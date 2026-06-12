@@ -1,0 +1,161 @@
+/* ============================================================
+   Base de styles partagée. Volontairement sobre : chaque
+   personne pourra affiner sa page. Les couleurs vert/rouge
+   sont imposées par le cahier des charges (statut licence).
+   ============================================================ */
+
+:root {
+  --ink: #16181d;
+  --muted: #6b7280;
+  --line: #e5e7eb;
+  --surface: #ffffff;
+  --bg: #f7f8fa;
+  --accent: #2f5fe0;
+
+  /* Statut licence */
+  --ok: #157f4a;
+  --ok-bg: #e7f5ee;
+  --ko: #c0362c;
+  --ko-bg: #fdecea;
+
+  --radius: 10px;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  color: var(--ink);
+  background: var(--bg);
+  line-height: 1.5;
+}
+
+h1, h2 { line-height: 1.2; }
+
+code {
+  background: #eef0f3;
+  padding: 1px 5px;
+  border-radius: 5px;
+  font-size: 0.9em;
+}
+
+.muted { color: var(--muted); }
+.error { color: var(--ko); font-weight: 600; }
+.centered { padding: 32px; text-align: center; color: var(--muted); }
+
+/* ---------- Mise en page ---------- */
+.page { min-height: 100vh; }
+
+.container {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 24px 20px 48px;
+}
+
+/* ---------- Barre du haut ---------- */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 20px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+}
+
+.topbar__left { display: flex; align-items: center; gap: 10px; }
+
+.badge {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background: var(--ink);
+  color: #fff;
+  padding: 3px 8px;
+  border-radius: 999px;
+}
+
+/* ---------- Boutons ---------- */
+button {
+  font: inherit;
+  cursor: pointer;
+  border: none;
+  border-radius: var(--radius);
+  padding: 11px 16px;
+  background: var(--accent);
+  color: #fff;
+  font-weight: 600;
+}
+
+button:disabled { opacity: 0.6; cursor: default; }
+
+.btn-ghost {
+  background: transparent;
+  color: var(--ink);
+  border: 1px solid var(--line);
+  padding: 8px 12px;
+}
+
+/* ---------- Connexion ---------- */
+.auth {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+}
+
+.card {
+  width: 100%;
+  max-width: 380px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.card h1 { margin: 0; font-size: 22px; }
+
+.card label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.card input {
+  font: inherit;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.card input:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+/* ---------- Bandeau de statut (Coach / Adhérent) ---------- */
+.banner {
+  border-radius: 14px;
+  padding: 20px 22px;
+  margin-top: 16px;
+  border: 1px solid transparent;
+}
+
+.banner--ok { background: var(--ok-bg); border-color: var(--ok); }
+.banner--ko { background: var(--ko-bg); border-color: var(--ko); }
+
+.banner__title { margin: 0; font-size: 20px; font-weight: 700; }
+.banner--ok .banner__title { color: var(--ok); }
+.banner--ko .banner__title { color: var(--ko); }
+
+.banner__list { margin: 10px 0 0; padding-left: 18px; }
+.banner__list li { margin: 2px 0; }
+
+/* ---------- Listes de tâches (placeholders) ---------- */
+.todo { line-height: 1.7; }

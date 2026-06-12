@@ -1,0 +1,10 @@
+{
+  "name": "Contrôle des licences",
+  "short_name": "Licences",
+  "description": "Contrôle des licences sportives par QR Code",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#16181d",
+  "theme_color": "#16181d",
+  "icons": []
+}
