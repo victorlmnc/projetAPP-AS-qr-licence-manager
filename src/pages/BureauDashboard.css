@@ -1,0 +1,247 @@
+/* ============================================================
+   Styles du dashboard Bureau.
+   Co-localisés ici (importés par BureauDashboard.jsx) pour ne pas
+   alourdir le index.css global. Réutilisent les variables de couleur
+   définies dans index.css (--ink, --ok, --ko, etc.).
+   ============================================================ */
+
+.dash-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.dash-top h2 { margin: 0; }
+
+/* ---------- Recherche ---------- */
+.dash-search {
+  width: 100%;
+  margin: 16px 0 12px;
+  padding: 10px 12px;
+  font: inherit;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.dash-search:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+/* ---------- Filtres (chips) ---------- */
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.chip {
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 6px 13px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.chip--on {
+  background: var(--ink);
+  color: #fff;
+  border-color: var(--ink);
+}
+
+/* ---------- Tableau ---------- */
+.dash-table-wrap { overflow-x: auto; }
+
+.dash-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.dash-table th,
+.dash-table td {
+  text-align: left;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--line);
+  vertical-align: middle;
+}
+
+.dash-table th {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  background: #fafbfc;
+}
+
+.dash-table tr:last-child td { border-bottom: none; }
+.dash-table tbody tr:hover { background: #fafbfc; }
+
+.small { font-size: 13px; }
+.muted.small { font-size: 12px; }
+.dash-empty { padding: 24px 0; }
+
+.dash-row-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  white-space: nowrap;
+}
+
+/* ---------- Pastille de statut ---------- */
+.status-badge {
+  display: inline-block;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.status-badge--ok { background: var(--ok-bg); color: var(--ok); }
+.status-badge--ko { background: var(--ko-bg); color: var(--ko); }
+
+/* ============================================================
+   Couche modale partagée (panneau d'édition + modale QR)
+   ============================================================ */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  z-index: 50;
+}
+
+/* Modale centrée (QR Code) */
+.modal {
+  margin: auto;
+  background: var(--surface);
+  border-radius: 14px;
+  padding: 24px;
+  width: min(360px, 92%);
+  text-align: center;
+}
+
+.modal h3 { margin-top: 0; }
+
+/* Panneau latéral droit (saisie / mise à jour) */
+.editor {
+  margin-left: auto;
+  height: 100%;
+  width: min(440px, 100%);
+  background: var(--surface);
+  padding: 24px;
+  overflow-y: auto;
+  animation: slide-in 0.18s ease-out;
+}
+
+@keyframes slide-in {
+  from { transform: translateX(20px); opacity: 0; }
+  to   { transform: translateX(0); opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .editor { animation: none; }
+}
+
+.editor h3 { margin-top: 0; }
+.editor hr { border: none; border-top: 1px solid var(--line); margin: 18px 0; }
+
+.editor-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+/* Champs texte du panneau (labels en colonne) */
+.editor label:not(.check) {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.editor input:not([type='checkbox']) {
+  font: inherit;
+  padding: 9px 11px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.editor input:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+/* Cases à cocher (libellé à droite) */
+.check {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 15px;
+  font-weight: 500;
+  margin: 10px 0;
+  cursor: pointer;
+}
+
+.check input { width: 17px; height: 17px; }
+
+.manques {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 10px 14px 12px;
+  margin: 10px 0;
+}
+
+.manques legend {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  padding: 0 6px;
+}
+
+/* Aperçu du statut dans le panneau */
+.apercu {
+  margin: 16px 0;
+  padding: 11px 14px;
+  border-radius: var(--radius);
+  font-size: 15px;
+}
+
+.apercu--ok { background: var(--ok-bg); color: var(--ok); }
+.apercu--ko { background: var(--ko-bg); color: var(--ko); }
+
+/* ---------- QR Code ---------- */
+.qr-wrap {
+  display: inline-block;
+  background: #fff;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  margin: 8px 0;
+}
+
+.qr-id {
+  font-size: 11px;
+  color: var(--muted);
+  word-break: break-all;
+  margin: 6px 0 0;
+}
+
+/* Barre d'actions commune aux modales */
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 18px;
+}
