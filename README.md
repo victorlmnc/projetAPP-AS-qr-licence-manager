@@ -12,10 +12,10 @@ Stack : React + Vite, Supabase (base de données Postgres + authentification + s
 Prérequis : Node.js 18+ installé.
 
 ```bash
-git clone <URL_DU_DEPOT>
-cd licences-qr
+git clone https://github.com/victorlmnc/projetAPP-AS-qr-licence-manager
+cd projetAPP-AS-qr-licence-manager
 npm install
-cp .env.example .env      # puis remplir les 2 clés Supabase
+cp .env.example .env      # puis remplir les 2 clés Supabase (qui sont sur Discord)
 npm run dev
 ```
 
@@ -27,7 +27,7 @@ Dans Supabase : **Project Settings > API**. Copier :
 - `anon public` → `VITE_SUPABASE_ANON_KEY`
 
 Le fichier `.env` n'est **jamais** poussé sur GitHub (il est dans `.gitignore`).
-On se partage les clés à part (Discord/WhatsApp).
+On se partage les clés à part (Discord)
 
 ---
 
