@@ -13,7 +13,7 @@ Prérequis : Node.js 18+.
 
 ```bash
 git clone <URL_DU_DEPOT>
-cd licences-qr
+cd projetAPP-AS-qr-licence-manager
 npm install
 cp .env.example .env      # puis remplir les 2 clés Supabase (voir Discord)
 npm run dev
