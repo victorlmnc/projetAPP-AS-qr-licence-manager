@@ -15,8 +15,8 @@ Prérequis : Node.js 18+.
 git clone <URL_DU_DEPOT>
 cd projetAPP-AS-qr-licence-manager
 npm install
-cp .env.example .env      # puis remplir les 2 clés Supabase (voir Discord)
-npm run dev
+cp .env.example .env      # puis remplir les 2 clés Supabase (voir Discord) dans le .env copié
+npm run dev # à partir d'ici on peut voir la page web sur http://localhost:5173
 ```
 
 L'app tourne sur http://localhost:5173
