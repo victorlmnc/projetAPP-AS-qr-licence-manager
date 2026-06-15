@@ -18,6 +18,7 @@ env:
 
 jobs:
   mirror:
+    if: github.repository == 'victorlmnc/projetAPP-AS-qr-licence-manager'
     runs-on: ubuntu-latest
 
     steps:
