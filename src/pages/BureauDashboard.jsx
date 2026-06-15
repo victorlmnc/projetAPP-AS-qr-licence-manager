@@ -121,8 +121,7 @@ export default function BureauDashboard() {
       .filter((a) =>
         !q ||
         reparerTexte(a.nom).toLowerCase().includes(q) ||
-        reparerTexte(a.prenom).toLowerCase().includes(q) ||
-        a.email?.toLowerCase().includes(q)
+        reparerTexte(a.prenom).toLowerCase().includes(q)
       );
   }, [adherents, filtresActifs, recherche]);
 

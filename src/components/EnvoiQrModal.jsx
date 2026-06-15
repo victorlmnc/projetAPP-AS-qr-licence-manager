@@ -14,8 +14,7 @@ export default function EnvoiQrModal({ adherents, onClose, onConfirm }) {
     return adherents.filter(
       (a) =>
         reparerTexte(a.nom).toLowerCase().includes(q) ||
-        reparerTexte(a.prenom).toLowerCase().includes(q) ||
-        (a.email ?? '').toLowerCase().includes(q)
+        reparerTexte(a.prenom).toLowerCase().includes(q)
     );
   }, [adherents, recherche]);
 
@@ -53,7 +52,7 @@ export default function EnvoiQrModal({ adherents, onClose, onConfirm }) {
 
         <input
           className="envoi-search"
-          placeholder="Rechercher un nom, prénom ou email…"
+          placeholder="Rechercher un nom ou prénom…"
           value={recherche}
           onChange={(e) => setRecherche(e.target.value)}
           autoFocus
