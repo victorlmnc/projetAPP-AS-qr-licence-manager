@@ -14,13 +14,13 @@ import './BureauDashboard.css';
 // Liste des filtres. `test(adherent)` renvoie true si l'adhérent doit
 // apparaître quand ce filtre est actif.
 const FILTRES = [
-  { cle: 'tous',       libelle: 'Tous',              test: () => true },
-  { cle: 'a_jour',     libelle: 'À jour',            test: (a) => calculerStatutLicence(a).valide },
-  { cle: 'non_a_jour', libelle: 'Non à jour',        test: (a) => !calculerStatutLicence(a).valide },
-  { cle: 'fiche',      libelle: 'Fiche manquante',   test: (a) => !a.fiche_renseignement },
-  { cle: 'yeps',       libelle: 'Manque YEPS',       test: (a) => a.manque_yeps },
-  { cle: 'passport',  libelle: "Manque PASS'SPORT", test: (a) => a.manque_passport },
-  { cle: 'paiement',   libelle: 'Manque paiement',   test: (a) => a.manque_paiement },
+  { cle: 'tous', libelle: 'Tous', test: () => true },
+  { cle: 'a_jour', libelle: 'À jour', test: (a) => calculerStatutLicence(a).valide },
+  { cle: 'non_a_jour', libelle: 'Non à jour', test: (a) => !calculerStatutLicence(a).valide },
+  { cle: 'fiche', libelle: 'Fiche manquante', test: (a) => !a.fiche_renseignement },
+  { cle: 'yeps', libelle: 'Manque YEPS', test: (a) => a.manque_yeps },
+  { cle: 'passport', libelle: "Manque PASS'SPORT", test: (a) => a.manque_passport },
+  { cle: 'paiement', libelle: 'Manque paiement', test: (a) => a.manque_paiement },
 ];
 
 function champCsv(valeur) {
@@ -250,9 +250,9 @@ export default function BureauDashboard() {
       </main>
 
       <footer className="container" style={{ marginTop: '40px', padding: '20px', borderTop: '2px dashed #f5c2c2', backgroundColor: '#fff7f7', borderRadius: 'var(--radius)', marginBottom: '40px' }}>
-        <h4 style={{ color: 'var(--ko)', margin: '0 0 10px 0' }}>Zone de Danger</h4>
+        <h4 style={{ color: 'var(--ko)', margin: '0 0 10px 0' }}>Réinitialiser les adhérents</h4>
         <p className="small muted" style={{ margin: '0 0 15px 0' }}>
-          La réinitialisation supprimera définitivement tous les adhérents de la base de données. Les comptes utilisateurs associés ne pourront plus être liés à ces fiches adhérents.
+          Attention cela supprimera définitivement tous les adhérents de la base de données. Les comptes utilisateurs associés ne pourront plus être liés à ces fiches adhérents.
         </p>
         <button
           onClick={() => setResetOuvert(true)}
