@@ -7,6 +7,7 @@ import AdherentEditor from '../components/AdherentEditor';
 import QrCodeModal from '../components/QrCodeModal';
 import ImportCsvModal from '../components/ImportCsvModal';
 import ChangePasswordModal from '../components/ChangePasswordModal';
+import CoachAccountModal from '../components/CoachAccountModal';
 import './BureauDashboard.css';
 
 // Liste des filtres. `test(adherent)` renvoie true si l'adhérent doit
@@ -38,6 +39,7 @@ export default function BureauDashboard() {
   const [qrAdherent, setQrAdherent] = useState(null);
   const [importOuvert, setImportOuvert] = useState(false);
   const [mdpOuvert, setMdpOuvert] = useState(false);
+  const [coachOuvert, setCoachOuvert] = useState(false);
 
   // Chargement initial depuis Supabase.
   useEffect(() => {
@@ -153,6 +155,9 @@ export default function BureauDashboard() {
         <div className="dash-top">
           <h2>Adhérents <span className="muted">({adherents.length})</span></h2>
           <div className="dash-top-actions">
+            <button className="btn-ghost" onClick={() => setCoachOuvert(true)}>
+              Comptes coach
+            </button>
             <button className="btn-ghost" onClick={() => setMdpOuvert(true)}>
               Mon mot de passe
             </button>
@@ -267,6 +272,7 @@ export default function BureauDashboard() {
       )}
 
       {mdpOuvert && <ChangePasswordModal onClose={() => setMdpOuvert(false)} />}
+      {coachOuvert && <CoachAccountModal onClose={() => setCoachOuvert(false)} />}
     </div>
   );
 }

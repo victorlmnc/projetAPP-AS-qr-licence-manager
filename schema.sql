@@ -34,10 +34,17 @@ create table profiles (
   id uuid primary key references auth.users(id) on delete cascade,
   role text not null check (role in ('bureau', 'coach', 'adherent')),
   adherent_id uuid references adherents(id) on delete set null,
+  login text,
   nom text,
   prenom text,
   created_at timestamptz not null default now()
 );
+
+-- Migration douce si la table profiles existe deja sans login.
+alter table profiles add column if not exists login text;
+create unique index if not exists profiles_login_unique
+  on profiles (lower(login))
+  where login is not null;
 
 -- ============================================
 -- Fonction utilitaire : rôle de l'utilisateur connecté

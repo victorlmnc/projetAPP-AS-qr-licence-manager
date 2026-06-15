@@ -38,7 +38,7 @@ clés en privé. Ne JAMAIS partager ni committer la clé **secret** (`sb_secret_
 insert into profiles (id, role, nom, prenom) values ('UID', 'bureau', 'Nom', 'Prénom');
 
 -- Coach
-insert into profiles (id, role) values ('UID', 'coach');
+insert into profiles (id, role, login, nom, prenom) values ('UID', 'coach', 'coach', 'Nom', 'Prenom');
 
 -- Adhérent : on relie le compte à une fiche existante (adherent_id)
 insert into profiles (id, role, adherent_id) values ('UID', 'adherent', 'ID_D_UNE_FICHE');
@@ -46,6 +46,23 @@ insert into profiles (id, role, adherent_id) values ('UID', 'adherent', 'ID_D_UN
 
 > Pour un compte Adhérent, récupérer l'`id` d'une fiche dans **Table Editor > adherents**
 > et le mettre dans `adherent_id`. C'est ce lien qui fait que l'adhérent voit SA fiche.
+
+Le login correspond a ce qui est tape sur la page de connexion. Par exemple `coach`
+devient automatiquement `coach@as-licences.fr`.
+
+### Modifier un compte coach depuis le Bureau
+
+Le bouton **Comptes coach** de l'espace Bureau permet de changer le login, le nom,
+le prenom et le mot de passe d'un coach.
+
+Pour que ce bouton fonctionne en ligne :
+
+```bash
+supabase functions deploy update-coach-account
+```
+
+La fonction utilise la cle `SUPABASE_SERVICE_ROLE_KEY` cote Supabase uniquement.
+Ne jamais mettre cette cle dans `.env`, `.env.example` ou dans le code frontend.
 
 ---
 
