@@ -1,0 +1,83 @@
+.scan-page {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.scan-heading h2 {
+  margin-bottom: 6px;
+}
+
+.scan-heading p {
+  margin-top: 0;
+}
+
+.scan-reader {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 16px;
+}
+
+.scan-reader__camera {
+  overflow: hidden;
+  min-height: 280px;
+  background: #111827;
+  border-radius: var(--radius);
+}
+
+.scan-reader__camera video {
+  display: block;
+  width: 100%;
+  border-radius: var(--radius);
+}
+
+.scan-reader__status {
+  margin: 12px 0 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.scan-token {
+  margin: 0;
+  word-break: break-word;
+}
+
+.scan-result {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.scan-result__identity {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+}
+
+.scan-result__identity strong {
+  font-size: 20px;
+}
+
+.scan-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+@media (max-width: 520px) {
+  .scan-reader {
+    padding: 10px;
+  }
+
+  .scan-reader__camera {
+    min-height: 240px;
+  }
+
+  .scan-actions button {
+    width: 100%;
+  }
+}

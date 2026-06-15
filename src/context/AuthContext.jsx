@@ -5,13 +5,13 @@ const AuthContext = createContext(null);
 
 // Fournit à toute l'application : utilisateur connecté + rôle + déconnexion.
 export function AuthProvider({ children }) {
-  const [session, setSession] = useState(null);
+  const [session, setSession] = useState(undefined);
   const [profile, setProfile] = useState(null); // { role, adherent_id, ... }
   const [loading, setLoading] = useState(true);
 
   // 1) Récupère la session au démarrage et écoute connexion/déconnexion.
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => setSession(data.session));
+    supabase.auth.getSession().then(({ data }) => setSession(data.session ?? null));
 
     const { data: listener } = supabase.auth.onAuthStateChange(
       (_event, newSession) => setSession(newSession)
@@ -23,6 +23,10 @@ export function AuthProvider({ children }) {
   // 2) Quand la session change, charge le profil (rôle) de l'utilisateur.
   useEffect(() => {
     async function loadProfile() {
+      if (session === undefined) {
+        return;
+      }
+
       if (!session?.user) {
         setProfile(null);
         setLoading(false);
