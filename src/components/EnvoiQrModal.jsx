@@ -9,11 +9,18 @@ export default function EnvoiQrModal({ adherents, onClose, onConfirm }) {
   const [selectionnes, setSelectionnes] = useState(() => new Set(adherents.map((a) => a.id)));
 
   const filtres = useMemo(() => {
-    const q = recherche.trim().toLowerCase();
+    const norm = (s) =>
+      reparerTexte(String(s ?? ''))
+        .normalize('NFD').replace(/[̀-ͯ]/g, '')
+        .replace(/\s+/g, ' ')
+        .toLowerCase()
+        .trim();
+
+    const q = norm(recherche);
     if (!q) return adherents;
     return adherents.filter((a) => {
-      const nom = reparerTexte(a.nom).toLowerCase();
-      const prenom = reparerTexte(a.prenom).toLowerCase();
+      const nom = norm(a.nom);
+      const prenom = norm(a.prenom);
       return (
         nom.includes(q) ||
         prenom.includes(q) ||

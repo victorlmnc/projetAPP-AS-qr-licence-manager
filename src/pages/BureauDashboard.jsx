@@ -113,15 +113,22 @@ export default function BureauDashboard() {
   }, []);
 
   const liste = useMemo(() => {
-    const q = recherche.trim().toLowerCase();
+    const norm = (s) =>
+      reparerTexte(String(s ?? ''))
+        .normalize('NFD').replace(/[̀-ͯ]/g, '')
+        .replace(/\s+/g, ' ')
+        .toLowerCase()
+        .trim();
+
+    const q = norm(recherche);
     const filtres = FILTRES.filter((x) => x.cle !== 'tous' && filtresActifs.includes(x.cle));
 
     return adherents
       .filter((a) => filtres.every((f) => f.test(a)))
       .filter((a) => {
         if (!q) return true;
-        const nom = reparerTexte(a.nom).toLowerCase();
-        const prenom = reparerTexte(a.prenom).toLowerCase();
+        const nom = norm(a.nom);
+        const prenom = norm(a.prenom);
         return (
           nom.includes(q) ||
           prenom.includes(q) ||
