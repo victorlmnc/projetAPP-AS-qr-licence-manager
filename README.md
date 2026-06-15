@@ -144,7 +144,21 @@ Avec Vercel :
    `VITE_SUPABASE_ANON_KEY` (mêmes valeurs que le `.env` local).
 4. **Deploy**. L'app est en ligne en HTTPS → la caméra fonctionne sur téléphone.
 
-À chaque fusion sur `main`, Vercel redéploie tout seul.
+À chaque push sur `main`, Vercel redéploie tout seul.
+
+### Miroir automatique vers le dépôt connecté à Vercel
+
+Le workflow `.github/workflows/mirror-to-vercel-repo.yml` se lance à chaque push
+sur `main` du dépôt de groupe et pousse la même version vers
+`Mathishrn/as-licences-cvl` sur sa branche `main`.
+
+À faire une seule fois dans le dépôt de groupe GitHub :
+1. Depuis le compte qui possède `Mathishrn/as-licences-cvl`, créer un token GitHub
+   limité à ce dépôt, avec le droit `Contents: Read and write`.
+2. Dans le dépôt de groupe : **Settings > Secrets and variables > Actions**.
+3. Créer un secret nommé `MIRROR_TOKEN` avec la valeur du token.
+
+Ne jamais mettre ce token dans `.env`, `.env.example` ou dans le code.
 
 ---
 
