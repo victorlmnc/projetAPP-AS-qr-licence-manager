@@ -38,6 +38,31 @@ export default function AdherentProfile() {
     load();
   }, [adherentId]);
 
+  // S'abonner aux changements en temps réel de la licence de l'adhérent
+  useEffect(() => {
+    if (!adherentId) return;
+
+    const canal = supabase
+      .channel('adherent_profile_realtime')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'adherents' },
+        (payload) => {
+          if (payload.eventType === 'UPDATE' && payload.new.id === adherentId) {
+            setAdherent(payload.new);
+          } else if (payload.eventType === 'DELETE' && payload.old.id === adherentId) {
+            setAdherent(null);
+            setErreur('Votre licence a été supprimée. Contactez le Bureau.');
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(canal);
+    };
+  }, [adherentId]);
+
   return (
     <div className="page">
       <Header titre="Ma licence" />

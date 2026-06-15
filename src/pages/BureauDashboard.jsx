@@ -42,7 +42,7 @@ export default function BureauDashboard() {
   const [mdpOuvert, setMdpOuvert] = useState(false);
   const [resetOuvert, setResetOuvert] = useState(false);
 
-  // Chargement initial depuis Supabase.
+  // Chargement initial et abonnement Realtime depuis Supabase.
   useEffect(() => {
     async function charger() {
       const { data, error } = await supabase
@@ -55,6 +55,36 @@ export default function BureauDashboard() {
       setChargement(false);
     }
     charger();
+
+    const canal = supabase
+      .channel('adherents_bureau_changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'adherents' },
+        (payload) => {
+          if (payload.eventType === 'INSERT') {
+            const nv = payload.new;
+            setAdherents((prev) => {
+              if (prev.some((a) => a.id === nv.id)) return prev;
+              return [...prev, nv].sort((a, b) => a.nom.localeCompare(b.nom));
+            });
+          } else if (payload.eventType === 'UPDATE') {
+            const nv = payload.new;
+            setAdherents((prev) => {
+              const maj = prev.map((a) => (a.id === nv.id ? nv : a));
+              return maj.sort((a, b) => a.nom.localeCompare(b.nom));
+            });
+          } else if (payload.eventType === 'DELETE') {
+            const anc = payload.old;
+            setAdherents((prev) => prev.filter((a) => a.id !== anc.id));
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(canal);
+    };
   }, []);
 
   // Liste affichée = filtre actif + recherche texte.

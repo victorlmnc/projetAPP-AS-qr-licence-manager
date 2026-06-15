@@ -77,6 +77,31 @@ export default function CoachScan() {
     setAdherent(data);
   }, []);
 
+  // S'abonner aux changements en temps réel de l'adhérent affiché
+  useEffect(() => {
+    if (!adherent?.id) return;
+
+    const canal = supabase
+      .channel('adherent_coach_realtime')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'adherents' },
+        (payload) => {
+          if (payload.eventType === 'UPDATE' && payload.new.id === adherent.id) {
+            setAdherent(payload.new);
+          } else if (payload.eventType === 'DELETE' && payload.old.id === adherent.id) {
+            setAdherent(null);
+            setErreur('Cet adhérent a été supprimé de la base de données.');
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(canal);
+    };
+  }, [adherent?.id]);
+
   useEffect(() => {
     let annule = false;
     let scanner = null;

@@ -101,3 +101,8 @@ create trigger trg_adherents_updated_at
   before update on adherents
   for each row
   execute function set_updated_at();
+
+-- ============================================
+-- Activation du Realtime pour la table adherents
+-- ============================================
+alter publication supabase_realtime add table adherents;
