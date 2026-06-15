@@ -33,7 +33,7 @@ function emailHtml(prenom, nom, lien) {
             <td style="background:#5e3a8c;padding:28px 32px;">
               <p style="margin:0;color:#ffffff;font-size:20px;font-weight:600;">Association Sportive</p>
               <p style="margin:4px 0 0 0;color:rgba(255,255,255,0.75);font-size:13px;">
-                Licence ${new Date().getFullYear()} — Accès à votre QR Code
+                Accès à votre QR Code de licence
               </p>
             </td>
           </tr>
@@ -111,6 +111,7 @@ export default async function handler(req, res) {
         from: `"Association Sportive" <${process.env.GMAIL_USER}>`,
         to: a.email,
         subject: `Votre QR Code de licence — ${a.prenom} ${a.nom}`,
+        text: `Bonjour ${a.prenom} ${a.nom},\n\nVotre QR Code de licence est disponible. Présentez-le à votre responsable sportif lors des entraînements et des matchs.\n\nAccéder à votre QR Code : ${lien}\n\nVous pouvez enregistrer cette page en favori sur votre téléphone.\n\n— Le bureau de l'Association Sportive`,
         html: emailHtml(a.prenom, a.nom, lien),
       });
       results.sent++;

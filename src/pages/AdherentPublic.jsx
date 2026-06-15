@@ -66,7 +66,7 @@ export default function AdherentPublic() {
           <img src="/logo.png" alt="Logo AS" className="pub-logo" />
           <div>
             <h2 className="pub-name">{adherent.prenom} {adherent.nom}</h2>
-            <p className="muted pub-sub">Association Sportive — Licence {new Date().getFullYear()}</p>
+            <p className="muted pub-sub">Association Sportive</p>
           </div>
         </div>
 
