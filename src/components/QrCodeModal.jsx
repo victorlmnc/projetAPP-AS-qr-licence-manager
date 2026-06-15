@@ -17,6 +17,19 @@ export default function QrCodeModal({ adherent, onClose }) {
     lien.click();
   }
 
+  // Ouvre le logiciel de messagerie du bureau, pré-adressé à l'adhérent.
+  // mailto ne peut pas joindre d'image : le bureau attache le PNG téléchargé.
+  function envoyerParMail() {
+    const sujet = encodeURIComponent('Votre QR Code de licence');
+    const corps = encodeURIComponent(
+      `Bonjour ${adherent.prenom},\n\n` +
+        `Voici votre QR Code de licence (en pièce jointe). ` +
+        `Présentez-le à votre coach lors des entraînements et des matchs.\n\n` +
+        `Sportivement,\nLe bureau`
+    );
+    window.location.href = `mailto:${adherent.email}?subject=${sujet}&body=${corps}`;
+  }
+
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal" onClick={(e) => e.stopPropagation()}>
@@ -31,8 +44,15 @@ export default function QrCodeModal({ adherent, onClose }) {
 
         <div className="modal-actions">
           <button className="btn-ghost" onClick={onClose}>Fermer</button>
-          <button onClick={telechargerPng}>Télécharger le PNG</button>
+          <button className="btn-ghost" onClick={telechargerPng}>Télécharger le PNG</button>
+          <button onClick={envoyerParMail} disabled={!adherent.email}>
+            Envoyer par e-mail
+          </button>
         </div>
+
+        {!adherent.email && (
+          <p className="qr-id">Aucun e-mail enregistré pour cet adhérent.</p>
+        )}
       </div>
     </div>
   );

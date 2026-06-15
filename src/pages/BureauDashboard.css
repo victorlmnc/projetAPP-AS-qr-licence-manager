@@ -245,3 +245,56 @@
   gap: 10px;
   margin-top: 18px;
 }
+
+/* ============================================================
+   Ajouts : statistiques, actions du haut, suppression
+   ============================================================ */
+
+/* Boutons groupés en haut à droite (Export + Nouvel adhérent) */
+.dash-top-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* Bandeau de statistiques */
+.stats {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 16px 0 4px;
+}
+
+.stat {
+  flex: 1 1 120px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.stat-num { font-size: 26px; font-weight: 700; line-height: 1.1; }
+.stat-lib { font-size: 13px; color: var(--muted); }
+
+.stat--ok .stat-num { color: var(--ok); }
+.stat--ko .stat-num { color: var(--ko); }
+
+/* Les actions des modales peuvent passer à la ligne sur petit écran */
+.modal-actions { flex-wrap: wrap; }
+
+/* Zone de suppression dans le panneau d'édition */
+.editor-danger {
+  margin-top: 22px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+
+.btn-danger {
+  background: var(--ko);
+  color: #fff;
+}
+
+.btn-danger:disabled { opacity: 0.6; }

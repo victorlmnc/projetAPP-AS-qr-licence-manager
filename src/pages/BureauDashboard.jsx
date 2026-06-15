@@ -19,6 +19,12 @@ const FILTRES = [
   { cle: 'paiement',   libelle: 'Manque paiement',   test: (a) => a.manque_paiement },
 ];
 
+// Échappe une valeur pour le format CSV : on entoure de guillemets et on double
+// les guillemets internes, pour gérer virgules/accents/retours à la ligne.
+function champCsv(valeur) {
+  return `"${String(valeur ?? '').replace(/"/g, '""')}"`;
+}
+
 export default function BureauDashboard() {
   const [adherents, setAdherents] = useState([]);
   const [chargement, setChargement] = useState(true);
@@ -60,6 +66,13 @@ export default function BureauDashboard() {
       );
   }, [adherents, filtre, recherche]);
 
+  // Statistiques globales (sur tous les adhérents, pas seulement la liste filtrée).
+  const stats = useMemo(() => {
+    let aJour = 0;
+    for (const a of adherents) if (calculerStatutLicence(a).valide) aJour++;
+    return { total: adherents.length, aJour, nonAJour: adherents.length - aJour };
+  }, [adherents]);
+
   // Après création/mise à jour : on rafraîchit la liste localement (sans recharger).
   function onSaved(adherent) {
     setAdherents((prev) => {
@@ -72,6 +85,39 @@ export default function BureauDashboard() {
     setEditeur(null);
   }
 
+  // Après suppression : on retire la fiche de la liste et on ferme le panneau.
+  function onDeleted(id) {
+    setAdherents((prev) => prev.filter((a) => a.id !== id));
+    setEditeur(null);
+  }
+
+  // Exporte la liste actuellement affichée (filtre + recherche) au format CSV.
+  function exporterCsv() {
+    const entetes = ['Nom', 'Prénom', 'Email', 'Fiche', 'Paiement', 'Statut', 'Détail'];
+    const lignes = liste.map((a) => {
+      const { valide, anomalies } = calculerStatutLicence(a);
+      return [
+        a.nom,
+        a.prenom,
+        a.email ?? '',
+        a.fiche_renseignement ? 'Oui' : 'Non',
+        a.paiement_global ? 'Oui' : 'Non',
+        valide ? 'À jour' : 'Non à jour',
+        valide ? '' : anomalies.join(' ; '),
+      ].map(champCsv).join(',');
+    });
+
+    const contenu = [entetes.map(champCsv).join(','), ...lignes].join('\n');
+    // Le BOM (\uFEFF) garantit l'affichage correct des accents dans Excel.
+    const blob = new Blob(['\uFEFF' + contenu], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const lien = document.createElement('a');
+    lien.href = url;
+    lien.download = 'adherents.csv';
+    lien.click();
+    URL.revokeObjectURL(url);
+  }
+
   return (
     <div className="page">
       <Header titre="Espace Bureau" />
@@ -79,7 +125,27 @@ export default function BureauDashboard() {
       <main className="container dash">
         <div className="dash-top">
           <h2>Adhérents <span className="muted">({adherents.length})</span></h2>
-          <button onClick={() => setEditeur({ adherent: null })}>+ Nouvel adhérent</button>
+          <div className="dash-top-actions">
+            <button className="btn-ghost" onClick={exporterCsv} disabled={liste.length === 0}>
+              Exporter en CSV
+            </button>
+            <button onClick={() => setEditeur({ adherent: null })}>+ Nouvel adhérent</button>
+          </div>
+        </div>
+
+        <div className="stats">
+          <div className="stat">
+            <span className="stat-num">{stats.total}</span>
+            <span className="stat-lib">Adhérents</span>
+          </div>
+          <div className="stat stat--ok">
+            <span className="stat-num">{stats.aJour}</span>
+            <span className="stat-lib">À jour</span>
+          </div>
+          <div className="stat stat--ko">
+            <span className="stat-num">{stats.nonAJour}</span>
+            <span className="stat-lib">Non à jour</span>
+          </div>
         </div>
 
         <input
@@ -152,6 +218,7 @@ export default function BureauDashboard() {
           adherent={editeur.adherent}
           onClose={() => setEditeur(null)}
           onSaved={onSaved}
+          onDeleted={onDeleted}
         />
       )}
 

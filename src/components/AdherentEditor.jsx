@@ -6,7 +6,8 @@ import { calculerStatutLicence } from '../lib/licence';
 //   adherent = null  -> mode création
 //   adherent = objet -> mode mise à jour rapide
 // onSaved(adherentEnregistré) est appelé après succès (insert ou update).
-export default function AdherentEditor({ adherent, onClose, onSaved }) {
+// onDeleted(id) est appelé après une suppression réussie.
+export default function AdherentEditor({ adherent, onClose, onSaved, onDeleted }) {
   const creation = !adherent;
 
   const [form, setForm] = useState({
@@ -21,6 +22,7 @@ export default function AdherentEditor({ adherent, onClose, onSaved }) {
   });
   const [erreur, setErreur] = useState(null);
   const [enCours, setEnCours] = useState(false);
+  const [suppression, setSuppression] = useState(false);
 
   function set(champ, valeur) {
     setForm((f) => ({ ...f, [champ]: valeur }));
@@ -63,6 +65,25 @@ export default function AdherentEditor({ adherent, onClose, onSaved }) {
       return;
     }
     onSaved(data);
+  }
+
+  // Supprime définitivement la fiche, après confirmation.
+  async function supprimer() {
+    const ok = window.confirm(
+      `Supprimer définitivement la fiche de ${adherent.prenom} ${adherent.nom} ?`
+    );
+    if (!ok) return;
+
+    setErreur(null);
+    setSuppression(true);
+    const { error } = await supabase.from('adherents').delete().eq('id', adherent.id);
+    setSuppression(false);
+
+    if (error) {
+      setErreur('Suppression impossible : ' + error.message);
+      return;
+    }
+    onDeleted(adherent.id);
   }
 
   return (
@@ -140,6 +161,20 @@ export default function AdherentEditor({ adherent, onClose, onSaved }) {
             </button>
           </div>
         </form>
+
+        {/* Suppression : disponible uniquement en mode édition */}
+        {!creation && (
+          <div className="editor-danger">
+            <button
+              type="button"
+              className="btn-danger"
+              onClick={supprimer}
+              disabled={suppression}
+            >
+              {suppression ? 'Suppression…' : 'Supprimer cet adhérent'}
+            </button>
+          </div>
+        )}
       </aside>
     </div>
   );
