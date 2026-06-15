@@ -52,15 +52,11 @@ jobs:
           mirror_remote="https://x-access-token:${MIRROR_TOKEN}@github.com/${MIRROR_REPOSITORY}.git"
           git fetch "$mirror_remote" main
 
-          if [ "$(git rev-parse HEAD^{tree})" = "$(git rev-parse FETCH_HEAD^{tree})" ]; then
-            echo "Mirror already has the same files."
-            exit 0
-          fi
-
           export GIT_AUTHOR_NAME="$mirror_login"
           export GIT_AUTHOR_EMAIL="${mirror_id}+${mirror_login}@users.noreply.github.com"
           export GIT_COMMITTER_NAME="$mirror_login"
           export GIT_COMMITTER_EMAIL="${mirror_id}+${mirror_login}@users.noreply.github.com"
 
           mirror_commit="$(git commit-tree HEAD^{tree} -p FETCH_HEAD -m "Mirror group main ${GITHUB_SHA}")"
+          echo "Created mirror commit ${mirror_commit} from source ${GITHUB_SHA} as ${mirror_login}."
           git push "$mirror_remote" "$mirror_commit:refs/heads/main"
