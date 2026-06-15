@@ -66,6 +66,14 @@ code {
 
 .topbar__left { display: flex; align-items: center; gap: 10px; }
 
+.topbar__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
 .badge {
   font-size: 12px;
   text-transform: uppercase;
@@ -95,6 +103,11 @@ button:disabled { opacity: 0.6; cursor: default; }
   color: var(--ink);
   border: 1px solid var(--line);
   padding: 8px 12px;
+}
+
+.btn-danger {
+  color: var(--ko);
+  border-color: #f2b8b2;
 }
 
 /* ---------- Connexion ---------- */
@@ -157,5 +170,86 @@ button:disabled { opacity: 0.6; cursor: default; }
 .banner__list { margin: 10px 0 0; padding-left: 18px; }
 .banner__list li { margin: 2px 0; }
 
+/* ---------- Scanner Coach ---------- */
+.scan-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.scan-head h2 { margin: 0; }
+
+.scanner-card {
+  margin-top: 18px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 14px;
+}
+
+.scanner-frame {
+  width: 100%;
+  min-height: 320px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: calc(var(--radius) - 2px);
+  background: #111318;
+}
+
+.scanner-frame video {
+  width: 100% !important;
+  border-radius: calc(var(--radius) - 2px);
+}
+
+.scan-status {
+  margin: 12px 0 0;
+  text-align: center;
+}
+
+/* ---------- Profil Adhérent ---------- */
+.profile-panel h2 {
+  margin-bottom: 6px;
+}
+
+.profile-panel p {
+  margin-top: 0;
+}
+
+.profile-qr {
+  margin-top: 18px;
+  text-align: center;
+}
+
+.profile-qr-card {
+  display: inline-block;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 14px;
+}
+
 /* ---------- Listes de tâches (placeholders) ---------- */
 .todo { line-height: 1.7; }
+
+@media (max-width: 560px) {
+  .topbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .topbar__actions {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .topbar__actions button {
+    flex: 1;
+  }
+
+  .scanner-frame {
+    min-height: 260px;
+  }
+}

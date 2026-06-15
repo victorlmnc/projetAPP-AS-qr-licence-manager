@@ -21,8 +21,6 @@ const FILTRES = [
   { cle: 'paiement',   libelle: 'Manque paiement',   test: (a) => a.manque_paiement },
 ];
 
-// Échappe une valeur pour le format CSV : on entoure de guillemets et on double
-// les guillemets internes, pour gérer virgules/accents/retours à la ligne.
 function champCsv(valeur) {
   return `"${String(valeur ?? '').replace(/"/g, '""')}"`;
 }
@@ -56,8 +54,7 @@ export default function BureauDashboard() {
     charger();
   }, []);
 
-  // Liste affichée = filtre actif + recherche texte. useMemo évite de recalculer
-  // à chaque rendu si rien n'a changé.
+  // Liste affichée = filtre actif + recherche texte.
   const liste = useMemo(() => {
     const f = FILTRES.find((x) => x.cle === filtre) ?? FILTRES[0];
     const q = recherche.trim().toLowerCase();
@@ -66,14 +63,17 @@ export default function BureauDashboard() {
       .filter((a) =>
         !q ||
         a.nom.toLowerCase().includes(q) ||
-        a.prenom.toLowerCase().includes(q)
+        a.prenom.toLowerCase().includes(q) ||
+        a.email?.toLowerCase().includes(q)
       );
   }, [adherents, filtre, recherche]);
 
   // Statistiques globales (sur tous les adhérents, pas seulement la liste filtrée).
   const stats = useMemo(() => {
     let aJour = 0;
-    for (const a of adherents) if (calculerStatutLicence(a).valide) aJour++;
+    for (const a of adherents) {
+      if (calculerStatutLicence(a).valide) aJour++;
+    }
     return { total: adherents.length, aJour, nonAJour: adherents.length - aJour };
   }, [adherents]);
 
@@ -104,27 +104,43 @@ export default function BureauDashboard() {
 
   // Exporte la liste actuellement affichée (filtre + recherche) au format CSV.
   function exporterCsv() {
-    const entetes = ['Nom', 'Prénom', 'Email', 'Fiche', 'Paiement', 'Statut', 'Détail'];
-    const lignes = liste.map((a) => {
-      const { valide, anomalies } = calculerStatutLicence(a);
+    const entetes = [
+      'Prénom',
+      'Nom',
+      'Email',
+      'Statut',
+      'Détail',
+      'Fiche renseignement',
+      'Paiement global',
+      'Manque paiement',
+      'Manque YEPS',
+      "Manque PASS'SPORT",
+      'ID',
+    ];
+
+    const lignes = liste.map((adherent) => {
+      const statut = calculerStatutLicence(adherent);
       return [
-        a.nom,
-        a.prenom,
-        a.email ?? '',
-        a.fiche_renseignement ? 'Oui' : 'Non',
-        a.paiement_global ? 'Oui' : 'Non',
-        valide ? 'À jour' : 'Non à jour',
-        valide ? '' : anomalies.join(' ; '),
-      ].map(champCsv).join(',');
+        adherent.prenom,
+        adherent.nom,
+        adherent.email ?? '',
+        statut.valide ? 'À jour' : 'Non à jour',
+        statut.anomalies.join(' | '),
+        adherent.fiche_renseignement ? 'Oui' : 'Non',
+        adherent.paiement_global ? 'Oui' : 'Non',
+        adherent.manque_paiement ? 'Oui' : 'Non',
+        adherent.manque_yeps ? 'Oui' : 'Non',
+        adherent.manque_passsport ? 'Oui' : 'Non',
+        adherent.id,
+      ].map(champCsv).join(';');
     });
 
-    const contenu = [entetes.map(champCsv).join(','), ...lignes].join('\n');
-    // Le BOM (\uFEFF) garantit l'affichage correct des accents dans Excel.
+    const contenu = [entetes.map(champCsv).join(';'), ...lignes].join('\r\n');
     const blob = new Blob(['\uFEFF' + contenu], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const lien = document.createElement('a');
     lien.href = url;
-    lien.download = 'adherents.csv';
+    lien.download = `adherents-${new Date().toISOString().slice(0, 10)}.csv`;
     lien.click();
     URL.revokeObjectURL(url);
   }
@@ -167,7 +183,7 @@ export default function BureauDashboard() {
 
         <input
           className="dash-search"
-          placeholder="Rechercher un nom ou un prénom…"
+          placeholder="Rechercher un nom, un prénom ou un email…"
           value={recherche}
           onChange={(e) => setRecherche(e.target.value)}
         />

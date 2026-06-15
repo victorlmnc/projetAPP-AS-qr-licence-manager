@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '../lib/supabase';
+import { supabase, supabaseConfigMissing } from '../lib/supabase';
 
 // Domaine interne ajouté automatiquement aux identifiants courts.
 // Les comptes doivent être créés avec ces e-mails : par ex. "bureau@as-licences.fr"
@@ -46,6 +46,12 @@ export default function Login() {
       <form className="card" onSubmit={handleSubmit}>
         <h1>Contrôle des licences</h1>
         <p className="muted">Connectez-vous pour continuer.</p>
+
+        {supabaseConfigMissing && (
+          <p className="error">
+            Configuration Supabase manquante : créez un fichier .env avec les clés du projet.
+          </p>
+        )}
 
         <label>
           Identifiant

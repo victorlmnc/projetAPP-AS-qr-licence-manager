@@ -1,30 +1,38 @@
 import { useEffect, useState } from 'react';
+import { QRCodeCanvas } from 'qrcode.react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import { messageAdherent } from '../lib/licence';
 import Header from '../components/Header';
+import StatusBanner from '../components/StatusBanner';
 
-// Le chargement de la fiche personnelle est DÉJÀ prêt.
-// ====== À COMPLÉTER — Personne 5 ======
-// Afficher le QR Code (QRCodeCanvas value={adherent.id}) et finaliser la PWA
-// (icônes du manifest, service worker, bouton "installer").
 export default function AdherentProfile() {
   const { adherentId } = useAuth();
   const [adherent, setAdherent] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [erreur, setErreur] = useState(null);
 
   useEffect(() => {
     async function load() {
+      setErreur(null);
+
       if (!adherentId) {
         setLoading(false);
         return;
       }
-      const { data } = await supabase
+
+      const { data, error } = await supabase
         .from('adherents')
         .select('*')
         .eq('id', adherentId)
         .single();
-      setAdherent(data);
+
+      if (error) {
+        setErreur('Chargement de la licence impossible.');
+        setAdherent(null);
+      } else {
+        setAdherent(data);
+      }
       setLoading(false);
     }
     load();
@@ -37,22 +45,36 @@ export default function AdherentProfile() {
       <main className="container">
         {loading && <p>Chargement…</p>}
 
-        {!loading && !adherent && (
+        {erreur && <p className="error">{erreur}</p>}
+
+        {!loading && !erreur && !adherent && (
           <p className="muted">
             Aucune fiche associée à votre compte. Contactez le Bureau.
           </p>
         )}
 
         {adherent && (
-          <>
-            <h2>
-              {adherent.prenom} {adherent.nom}
-            </h2>
-            <p>{messageAdherent(adherent)}</p>
-            <p className="muted">
-              Zone à compléter (Personne 5) : afficher le QR Code et configurer la PWA.
-            </p>
-          </>
+          <article className="profile-panel">
+            <div className="profile-heading">
+              <div>
+                <h2>
+                  {adherent.prenom} {adherent.nom}
+                </h2>
+                <p>{messageAdherent(adherent)}</p>
+              </div>
+            </div>
+
+            <StatusBanner adherent={adherent} />
+
+            <section className="profile-qr" aria-label="QR Code de licence">
+              <div className="profile-qr-card">
+                <QRCodeCanvas value={adherent.id} size={220} />
+              </div>
+              <p className="muted small">
+                Présentez ce QR Code au responsable sportif lors du contrôle terrain.
+              </p>
+            </section>
+          </article>
         )}
       </main>
     </div>

@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Html5Qrcode } from 'html5-qrcode';
 import { supabase } from '../lib/supabase';
 import Header from '../components/Header';
 import StatusBanner from '../components/StatusBanner';
@@ -26,25 +25,48 @@ function extraireIdentifiantQr(texteLu) {
   }
 }
 
+async function nettoyerScanner(scanner) {
+  if (!scanner) return;
+
+  try {
+    await scanner.stop();
+  } catch {
+    // Le scanner peut deja etre arrete.
+  }
+
+  try {
+    const resultat = scanner.clear();
+    if (resultat?.catch) await resultat.catch(() => {});
+  } catch {
+    // Nettoyage best-effort.
+  }
+}
+
 export default function CoachScan() {
   const [adherent, setAdherent] = useState(null);
   const [erreur, setErreur] = useState(null);
-  const [cameraMessage, setCameraMessage] = useState('Ouverture de la camera...');
+  const [cameraMessage, setCameraMessage] = useState('Initialisation de la camera...');
   const [texteLu, setTexteLu] = useState('');
-  const [scanEnCours, setScanEnCours] = useState(false);
+  const [scanActif, setScanActif] = useState(false);
+  const [scanKey, setScanKey] = useState(0);
   const scannerRef = useRef(null);
-  const scannerActifRef = useRef(false);
   const generationScannerRef = useRef(0);
-  const qrDejaTraiteRef = useRef(false);
+  const lectureEnCoursRef = useRef(false);
 
   const chercherAdherent = useCallback(async (id) => {
     setErreur(null);
     setAdherent(null);
 
+    const identifiant = id.trim();
+    if (!identifiant) {
+      setErreur('QR invalide : aucun identifiant lu.');
+      return;
+    }
+
     const { data, error } = await supabase
       .from('adherents')
       .select('*')
-      .eq('id', id)
+      .eq('id', identifiant)
       .single();
 
     if (error) {
@@ -55,107 +77,91 @@ export default function CoachScan() {
     setAdherent(data);
   }, []);
 
-  const arreterScanner = useCallback(async ({ invalider = true } = {}) => {
-    if (invalider) {
-      generationScannerRef.current += 1;
-    }
-
-    const scanner = scannerRef.current;
-    scannerRef.current = null;
-    scannerActifRef.current = false;
-    setScanEnCours(false);
-
-    if (!scanner) return;
-
-    try {
-      await scanner.stop();
-    } catch {
-      // Le navigateur peut deja avoir coupe le flux camera.
-    }
-
-    try {
-      scanner.clear();
-    } catch {
-      // Le nettoyage visuel n'est pas critique si le flux est deja stoppe.
-    }
-
-  }, []);
-
-  const demarrerScanner = useCallback(async () => {
-    await arreterScanner({ invalider: false });
-
-    const reader = document.getElementById(READER_ID);
-    if (!reader) return;
-
+  useEffect(() => {
+    let annule = false;
+    let scanner = null;
+    let demarrage = Promise.resolve();
     const generation = generationScannerRef.current + 1;
+
     generationScannerRef.current = generation;
-    qrDejaTraiteRef.current = false;
+    lectureEnCoursRef.current = false;
+    setScanActif(false);
+    setCameraMessage('Initialisation de la camera...');
+
+    async function lancerScanner() {
+      try {
+        const { Html5Qrcode } = await import('html5-qrcode');
+        if (annule || generation !== generationScannerRef.current) return;
+
+        scanner = new Html5Qrcode(READER_ID);
+        scannerRef.current = scanner;
+
+        demarrage = scanner
+          .start(
+            { facingMode: 'environment' },
+            { fps: 10, qrbox: { width: 250, height: 250 } },
+            async (resultat) => {
+              if (lectureEnCoursRef.current) return;
+              if (annule || generation !== generationScannerRef.current) return;
+              lectureEnCoursRef.current = true;
+
+              const identifiant = extraireIdentifiantQr(resultat);
+              setTexteLu(identifiant);
+              setCameraMessage('QR code lu. Recherche en cours...');
+              setScanActif(false);
+
+              await nettoyerScanner(scanner);
+              if (!annule && generation === generationScannerRef.current) {
+                await chercherAdherent(identifiant);
+              }
+            },
+            () => {}
+          )
+          .then(async () => {
+            if (annule || generation !== generationScannerRef.current) {
+              await nettoyerScanner(scanner);
+              return;
+            }
+            setScanActif(true);
+            setCameraMessage('Camera active : presentez le QR code devant l objectif.');
+          })
+          .catch(async () => {
+            await nettoyerScanner(scanner);
+            if (!annule && generation === generationScannerRef.current) {
+              setScanActif(false);
+              setCameraMessage('Camera indisponible.');
+              setErreur(
+                "Impossible d'acceder a la camera. Verifiez l'autorisation navigateur et l'acces HTTPS."
+              );
+            }
+          });
+      } catch {
+        if (!annule && generation === generationScannerRef.current) {
+          setErreur('Le module de scan QR est indisponible.');
+          setScanActif(false);
+          setCameraMessage('Scanner indisponible.');
+        }
+        if (scanner) {
+          await nettoyerScanner(scanner);
+        }
+      }
+    }
+
+    lancerScanner();
+
+    return () => {
+      annule = true;
+      generationScannerRef.current += 1;
+      if (scannerRef.current === scanner) scannerRef.current = null;
+      demarrage.finally(() => nettoyerScanner(scanner));
+    };
+  }, [chercherAdherent, scanKey]);
+
+  function scannerUnAutre() {
     setAdherent(null);
     setErreur(null);
     setTexteLu('');
-    setCameraMessage('Ouverture de la camera...');
-
-    const scanner = new Html5Qrcode(READER_ID);
-    scannerRef.current = scanner;
-
-    try {
-      await scanner.start(
-        { facingMode: 'environment' },
-        { fps: 10, qrbox: { width: 250, height: 250 } },
-        async (resultat) => {
-          if (qrDejaTraiteRef.current) return;
-          if (generation !== generationScannerRef.current) return;
-          qrDejaTraiteRef.current = true;
-
-          const identifiant = extraireIdentifiantQr(resultat);
-          setTexteLu(identifiant);
-          setCameraMessage('QR code lu. Recherche en cours...');
-          await arreterScanner();
-          await chercherAdherent(identifiant);
-        },
-        () => {}
-      );
-
-      if (generation !== generationScannerRef.current) {
-        try {
-          await scanner.stop();
-        } catch {
-          // Scanner deja stoppe ou jamais completement demarre.
-        }
-        try {
-          scanner.clear();
-        } catch {
-          // Nettoyage non critique.
-        }
-        return;
-      }
-
-      scannerActifRef.current = true;
-      setScanEnCours(true);
-      setCameraMessage('Camera active : presentez le QR code devant l objectif.');
-    } catch {
-      if (generation !== generationScannerRef.current) return;
-
-      scannerRef.current = null;
-      scannerActifRef.current = false;
-      setScanEnCours(false);
-      setCameraMessage('Camera indisponible.');
-      setErreur(
-        "Impossible d'acceder a la camera. Verifiez l'autorisation du navigateur et utilisez HTTPS sur telephone."
-      );
-    }
-  }, [arreterScanner, chercherAdherent]);
-
-  useEffect(() => {
-    demarrerScanner();
-
-    return () => {
-      arreterScanner();
-    };
-  }, [arreterScanner, demarrerScanner]);
-
-  function scannerUnAutre() {
-    demarrerScanner();
+    setScanKey((key) => key + 1);
   }
 
   return (
@@ -199,7 +205,7 @@ export default function CoachScan() {
 
         <div className="scan-actions">
           <button type="button" onClick={scannerUnAutre}>
-            {scanEnCours ? 'Relancer le scanner' : 'Scanner un autre'}
+            {scanActif ? 'Relancer le scanner' : 'Scanner un autre'}
           </button>
         </div>
       </main>

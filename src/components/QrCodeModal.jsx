@@ -17,17 +17,24 @@ export default function QrCodeModal({ adherent, onClose }) {
     lien.click();
   }
 
-  // Ouvre le logiciel de messagerie du bureau, pré-adressé à l'adhérent.
-  // mailto ne peut pas joindre d'image : le bureau attache le PNG téléchargé.
   function envoyerParMail() {
-    const sujet = encodeURIComponent('Votre QR Code de licence');
-    const corps = encodeURIComponent(
-      `Bonjour ${adherent.prenom},\n\n` +
-        `Voici votre QR Code de licence (en pièce jointe). ` +
-        `Présentez-le à votre coach lors des entraînements et des matchs.\n\n` +
-        `Sportivement,\nLe bureau`
-    );
-    window.location.href = `mailto:${adherent.email}?subject=${sujet}&body=${corps}`;
+    if (!adherent.email) return;
+
+    const sujet = `Votre QR Code licence - ${adherent.prenom} ${adherent.nom}`;
+    const profilUrl = `${window.location.origin}/profil`;
+    const corps = [
+      `Bonjour ${adherent.prenom},`,
+      'Voici les informations de votre licence.',
+      `Identifiant QR : ${adherent.id}`,
+      `Vous pouvez consulter votre profil ici : ${profilUrl}`,
+      'Vous pouvez aussi présenter le QR Code envoyé ou imprimé au coach.',
+      'Sportivement,',
+      'Le bureau',
+    ].join('\n\n');
+
+    window.location.href = `mailto:${encodeURIComponent(adherent.email)}?subject=${encodeURIComponent(
+      sujet
+    )}&body=${encodeURIComponent(corps)}`;
   }
 
   return (
@@ -45,7 +52,11 @@ export default function QrCodeModal({ adherent, onClose }) {
         <div className="modal-actions">
           <button className="btn-ghost" onClick={onClose}>Fermer</button>
           <button className="btn-ghost" onClick={telechargerPng}>Télécharger le PNG</button>
-          <button onClick={envoyerParMail} disabled={!adherent.email}>
+          <button
+            onClick={envoyerParMail}
+            disabled={!adherent.email}
+            title={!adherent.email ? "Aucun e-mail enregistré pour cet adhérent" : undefined}
+          >
             Envoyer par e-mail
           </button>
         </div>
