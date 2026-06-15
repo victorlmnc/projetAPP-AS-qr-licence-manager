@@ -1,7 +1,9 @@
 import nodemailer from 'nodemailer';
 import { createClient } from '@supabase/supabase-js';
 
-const LIMITE_PAR_JOUR = 450;
+// Petit batch par appel pour rester sous le timeout Vercel (10s).
+// Le client boucle jusqu'à remaining === 0, avec une limite de 450/jour côté BDD.
+const LIMITE_PAR_APPEL = 15;
 
 const transporter = nodemailer.createTransport({
   host: 'smtp.gmail.com',
@@ -98,9 +100,9 @@ export default async function handler(req, res) {
   }
 
   const totalRestant = adherents.length;
-  const batch = adherents.slice(0, LIMITE_PAR_JOUR);
+  const batch = adherents.slice(0, LIMITE_PAR_APPEL);
   const baseUrl = `https://${req.headers.host}`;
-  const results = { sent: 0, remaining: Math.max(0, totalRestant - LIMITE_PAR_JOUR), errors: [] };
+  const results = { sent: 0, remaining: Math.max(0, totalRestant - LIMITE_PAR_APPEL), errors: [] };
 
   const idEnvoyes = [];
 

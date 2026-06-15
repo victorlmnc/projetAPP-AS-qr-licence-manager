@@ -39,7 +39,8 @@ export default function BureauDashboard() {
   const [importOuvert, setImportOuvert] = useState(false);
 
   // État de l'envoi groupé des QR codes
-  const [envoi, setEnvoi] = useState(null); // null | 'loading' | { sent, skipped, errors }
+  const [envoi, setEnvoi] = useState(null); // null | 'loading' | { sent, remaining, errors }
+  const [progression, setProgression] = useState(null); // null | { envoyes, total }
 
   // Chargement initial et abonnement Realtime depuis Supabase.
   useEffect(() => {
@@ -157,20 +158,39 @@ export default function BureauDashboard() {
     );
   }
 
-  // Envoie les QR codes par email à tous les adhérents ayant une adresse email.
+  // Envoie les QR codes par lots successifs jusqu'à ce que tout soit parti.
   async function envoyerQrATous() {
     setEnvoi('loading');
+    setProgression({ envoyes: 0, total: null });
+
+    let totalEnvoyes = 0;
+    let total = null;
+    const tousLesErreurs = [];
+
     try {
-      const res = await fetch('/api/send-qr', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({}),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? 'Erreur inconnue');
-      setEnvoi(data);
+      while (true) {
+        const res = await fetch('/api/send-qr', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({}),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error ?? 'Erreur inconnue');
+
+        totalEnvoyes += data.sent;
+        tousLesErreurs.push(...data.errors);
+
+        // On calcule le total dès le premier appel
+        if (total === null) total = totalEnvoyes + data.remaining;
+        setProgression({ envoyes: totalEnvoyes, total });
+
+        if (data.remaining === 0 || data.sent === 0) break;
+      }
+      setEnvoi({ sent: totalEnvoyes, remaining: 0, errors: tousLesErreurs });
     } catch (err) {
-      setEnvoi({ sent: 0, skipped: 0, errors: [{ nom: 'Serveur', raison: err.message }] });
+      setEnvoi({ sent: totalEnvoyes, remaining: null, errors: [{ nom: 'Serveur', raison: err.message }] });
+    } finally {
+      setProgression(null);
     }
   }
 
@@ -241,6 +261,27 @@ export default function BureauDashboard() {
             <button onClick={() => setEditeur({ adherent: null })}>+ Nouvel adhérent</button>
           </div>
         </div>
+
+        {envoi === 'loading' && progression && (
+          <div className="envoi-progress">
+            <div className="envoi-progress__bar">
+              <div
+                className="envoi-progress__fill"
+                style={{
+                  width: progression.total
+                    ? `${Math.round((progression.envoyes / progression.total) * 100)}%`
+                    : '0%',
+                }}
+              />
+            </div>
+            <p className="envoi-progress__label">
+              {progression.envoyes} / {progression.total ?? '…'} emails envoyés
+              {progression.total && (
+                <span className="muted"> · {Math.round((progression.envoyes / progression.total) * 100)}%</span>
+              )}
+            </p>
+          </div>
+        )}
 
         <div className="stats">
           <div className="stat">
