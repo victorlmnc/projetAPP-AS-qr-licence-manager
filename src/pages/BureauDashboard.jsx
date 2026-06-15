@@ -50,6 +50,12 @@ export default function BureauDashboard() {
     [adherents]
   );
 
+  // Nombre d'emails envoyés aujourd'hui (pour la limite journalière Gmail de 500).
+  const envoiesAujourdhui = useMemo(() => {
+    const aujourd = new Date().toISOString().slice(0, 10);
+    return adherents.filter((a) => a.qr_envoye_le?.startsWith(aujourd)).length;
+  }, [adherents]);
+
   // Chargement initial et abonnement Realtime depuis Supabase.
   useEffect(() => {
     async function charger() {
@@ -267,6 +273,9 @@ export default function BureauDashboard() {
             </button>
             <button onClick={() => setEditeur({ adherent: null })}>+ Nouvel adhérent</button>
           </div>
+          <p className="muted small" style={{ textAlign: 'right', marginTop: 6 }}>
+            Limite Gmail : {envoiesAujourdhui} / 500 emails envoyés aujourd'hui
+          </p>
         </div>
 
         {envoi === 'loading' && progression && (

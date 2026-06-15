@@ -3,7 +3,7 @@ import { QRCodeCanvas } from 'qrcode.react';
 
 export default function QrCodeModal({ adherent, onClose }) {
   const wrapRef = useRef(null);
-  const [envoi, setEnvoi] = useState(null); // null | 'loading' | 'ok' | 'error'
+  const [envoi, setEnvoi] = useState(null); // null | 'loading' | 'ok' | { error: string }
 
   function telechargerPng() {
     const canvas = wrapRef.current?.querySelector('canvas');
@@ -25,9 +25,11 @@ export default function QrCodeModal({ adherent, onClose }) {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? 'Erreur inconnue');
+      if (data.errors?.length > 0) throw new Error(data.errors[0].raison);
+      if (data.sent === 0) throw new Error('Email non envoyé (vérifiez la config Gmail)');
       setEnvoi('ok');
-    } catch {
-      setEnvoi('error');
+    } catch (err) {
+      setEnvoi({ error: err.message });
     }
   }
 
@@ -48,9 +50,9 @@ export default function QrCodeModal({ adherent, onClose }) {
             Email envoyé à {adherent.email}
           </p>
         )}
-        {envoi === 'error' && (
-          <p className="error" style={{ textAlign: 'center', margin: '8px 0 0' }}>
-            Échec de l'envoi. Vérifiez la configuration email.
+        {envoi?.error && (
+          <p className="error" style={{ textAlign: 'center', margin: '8px 0 0', fontSize: 13 }}>
+            Échec : {envoi.error}
           </p>
         )}
 
