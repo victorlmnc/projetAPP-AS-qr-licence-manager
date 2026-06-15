@@ -260,6 +260,12 @@
   color: #fff;
 }
 
+.btn-ghost.btn-danger {
+  background: transparent;
+  color: var(--ko);
+  border-color: #f2b8b2;
+}
+
 .btn-danger:disabled { opacity: 0.6; }
 
 /* ---------- QR Code ---------- */

@@ -7,6 +7,7 @@ import AdherentEditor from '../components/AdherentEditor';
 import QrCodeModal from '../components/QrCodeModal';
 import ImportCsvModal from '../components/ImportCsvModal';
 import ChangePasswordModal from '../components/ChangePasswordModal';
+import ResetAdherentsModal from '../components/ResetAdherentsModal';
 import './BureauDashboard.css';
 
 // Liste des filtres. `test(adherent)` renvoie true si l'adhérent doit
@@ -38,6 +39,7 @@ export default function BureauDashboard() {
   const [qrAdherent, setQrAdherent] = useState(null);
   const [importOuvert, setImportOuvert] = useState(false);
   const [mdpOuvert, setMdpOuvert] = useState(false);
+  const [resetOuvert, setResetOuvert] = useState(false);
 
   // Chargement initial depuis Supabase.
   useEffect(() => {
@@ -162,6 +164,9 @@ export default function BureauDashboard() {
             <button className="btn-ghost" onClick={exporterCsv} disabled={liste.length === 0}>
               Exporter en CSV
             </button>
+            <button className="btn-ghost btn-danger" onClick={() => setResetOuvert(true)}>
+              Réinitialiser les comptes adhérents
+            </button>
             <button onClick={() => setEditeur({ adherent: null })}>+ Nouvel adhérent</button>
           </div>
         </div>
@@ -267,6 +272,13 @@ export default function BureauDashboard() {
       )}
 
       {mdpOuvert && <ChangePasswordModal onClose={() => setMdpOuvert(false)} />}
+
+      {resetOuvert && (
+        <ResetAdherentsModal
+          onClose={() => setResetOuvert(false)}
+          onReset={() => setAdherents([])}
+        />
+      )}
     </div>
   );
 }
