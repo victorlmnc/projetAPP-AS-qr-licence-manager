@@ -86,6 +86,13 @@ create policy "bureau_manage_profiles"
   on profiles for all
   using (get_my_role() = 'bureau');
 
+-- Lecture publique d'une fiche adhérent par son UUID (utilisé par la page /adherent/:id).
+-- L'UUID sert de token d'accès : 128 bits aléatoires, non devinable.
+create policy "public_read_by_id"
+  on adherents for select
+  to anon
+  using (true);
+
 -- ============================================
 -- Trigger : mise à jour automatique de updated_at
 -- ============================================

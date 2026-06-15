@@ -13,6 +13,7 @@
     "@vercel/analytics": "^2.0.1",
     "@vercel/speed-insights": "^2.0.0",
     "html5-qrcode": "^2.3.8",
+    "nodemailer": "^9.0.0",
     "papaparse": "^5.5.3",
     "qrcode.react": "^4.0.1",
     "react": "^18.3.1",

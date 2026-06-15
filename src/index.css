@@ -479,6 +479,70 @@ button:disabled {
   margin-top: 28px;
 }
 
+/* ---------- Page publique adhérent (/adherent/:id) ---------- */
+.pub-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 16px;
+}
+
+.pub-card {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: 32px 28px;
+  width: 100%;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.pub-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+}
+
+.pub-logo {
+  width: 52px;
+  height: 52px;
+  object-fit: contain;
+  border-radius: 10px;
+}
+
+.pub-name {
+  margin: 0;
+  font-size: 1.25em;
+}
+
+.pub-sub {
+  margin: 2px 0 0 0;
+  font-size: 13px;
+}
+
+.pub-qr {
+  background: white;
+  padding: 16px;
+  border-radius: var(--radius);
+  border: 1.5px solid var(--line);
+}
+
+.pub-hint {
+  font-size: 13.5px;
+  text-align: center;
+  margin: 0;
+}
+
+.pub-dl {
+  width: 100%;
+  text-align: center;
+}
+
 /* ---------- Custom Scrollbar ---------- */
 ::-webkit-scrollbar {
   width: 8px;
