@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { QRCodeCanvas } from 'qrcode.react';
 import { supabase } from '../lib/supabase';
 import { calculerStatutLicence } from '../lib/licence';
+import { nomComplet, reparerTexte } from '../lib/texte';
 import StatusBanner from '../components/StatusBanner';
 
 export default function AdherentPublic() {
@@ -35,7 +36,7 @@ export default function AdherentPublic() {
     if (!canvas) return;
     const lien = document.createElement('a');
     lien.href = canvas.toDataURL('image/png');
-    lien.download = `qr-licence-${adherent.nom}-${adherent.prenom}.png`;
+    lien.download = `qr-licence-${reparerTexte(adherent.nom)}-${reparerTexte(adherent.prenom)}.png`;
     lien.click();
   }
 
@@ -65,7 +66,7 @@ export default function AdherentPublic() {
         <div className="pub-header">
           <img src="/logo.png" alt="Logo AS" className="pub-logo" />
           <div>
-            <h2 className="pub-name">{adherent.prenom} {adherent.nom}</h2>
+            <h2 className="pub-name">{nomComplet(adherent)}</h2>
             <p className="muted pub-sub">Association Sportive</p>
           </div>
         </div>

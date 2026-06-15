@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { nomComplet, reparerTexte } from '../lib/texte';
 
 // Modale de confirmation avant l'envoi groupé des QR codes.
 // `adherents` = liste des adhérents éligibles (email présent, pas encore reçu le QR).
@@ -12,8 +13,8 @@ export default function EnvoiQrModal({ adherents, onClose, onConfirm }) {
     if (!q) return adherents;
     return adherents.filter(
       (a) =>
-        a.nom.toLowerCase().includes(q) ||
-        a.prenom.toLowerCase().includes(q) ||
+        reparerTexte(a.nom).toLowerCase().includes(q) ||
+        reparerTexte(a.prenom).toLowerCase().includes(q) ||
         (a.email ?? '').toLowerCase().includes(q)
     );
   }, [adherents, recherche]);
@@ -88,7 +89,7 @@ export default function EnvoiQrModal({ adherents, onClose, onConfirm }) {
                 onChange={() => toggle(a.id)}
               />
               <span className="envoi-item__name">
-                {a.prenom} {a.nom}
+                {nomComplet(a)}
               </span>
               <span className="muted small envoi-item__email">{a.email}</span>
             </label>

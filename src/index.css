@@ -37,6 +37,7 @@
 
 html {
   min-height: 100%;
+  background: #f6f1f8;
 }
 
 body {
@@ -48,6 +49,9 @@ body {
     linear-gradient(135deg, rgba(255, 122, 89, 0.12) 0 14%, transparent 14% 100%),
     linear-gradient(315deg, rgba(244, 91, 157, 0.11) 0 18%, transparent 18% 100%),
     linear-gradient(180deg, #fffaf2 0%, #f7f0fb 46%, #f1e8f8 100%);
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+  background-size: 100vw 100vh;
   line-height: 1.5;
 }
 

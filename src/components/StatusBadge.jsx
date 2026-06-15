@@ -5,7 +5,7 @@ export default function StatusBadge({ adherent }) {
 
   return (
     <span className={`status-badge ${valide ? 'status-badge--ok' : 'status-badge--ko'}`}>
-      {valide ? 'A jour' : 'Non a jour'}
+      {valide ? 'À jour' : 'Non à jour'}
     </span>
   );
 }

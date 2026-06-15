@@ -27,18 +27,18 @@ export default function SettingsModal({ onClose }) {
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal settings-modal" onClick={(e) => e.stopPropagation()}>
-        <h3>Parametres</h3>
+        <h3>Paramètres</h3>
 
         <div className="settings-actions">
           <button type="button" className="btn-ghost settings-action" onClick={() => setAction('password')}>
             <span className="settings-action__title">Modifier mon mot de passe</span>
-            <span className="settings-action__text">Changer le mot de passe du compte connecte.</span>
+            <span className="settings-action__text">Changer le mot de passe du compte connecté.</span>
           </button>
 
           {role === 'bureau' && (
             <button type="button" className="btn-ghost settings-action settings-action--danger" onClick={() => setAction('reset')}>
-              <span className="settings-action__title">Reinitialiser les adherents</span>
-              <span className="settings-action__text">Supprimer toutes les fiches adherents apres confirmation.</span>
+              <span className="settings-action__title">Réinitialiser les adhérents</span>
+              <span className="settings-action__text">Supprimer toutes les fiches adhérents après confirmation.</span>
             </button>
           )}
         </div>

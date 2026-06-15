@@ -8,6 +8,7 @@ import AdherentEditor from '../components/AdherentEditor';
 import QrCodeModal from '../components/QrCodeModal';
 import ImportCsvModal from '../components/ImportCsvModal';
 import EnvoiQrModal from '../components/EnvoiQrModal';
+import { nomComplet, reparerTexte } from '../lib/texte';
 import './BureauDashboard.css';
 
 // Liste des filtres. `test(adherent)` renvoie true si l'adhérent doit
@@ -119,8 +120,8 @@ export default function BureauDashboard() {
       .filter((a) => filtres.every((f) => f.test(a)))
       .filter((a) =>
         !q ||
-        a.nom.toLowerCase().includes(q) ||
-        a.prenom.toLowerCase().includes(q) ||
+        reparerTexte(a.nom).toLowerCase().includes(q) ||
+        reparerTexte(a.prenom).toLowerCase().includes(q) ||
         a.email?.toLowerCase().includes(q)
       );
   }, [adherents, filtresActifs, recherche]);
@@ -225,8 +226,8 @@ export default function BureauDashboard() {
     const lignes = liste.map((adherent) => {
       const statut = calculerStatutLicence(adherent);
       return [
-        adherent.prenom,
-        adherent.nom,
+        reparerTexte(adherent.prenom),
+        reparerTexte(adherent.nom),
         adherent.email ?? '',
         statut.valide ? 'À jour' : 'Non à jour',
         statut.anomalies.join(' | '),
@@ -361,7 +362,7 @@ export default function BureauDashboard() {
                     return (
                       <tr key={a.id}>
                         <td>
-                          <strong>{a.prenom} {a.nom}</strong>
+                          <strong>{nomComplet(a)}</strong>
                           {a.email && <div className="muted small">{a.email}</div>}
                         </td>
                         <td><StatusBadge adherent={a} /></td>
@@ -434,7 +435,7 @@ export default function BureauDashboard() {
                 <p className="error">{envoi.errors.length} échec(s) :</p>
                 <ul style={{ margin: '4px 0', paddingLeft: 20 }}>
                   {envoi.errors.map((e, i) => (
-                    <li key={i} className="small error">{e.nom} — {e.raison}</li>
+                    <li key={i} className="small error">{reparerTexte(e.nom)} — {e.raison}</li>
                   ))}
                 </ul>
               </>

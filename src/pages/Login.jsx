@@ -41,13 +41,13 @@ export default function Login() {
           <img src="/logo.png" alt="Logo AS" />
           <div>
             <span>AS INSA</span>
-            <h1>Controle des licences</h1>
+            <h1>Contrôle des licences</h1>
           </div>
         </div>
 
         {supabaseConfigMissing && (
           <p className="error">
-            Configuration Supabase manquante : creez un fichier .env avec les cles du projet.
+            Configuration Supabase manquante : créez un fichier .env avec les clés du projet.
           </p>
         )}
 

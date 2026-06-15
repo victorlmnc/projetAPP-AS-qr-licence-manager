@@ -5,9 +5,9 @@ export default function StatusBanner({ adherent }) {
 
   return (
     <div className={`banner ${valide ? 'banner--ok' : 'banner--ko'}`}>
-      <p className="banner__eyebrow">{valide ? 'Controle valide' : 'Controle bloque'}</p>
+      <p className="banner__eyebrow">{valide ? 'Contrôle valide' : 'Contrôle bloqué'}</p>
       <p className="banner__title">
-        {valide ? 'Licence a jour' : 'Licence non a jour'}
+        {valide ? 'Licence à jour' : 'Licence non à jour'}
       </p>
 
       {!valide && (

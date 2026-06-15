@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import Papa from 'papaparse';
 import { supabase } from '../lib/supabase';
+import { reparerTexte } from '../lib/texte';
 
 // Normalise un en-tête de colonne : minuscules, sans accents, sans espaces autour.
 function normaliser(s) {
@@ -25,12 +26,24 @@ export default function ImportCsvModal({ onClose, onImported }) {
   const [etat, setEtat] = useState(null);
   const [enCours, setEnCours] = useState(false);
 
-  function gererFichier(e) {
+  async function lireCsv(fichier) {
+    const buffer = await fichier.arrayBuffer();
+
+    try {
+      return new TextDecoder('utf-8', { fatal: true }).decode(buffer);
+    } catch {
+      return new TextDecoder('windows-1252').decode(buffer);
+    }
+  }
+
+  async function gererFichier(e) {
     const fichier = e.target.files?.[0];
     if (!fichier) return;
     setEtat(null);
 
-    Papa.parse(fichier, {
+    const contenu = await lireCsv(fichier);
+
+    Papa.parse(contenu, {
       header: true,
       skipEmptyLines: true,
       transformHeader: normaliser,
@@ -44,8 +57,8 @@ export default function ImportCsvModal({ onClose, onImported }) {
     let ignorees = 0;
 
     for (const l of lignes) {
-      const nom = (l.nom || '').trim();
-      const prenom = (l.prenom || '').trim();
+      const nom = reparerTexte(l.nom).trim();
+      const prenom = reparerTexte(l.prenom).trim();
       const email = (l.email || '').trim();
 
       // L'e-mail est obligatoire (cohérent avec le formulaire).

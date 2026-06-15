@@ -37,12 +37,12 @@ export default function Header({ titre }) {
           <button
             className="btn-ghost topbar__icon-btn"
             onClick={() => setParametresOuverts(true)}
-            aria-label="Parametres"
-            title="Parametres"
+            aria-label="Paramètres"
+            title="Paramètres"
           >
             {'\u2699'}
           </button>
-          <button className="btn-ghost" onClick={signOut}>Se deconnecter</button>
+          <button className="btn-ghost" onClick={signOut}>Se déconnecter</button>
         </div>
       </header>
 

@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import { QRCodeCanvas } from 'qrcode.react';
+import { nomComplet, reparerTexte } from '../lib/texte';
 
 export default function QrCodeModal({ adherent, onClose }) {
   const wrapRef = useRef(null);
@@ -10,7 +11,7 @@ export default function QrCodeModal({ adherent, onClose }) {
     if (!canvas) return;
     const lien = document.createElement('a');
     lien.href = canvas.toDataURL('image/png');
-    lien.download = `licence-${adherent.nom}-${adherent.prenom}.png`;
+    lien.download = `licence-${reparerTexte(adherent.nom)}-${reparerTexte(adherent.prenom)}.png`;
     lien.click();
   }
 
@@ -36,7 +37,7 @@ export default function QrCodeModal({ adherent, onClose }) {
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal" onClick={(e) => e.stopPropagation()}>
-        <h3>QR Code — {adherent.prenom} {adherent.nom}</h3>
+        <h3>QR Code — {nomComplet(adherent)}</h3>
         <p className="muted">À remettre à l'adhérent (par mail ou imprimé).</p>
 
         <div className="qr-wrap" ref={wrapRef}>

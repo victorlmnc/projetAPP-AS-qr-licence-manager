@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import Header from '../components/Header';
 import StatusBanner from '../components/StatusBanner';
+import { nomComplet } from '../lib/texte';
 import './CoachScan.css';
 
 const READER_ID = 'reader';
@@ -31,7 +32,7 @@ async function nettoyerScanner(scanner) {
   try {
     await scanner.stop();
   } catch {
-    // Le scanner peut deja etre arrete.
+    // Le scanner peut déjà être arrêté.
   }
 
   try {
@@ -70,7 +71,7 @@ export default function CoachScan() {
       .single();
 
     if (error) {
-      setErreur('Adherent introuvable ou QR invalide.');
+      setErreur('Adhérent introuvable ou QR invalide.');
       return;
     }
 
@@ -219,7 +220,7 @@ export default function CoachScan() {
             <div className="scan-result__identity">
               <span className="muted">Adhérent contrôlé</span>
               <strong>
-                {adherent.prenom} {adherent.nom}
+                {nomComplet(adherent)}
               </strong>
               {adherent.email && <span>{adherent.email}</span>}
             </div>

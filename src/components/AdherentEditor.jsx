@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { calculerStatutLicence } from '../lib/licence';
+import { nomComplet, reparerTexte } from '../lib/texte';
 
 // Panneau latéral de saisie.
 //   adherent = null  -> mode création
@@ -11,8 +12,8 @@ export default function AdherentEditor({ adherent, onClose, onSaved, onDeleted }
   const creation = !adherent;
 
   const [form, setForm] = useState({
-    nom: adherent?.nom ?? '',
-    prenom: adherent?.prenom ?? '',
+    nom: reparerTexte(adherent?.nom),
+    prenom: reparerTexte(adherent?.prenom),
     email: adherent?.email ?? '',
     fiche_renseignement: adherent?.fiche_renseignement ?? false,
     paiement_global: adherent?.paiement_global ?? false,
@@ -46,8 +47,8 @@ export default function AdherentEditor({ adherent, onClose, onSaved, onDeleted }
 
     // Si le paiement est à jour, les "manque…" n'ont plus de sens : on les remet à false.
     const donnees = {
-      nom: form.nom.trim(),
-      prenom: form.prenom.trim(),
+      nom: reparerTexte(form.nom).trim(),
+      prenom: reparerTexte(form.prenom).trim(),
       email: form.email.trim(),
       fiche_renseignement: form.fiche_renseignement,
       paiement_global: form.paiement_global,
@@ -74,7 +75,7 @@ export default function AdherentEditor({ adherent, onClose, onSaved, onDeleted }
   // Supprime définitivement la fiche, après confirmation.
   async function supprimer() {
     const ok = window.confirm(
-      `Supprimer définitivement la fiche de ${adherent.prenom} ${adherent.nom} ?`
+      `Supprimer définitivement la fiche de ${nomComplet(adherent)} ?`
     );
     if (!ok) return;
 
@@ -94,7 +95,7 @@ export default function AdherentEditor({ adherent, onClose, onSaved, onDeleted }
     <div className="modal-overlay" onClick={onClose}>
       <aside className="editor" onClick={(e) => e.stopPropagation()}>
         <form onSubmit={enregistrer}>
-          <h3>{creation ? 'Nouvel adhérent' : `Modifier — ${adherent.prenom} ${adherent.nom}`}</h3>
+          <h3>{creation ? 'Nouvel adhérent' : `Modifier — ${nomComplet(adherent)}`}</h3>
 
           <div className="editor-grid">
             <label>

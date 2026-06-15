@@ -3,6 +3,7 @@ import { QRCodeCanvas } from 'qrcode.react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import { messageAdherent } from '../lib/licence';
+import { nomComplet } from '../lib/texte';
 import Header from '../components/Header';
 import StatusBanner from '../components/StatusBanner';
 
@@ -83,7 +84,7 @@ export default function AdherentProfile() {
             <div className="profile-heading">
               <div>
                 <h2>
-                  {adherent.prenom} {adherent.nom}
+                  {nomComplet(adherent)}
                 </h2>
                 <p>{messageAdherent(adherent)}</p>
               </div>
