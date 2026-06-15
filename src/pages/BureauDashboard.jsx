@@ -286,9 +286,7 @@ export default function BureauDashboard() {
             </button>
             <button onClick={() => setEditeur({ adherent: null })}>+ Nouvel adhérent</button>
           </div>
-          <p className="muted small" style={{ textAlign: 'right', marginTop: 6 }}>
-            Limite Gmail : {envoiesAujourdhui} / 500 emails envoyés aujourd'hui
-          </p>
+
         </div>
 
         {envoi === 'loading' && progression && (
