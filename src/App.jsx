@@ -4,7 +4,6 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Login from './pages/Login';
 import BureauDashboard from './pages/BureauDashboard';
 import CoachScan from './pages/CoachScan';
-import AdherentProfile from './pages/AdherentProfile';
 import AdherentPublic from './pages/AdherentPublic';
 
 // Page "/" : envoie chacun vers l'écran de son rôle.
@@ -16,7 +15,6 @@ function Home() {
 
   if (role === 'bureau') return <Navigate to="/bureau" replace />;
   if (role === 'coach') return <Navigate to="/scan" replace />;
-  if (role === 'adherent') return <Navigate to="/profil" replace />;
 
   return (
     <p className="centered">
@@ -49,15 +47,6 @@ export default function App() {
               </ProtectedRoute>
             }
           />
-          <Route
-            path="/profil"
-            element={
-              <ProtectedRoute allow={['adherent']}>
-                <AdherentProfile />
-              </ProtectedRoute>
-            }
-          />
-
           {/* Page publique : QR code + statut, sans login requis */}
           <Route path="/adherent/:id" element={<AdherentPublic />} />
 

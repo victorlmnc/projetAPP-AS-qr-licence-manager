@@ -2,12 +2,8 @@ import { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { calculerStatutLicence } from '../lib/licence';
 import { nomComplet, reparerTexte } from '../lib/texte';
+import ConfirmDialog from './ConfirmDialog';
 
-// Panneau latéral de saisie.
-//   adherent = null  -> mode création
-//   adherent = objet -> mode mise à jour rapide
-// onSaved(adherentEnregistré) est appelé après succès (insert ou update).
-// onDeleted(id) est appelé après une suppression réussie.
 export default function AdherentEditor({ adherent, onClose, onSaved, onDeleted }) {
   const creation = !adherent;
 
@@ -24,12 +20,12 @@ export default function AdherentEditor({ adherent, onClose, onSaved, onDeleted }
   const [erreur, setErreur] = useState(null);
   const [enCours, setEnCours] = useState(false);
   const [suppression, setSuppression] = useState(false);
+  const [confirmationSuppression, setConfirmationSuppression] = useState(false);
 
   function set(champ, valeur) {
     setForm((f) => ({ ...f, [champ]: valeur }));
   }
 
-  // Aperçu en direct : on rejoue la logique partagée sur l'état du formulaire.
   const apercu = calculerStatutLicence(form);
 
   async function enregistrer(e) {
@@ -37,15 +33,14 @@ export default function AdherentEditor({ adherent, onClose, onSaved, onDeleted }
     setErreur(null);
 
     if (!form.nom.trim() || !form.prenom.trim() || !form.email.trim()) {
-      setErreur('Le nom, le prénom et l’e-mail sont obligatoires.');
+      setErreur("Le nom, le prenom et l'e-mail sont obligatoires.");
       return;
     }
     if (!form.email.includes('@')) {
-      setErreur('L’e-mail ne semble pas valide.');
+      setErreur("L'e-mail ne semble pas valide.");
       return;
     }
 
-    // Si le paiement est à jour, les "manque…" n'ont plus de sens : on les remet à false.
     const donnees = {
       nom: reparerTexte(form.nom).trim(),
       prenom: reparerTexte(form.prenom).trim(),
@@ -72,34 +67,29 @@ export default function AdherentEditor({ adherent, onClose, onSaved, onDeleted }
     onSaved(data);
   }
 
-  // Supprime définitivement la fiche, après confirmation.
   async function supprimer() {
-    const ok = window.confirm(
-      `Supprimer définitivement la fiche de ${nomComplet(adherent)} ?`
-    );
-    if (!ok) return;
-
     setErreur(null);
     setSuppression(true);
     const { error } = await supabase.from('adherents').delete().eq('id', adherent.id);
     setSuppression(false);
+    setConfirmationSuppression(false);
 
     if (error) {
       setErreur('Suppression impossible : ' + error.message);
       return;
     }
-    onDeleted(adherent.id);
+    onDeleted(adherent);
   }
 
   return (
     <div className="modal-overlay" onClick={onClose}>
       <aside className="editor" onClick={(e) => e.stopPropagation()}>
         <form onSubmit={enregistrer}>
-          <h3>{creation ? 'Nouvel adhérent' : `Modifier — ${nomComplet(adherent)}`}</h3>
+          <h3>{creation ? 'Nouvel adherent' : `Modifier - ${nomComplet(adherent)}`}</h3>
 
           <div className="editor-grid">
             <label>
-              Prénom
+              Prenom
               <input type="text" value={form.prenom}
                      onChange={(e) => set('prenom', e.target.value)} />
             </label>
@@ -121,23 +111,22 @@ export default function AdherentEditor({ adherent, onClose, onSaved, onDeleted }
           <label className="check">
             <input type="checkbox" checked={form.fiche_renseignement}
                    onChange={(e) => set('fiche_renseignement', e.target.checked)} />
-            Fiche de renseignement à jour
+            Fiche de renseignement a jour
           </label>
 
           <label className="check">
             <input type="checkbox" checked={form.paiement_global}
                    onChange={(e) => set('paiement_global', e.target.checked)} />
-            Paiement global à jour
+            Paiement global a jour
           </label>
 
-          {/* Détail des manques : visible uniquement si le paiement n'est PAS à jour */}
           {!form.paiement_global && (
             <fieldset className="manques">
               <legend>Ce qu'il manque :</legend>
               <label className="check">
                 <input type="checkbox" checked={form.manque_paiement}
                        onChange={(e) => set('manque_paiement', e.target.checked)} />
-                Paiement (chèque, espèces, CB…)
+                Paiement (cheque, especes, CB...)
               </label>
               <label className="check">
                 <input type="checkbox" checked={form.manque_yeps}
@@ -152,9 +141,8 @@ export default function AdherentEditor({ adherent, onClose, onSaved, onDeleted }
             </fieldset>
           )}
 
-          {/* Aperçu du statut qui sera enregistré */}
           <div className={`apercu ${apercu.valide ? 'apercu--ok' : 'apercu--ko'}`}>
-            Statut résultant : <strong>{apercu.valide ? 'À jour' : 'Non à jour'}</strong>
+            Statut resultant : <strong>{apercu.valide ? 'A jour' : 'Non a jour'}</strong>
           </div>
 
           {erreur && <p className="error">{erreur}</p>}
@@ -162,25 +150,36 @@ export default function AdherentEditor({ adherent, onClose, onSaved, onDeleted }
           <div className="modal-actions">
             <button type="button" className="btn-ghost" onClick={onClose}>Annuler</button>
             <button type="submit" disabled={enCours}>
-              {enCours ? 'Enregistrement…' : creation ? 'Créer' : 'Enregistrer'}
+              {enCours ? 'Enregistrement...' : creation ? 'Creer' : 'Enregistrer'}
             </button>
           </div>
         </form>
 
-        {/* Suppression : disponible uniquement en mode édition */}
         {!creation && (
           <div className="editor-danger">
             <button
               type="button"
               className="btn-danger"
-              onClick={supprimer}
+              onClick={() => setConfirmationSuppression(true)}
               disabled={suppression}
             >
-              {suppression ? 'Suppression…' : 'Supprimer cet adhérent'}
+              {suppression ? 'Suppression...' : 'Supprimer cet adherent'}
             </button>
           </div>
         )}
       </aside>
+
+      {confirmationSuppression && (
+        <ConfirmDialog
+          danger
+          loading={suppression}
+          title="Supprimer cet adherent ?"
+          message={`La fiche de ${nomComplet(adherent)} sera supprimee. Vous pourrez annuler depuis l'historique recent tant que la page reste ouverte.`}
+          confirmLabel="Supprimer"
+          onCancel={() => setConfirmationSuppression(false)}
+          onConfirm={supprimer}
+        />
+      )}
     </div>
   );
 }

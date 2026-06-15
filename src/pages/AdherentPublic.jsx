@@ -3,33 +3,74 @@ import { useParams } from 'react-router-dom';
 import { QRCodeCanvas } from 'qrcode.react';
 import { supabase } from '../lib/supabase';
 import { calculerStatutLicence } from '../lib/licence';
+import { publicAdherentUrl } from '../lib/publicAccess';
 import { nomComplet, reparerTexte } from '../lib/texte';
 import StatusBanner from '../components/StatusBanner';
 
+async function chargerAdherentPublic(token) {
+  const res = await fetch(`/api/public-adherent?token=${encodeURIComponent(token)}`);
+  const contentType = res.headers.get('content-type') || '';
+
+  if (res.ok && contentType.includes('application/json')) {
+    return res.json();
+  }
+
+  if (!import.meta.env.DEV) {
+    const body = contentType.includes('application/json') ? await res.json() : {};
+    throw new Error(body.error || 'Aucun adherent trouve pour ce QR Code.');
+  }
+
+  // En dev Vite simple, les fonctions Vercel /api ne tournent pas. On garde un fallback local.
+  let fallback = await supabase
+    .from('adherents')
+    .select('id, public_token, nom, prenom, fiche_renseignement, paiement_global, manque_paiement, manque_yeps, manque_passport')
+    .eq('public_token', token)
+    .maybeSingle();
+
+  if (!fallback.data && !fallback.error) {
+    fallback = await supabase
+      .from('adherents')
+      .select('id, public_token, nom, prenom, fiche_renseignement, paiement_global, manque_paiement, manque_yeps, manque_passport')
+      .eq('id', token)
+      .maybeSingle();
+  }
+
+  if (fallback.error || !fallback.data) {
+    throw new Error('Aucun adherent trouve pour ce QR Code.');
+  }
+
+  return fallback.data;
+}
+
 export default function AdherentPublic() {
-  const { id } = useParams();
+  const { id: token } = useParams();
   const [adherent, setAdherent] = useState(null);
   const [chargement, setChargement] = useState(true);
   const [erreur, setErreur] = useState(null);
   const qrRef = useRef(null);
 
   useEffect(() => {
-    async function charger() {
-      const { data, error } = await supabase
-        .from('adherents')
-        .select('*')
-        .eq('id', id)
-        .single();
+    let annule = false;
 
-      if (error || !data) {
-        setErreur('Aucun adhérent trouvé pour ce QR Code.');
-      } else {
-        setAdherent(data);
+    async function charger() {
+      setChargement(true);
+      setErreur(null);
+
+      try {
+        const data = await chargerAdherentPublic(token);
+        if (!annule) setAdherent(data);
+      } catch (err) {
+        if (!annule) setErreur(err.message);
+      } finally {
+        if (!annule) setChargement(false);
       }
-      setChargement(false);
     }
+
     charger();
-  }, [id]);
+    return () => {
+      annule = true;
+    };
+  }, [token]);
 
   function telechargerQr() {
     const canvas = qrRef.current?.querySelector('canvas');
@@ -43,7 +84,7 @@ export default function AdherentPublic() {
   if (chargement) {
     return (
       <div className="pub-page">
-        <p className="centered">Chargement…</p>
+        <p className="centered">Chargement...</p>
       </div>
     );
   }
@@ -52,39 +93,42 @@ export default function AdherentPublic() {
     return (
       <div className="pub-page">
         <div className="pub-card">
-          <p className="error" style={{ textAlign: 'center', padding: '24px' }}>{erreur}</p>
+          <p className="error pub-error">{erreur}</p>
         </div>
       </div>
     );
   }
 
   const { valide } = calculerStatutLicence(adherent);
+  const lienPublic = publicAdherentUrl(adherent);
 
   return (
     <div className="pub-page">
       <div className="pub-card">
-        <div className="pub-header">
+        <div className="pub-header pub-header--center">
           <img src="/logo.png" alt="Logo AS" className="pub-logo" />
-          <div>
-            <h2 className="pub-name">{nomComplet(adherent)}</h2>
-            <p className="muted pub-sub">Association Sportive</p>
-          </div>
+          <p className="muted pub-sub">Association Sportive</p>
+        </div>
+
+        <div className="pub-identity">
+          <span className="pub-label">Licence de</span>
+          <h1 className="pub-name">{nomComplet(adherent)}</h1>
         </div>
 
         <StatusBanner adherent={adherent} />
 
         <div className="pub-qr" ref={qrRef}>
-          <QRCodeCanvas value={adherent.id} size={200} />
+          <QRCodeCanvas value={lienPublic} size={210} />
         </div>
 
         <p className="muted pub-hint">
           {valide
-            ? 'Présentez ce QR Code au responsable sportif pour valider votre participation.'
-            : 'Votre licence est incomplète. Contactez le bureau pour régulariser votre situation.'}
+            ? 'Nom et statut a verifier par le coach avant participation.'
+            : 'Licence incomplete : merci de contacter le bureau pour regulariser.'}
         </p>
 
         <button className="btn-ghost pub-dl" onClick={telechargerQr}>
-          Télécharger le QR Code
+          Telecharger le QR Code
         </button>
       </div>
     </div>

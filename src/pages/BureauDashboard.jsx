@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '../lib/supabase';
-import { useAuth } from '../context/AuthContext';
 import { calculerStatutLicence } from '../lib/licence';
 import Header from '../components/Header';
 import StatusBadge from '../components/StatusBadge';
@@ -11,20 +10,41 @@ import EnvoiQrModal from '../components/EnvoiQrModal';
 import { nomComplet, reparerTexte } from '../lib/texte';
 import './BureauDashboard.css';
 
-// Liste des filtres. `test(adherent)` renvoie true si l'adhérent doit
-// apparaître quand ce filtre est actif.
 const FILTRES = [
   { cle: 'tous', libelle: 'Tous', test: () => true },
-  { cle: 'a_jour', libelle: 'À jour', test: (a) => calculerStatutLicence(a).valide },
-  { cle: 'non_a_jour', libelle: 'Non à jour', test: (a) => !calculerStatutLicence(a).valide },
+  { cle: 'a_jour', libelle: 'A jour', test: (a) => calculerStatutLicence(a).valide },
+  { cle: 'non_a_jour', libelle: 'Non a jour', test: (a) => !calculerStatutLicence(a).valide },
   { cle: 'fiche', libelle: 'Fiche manquante', test: (a) => !a.fiche_renseignement },
   { cle: 'yeps', libelle: 'Manque YEPS', test: (a) => a.manque_yeps },
   { cle: 'passport', libelle: "Manque PASS'SPORT", test: (a) => a.manque_passport },
   { cle: 'paiement', libelle: 'Manque paiement', test: (a) => a.manque_paiement },
 ];
 
+const HISTORIQUE_MAX = 8;
+
 function champCsv(valeur) {
   return `"${String(valeur ?? '').replace(/"/g, '""')}"`;
+}
+
+function trierAdherents(liste) {
+  return [...liste].sort((a, b) => reparerTexte(a.nom).localeCompare(reparerTexte(b.nom)));
+}
+
+function identifiantAction() {
+  return globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random()}`;
+}
+
+function champsModifiables(adherent) {
+  return {
+    nom: adherent.nom,
+    prenom: adherent.prenom,
+    email: adherent.email ?? null,
+    fiche_renseignement: !!adherent.fiche_renseignement,
+    paiement_global: !!adherent.paiement_global,
+    manque_paiement: !!adherent.manque_paiement,
+    manque_yeps: !!adherent.manque_yeps,
+    manque_passport: !!adherent.manque_passport,
+  };
 }
 
 export default function BureauDashboard() {
@@ -35,29 +55,15 @@ export default function BureauDashboard() {
   const [recherche, setRecherche] = useState('');
   const [filtresActifs, setFiltresActifs] = useState([]);
 
-  // editeur : null = fermé ; { adherent: objet } = édition ; { adherent: null } = création
   const [editeur, setEditeur] = useState(null);
   const [qrAdherent, setQrAdherent] = useState(null);
   const [importOuvert, setImportOuvert] = useState(false);
+  const [historique, setHistorique] = useState([]);
+  const [annulationId, setAnnulationId] = useState(null);
+  const [envoi, setEnvoi] = useState(null);
+  const [envoiModal, setEnvoiModal] = useState(null);
+  const [progression, setProgression] = useState(null);
 
-  // État de l'envoi groupé des QR codes
-  const [envoiModalOuvert, setEnvoiModalOuvert] = useState(false);
-  const [envoi, setEnvoi] = useState(null); // null | 'loading' | { sent, remaining, errors }
-  const [progression, setProgression] = useState(null); // null | { envoyes, total }
-
-  // Adhérents éligibles à l'envoi : email présent + jamais reçu le QR
-  const adherentsEligibles = useMemo(
-    () => adherents.filter((a) => a.email && !a.qr_envoye_le),
-    [adherents]
-  );
-
-  // Nombre d'emails envoyés aujourd'hui (pour la limite journalière Gmail de 500).
-  const envoiesAujourdhui = useMemo(() => {
-    const aujourd = new Date().toISOString().slice(0, 10);
-    return adherents.filter((a) => a.qr_envoye_le?.startsWith(aujourd)).length;
-  }, [adherents]);
-
-  // Chargement initial et abonnement Realtime depuis Supabase.
   useEffect(() => {
     async function charger() {
       const { data, error } = await supabase
@@ -81,14 +87,11 @@ export default function BureauDashboard() {
             const nv = payload.new;
             setAdherents((prev) => {
               if (prev.some((a) => a.id === nv.id)) return prev;
-              return [...prev, nv].sort((a, b) => a.nom.localeCompare(b.nom));
+              return trierAdherents([...prev, nv]);
             });
           } else if (payload.eventType === 'UPDATE') {
             const nv = payload.new;
-            setAdherents((prev) => {
-              const maj = prev.map((a) => (a.id === nv.id ? nv : a));
-              return maj.sort((a, b) => a.nom.localeCompare(b.nom));
-            });
+            setAdherents((prev) => trierAdherents(prev.map((a) => (a.id === nv.id ? nv : a))));
           } else if (payload.eventType === 'DELETE') {
             const anc = payload.old;
             setAdherents((prev) => prev.filter((a) => a.id !== anc.id));
@@ -102,10 +105,20 @@ export default function BureauDashboard() {
     };
   }, []);
 
-  // Liste affichée = filtres actifs + recherche texte.
   useEffect(() => {
-    function handleReset() {
-      setAdherents([]);
+    function handleReset(event) {
+      const deletedFromEvent = event.detail?.deleted;
+      setAdherents((prev) => {
+        const deleted = Array.isArray(deletedFromEvent) ? deletedFromEvent : prev;
+        if (deleted.length > 0) {
+          ajouterAction({
+            type: 'reset',
+            label: `Reinitialisation de ${deleted.length} adherent(s)`,
+            deleted,
+          });
+        }
+        return [];
+      });
     }
 
     window.addEventListener('adherents:reset', handleReset);
@@ -115,7 +128,7 @@ export default function BureauDashboard() {
   const liste = useMemo(() => {
     const norm = (s) =>
       reparerTexte(String(s ?? ''))
-        .normalize('NFD').replace(/[̀-ͯ]/g, '')
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
         .replace(/\s+/g, ' ')
         .toLowerCase()
         .trim();
@@ -138,7 +151,6 @@ export default function BureauDashboard() {
       });
   }, [adherents, filtresActifs, recherche]);
 
-  // Statistiques globales (sur tous les adhérents, pas seulement la liste filtrée).
   const stats = useMemo(() => {
     let aJour = 0;
     for (const a of adherents) {
@@ -147,29 +159,72 @@ export default function BureauDashboard() {
     return { total: adherents.length, aJour, nonAJour: adherents.length - aJour };
   }, [adherents]);
 
-  // Après création/mise à jour : on rafraîchit la liste localement (sans recharger).
+  const relancesPossibles = useMemo(
+    () => adherents.filter((a) => !calculerStatutLicence(a).valide && a.email),
+    [adherents]
+  );
+
+  const adherentsEligibles = useMemo(
+    () => adherents.filter((a) => a.email && !a.qr_envoye_le),
+    [adherents]
+  );
+
+  function ajouterAction(action) {
+    setHistorique((prev) => [
+      {
+        id: identifiantAction(),
+        date: new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
+        undone: false,
+        ...action,
+      },
+      ...prev,
+    ].slice(0, HISTORIQUE_MAX));
+  }
+
   function onSaved(adherent) {
+    const avant = editeur?.adherent ?? null;
+
     setAdherents((prev) => {
       const existe = prev.some((a) => a.id === adherent.id);
-      const maj = existe
-        ? prev.map((a) => (a.id === adherent.id ? adherent : a))
-        : [...prev, adherent];
-      return maj.sort((a, b) => a.nom.localeCompare(b.nom));
+      const maj = existe ? prev.map((a) => (a.id === adherent.id ? adherent : a)) : [...prev, adherent];
+      return trierAdherents(maj);
+    });
+
+    ajouterAction(
+      avant
+        ? {
+            type: 'update',
+            label: `Modification de ${nomComplet(adherent)}`,
+            before: avant,
+            after: adherent,
+          }
+        : {
+            type: 'create',
+            label: `Creation de ${nomComplet(adherent)}`,
+            created: adherent,
+          }
+    );
+
+    setEditeur(null);
+  }
+
+  function onDeleted(adherentSupprime) {
+    setAdherents((prev) => prev.filter((a) => a.id !== adherentSupprime.id));
+    ajouterAction({
+      type: 'delete',
+      label: `Suppression de ${nomComplet(adherentSupprime)}`,
+      deleted: adherentSupprime,
     });
     setEditeur(null);
   }
 
-  // Après suppression : on retire la fiche de la liste et on ferme le panneau.
-  function onDeleted(id) {
-    setAdherents((prev) => prev.filter((a) => a.id !== id));
-    setEditeur(null);
-  }
-
-  // Après un import CSV : on ajoute les nouvelles fiches à la liste, triées par nom.
   function onImported(nouveaux) {
-    setAdherents((prev) =>
-      [...prev, ...nouveaux].sort((a, b) => a.nom.localeCompare(b.nom))
-    );
+    setAdherents((prev) => trierAdherents([...prev, ...nouveaux]));
+    ajouterAction({
+      type: 'import',
+      label: `Import de ${nouveaux.length} adherent(s)`,
+      created: nouveaux,
+    });
   }
 
   function basculerFiltre(cle) {
@@ -185,54 +240,129 @@ export default function BureauDashboard() {
     );
   }
 
-  // Envoie les QR codes par lots de 15 pour une liste d'IDs donnée.
-  async function envoyerAvecIds(ids) {
-    setEnvoiModalOuvert(false);
+  function ouvrirEnvoiModal(mode) {
+    const cible = mode === 'reminder' ? relancesPossibles : adherentsEligibles;
+    if (cible.length === 0) return;
+    setEnvoiModal({ mode, adherents: cible });
+  }
+
+  async function envoyerQrSelection(ids) {
+    const mode = envoiModal?.mode ?? 'all';
+    const cible = Array.isArray(ids) ? ids : [];
+    if (cible.length === 0) return;
+
+    setEnvoiModal(null);
     setEnvoi('loading');
-    setProgression({ envoyes: 0, total: ids.length });
+    setProgression({ traites: 0, total: cible.length, envoyes: 0 });
 
     let totalEnvoyes = 0;
-    const tousLesErreurs = [];
-    let i = 0;
+    let totalIgnores = 0;
+    const erreurs = [];
 
     try {
-      while (i < ids.length) {
-        const batch = ids.slice(i, i + 15);
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData.session?.access_token;
+      if (!token) throw new Error('Session bureau introuvable.');
+
+      for (let i = 0; i < cible.length; i += 15) {
+        const batch = cible.slice(i, i + 15);
         const res = await fetch('/api/send-qr', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ adherentIds: batch }),
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            mode: mode === 'reminder' ? 'reminder' : 'all',
+            adherentIds: batch,
+          }),
         });
+
         const data = await res.json();
         if (!res.ok) throw new Error(data.error ?? 'Erreur inconnue');
 
-        totalEnvoyes += data.sent;
-        tousLesErreurs.push(...data.errors);
-        i += batch.length;
-        setProgression({ envoyes: totalEnvoyes, total: ids.length });
+        totalEnvoyes += data.sent ?? 0;
+        totalIgnores += data.skipped ?? 0;
+        erreurs.push(...(data.errors ?? []));
+        setProgression({
+          traites: Math.min(i + batch.length, cible.length),
+          total: cible.length,
+          envoyes: totalEnvoyes,
+        });
       }
-      setEnvoi({ sent: totalEnvoyes, remaining: 0, errors: tousLesErreurs });
+
+      setEnvoi({ sent: totalEnvoyes, skipped: totalIgnores, remaining: 0, errors: erreurs, mode });
     } catch (err) {
-      setEnvoi({ sent: totalEnvoyes, remaining: null, errors: [{ nom: 'Serveur', raison: err.message }] });
+      setEnvoi({
+        sent: totalEnvoyes,
+        skipped: totalIgnores,
+        remaining: null,
+        mode,
+        errors: [{ nom: 'Serveur', raison: err.message }, ...erreurs],
+      });
     } finally {
       setProgression(null);
     }
   }
 
-  // Exporte la liste actuellement affichée (filtre + recherche) au format CSV.
+  async function annulerAction(action) {
+    if (action.undone) return;
+    setErreur(null);
+    setAnnulationId(action.id);
+
+    try {
+      if (action.type === 'create') {
+        const { error } = await supabase.from('adherents').delete().eq('id', action.created.id);
+        if (error) throw error;
+        setAdherents((prev) => prev.filter((a) => a.id !== action.created.id));
+      } else if (action.type === 'update') {
+        const { data, error } = await supabase
+          .from('adherents')
+          .update(champsModifiables(action.before))
+          .eq('id', action.before.id)
+          .select()
+          .single();
+        if (error) throw error;
+        setAdherents((prev) => trierAdherents(prev.map((a) => (a.id === data.id ? data : a))));
+      } else if (action.type === 'delete') {
+        const { data, error } = await supabase.from('adherents').insert(action.deleted).select().single();
+        if (error) throw error;
+        setAdherents((prev) => trierAdherents([...prev.filter((a) => a.id !== data.id), data]));
+      } else if (action.type === 'import') {
+        const ids = action.created.map((a) => a.id);
+        const { error } = await supabase.from('adherents').delete().in('id', ids);
+        if (error) throw error;
+        setAdherents((prev) => prev.filter((a) => !ids.includes(a.id)));
+      } else if (action.type === 'reset') {
+        const { data, error } = await supabase.from('adherents').insert(action.deleted).select();
+        if (error) throw error;
+        setAdherents(trierAdherents(data));
+      }
+
+      setHistorique((prev) =>
+        prev.map((item) => item.id === action.id ? { ...item, undone: true } : item)
+      );
+    } catch (err) {
+      setErreur('Annulation impossible : ' + err.message);
+    } finally {
+      setAnnulationId(null);
+    }
+  }
+
   function exporterCsv() {
     const entetes = [
-      'Prénom',
+      'Prenom',
       'Nom',
       'Email',
       'Statut',
-      'Détail',
+      'Detail',
       'Fiche renseignement',
       'Paiement global',
       'Manque paiement',
       'Manque YEPS',
       "Manque PASS'SPORT",
-      'ID',
+      'Token public',
+      'ID interne',
     ];
 
     const lignes = liste.map((adherent) => {
@@ -241,13 +371,14 @@ export default function BureauDashboard() {
         reparerTexte(adherent.prenom),
         reparerTexte(adherent.nom),
         adherent.email ?? '',
-        statut.valide ? 'À jour' : 'Non à jour',
+        statut.valide ? 'A jour' : 'Non a jour',
         statut.anomalies.join(' | '),
         adherent.fiche_renseignement ? 'Oui' : 'Non',
         adherent.paiement_global ? 'Oui' : 'Non',
         adherent.manque_paiement ? 'Oui' : 'Non',
         adherent.manque_yeps ? 'Oui' : 'Non',
         adherent.manque_passport ? 'Oui' : 'Non',
+        adherent.public_token ?? '',
         adherent.id,
       ].map(champCsv).join(';');
     });
@@ -268,7 +399,7 @@ export default function BureauDashboard() {
 
       <main className="container dash">
         <div className="dash-top">
-          <h2>Adhérents <span className="muted">({adherents.length})</span></h2>
+          <h2>Adherents <span className="muted">({adherents.length})</span></h2>
           <div className="dash-top-actions">
             <button className="btn-ghost" onClick={() => setImportOuvert(true)}>
               Importer CSV
@@ -278,15 +409,21 @@ export default function BureauDashboard() {
             </button>
             <button
               className="btn-ghost"
-              onClick={() => setEnvoiModalOuvert(true)}
+              onClick={() => ouvrirEnvoiModal('all')}
               disabled={envoi === 'loading' || adherentsEligibles.length === 0}
-              title={adherentsEligibles.length === 0 ? 'Tous les adhérents ont déjà reçu leur QR Code' : undefined}
+              title={adherentsEligibles.length === 0 ? 'Tous les adherents avec email ont deja recu leur QR.' : undefined}
             >
-              {envoi === 'loading' ? 'Envoi en cours…' : `Envoyer les QR par email (${adherentsEligibles.length})`}
+              {envoi === 'loading' ? 'Envoi...' : `Envoyer les QR (${adherentsEligibles.length})`}
             </button>
-            <button onClick={() => setEditeur({ adherent: null })}>+ Nouvel adhérent</button>
+            <button
+              className="btn-ghost"
+              onClick={() => ouvrirEnvoiModal('reminder')}
+              disabled={envoi === 'loading' || relancesPossibles.length === 0}
+            >
+              Relancer non a jour ({relancesPossibles.length})
+            </button>
+            <button onClick={() => setEditeur({ adherent: null })}>+ Nouvel adherent</button>
           </div>
-
         </div>
 
         {envoi === 'loading' && progression && (
@@ -296,16 +433,13 @@ export default function BureauDashboard() {
                 className="envoi-progress__fill"
                 style={{
                   width: progression.total
-                    ? `${Math.round((progression.envoyes / progression.total) * 100)}%`
+                    ? `${Math.round((progression.traites / progression.total) * 100)}%`
                     : '0%',
                 }}
               />
             </div>
             <p className="envoi-progress__label">
-              {progression.envoyes} / {progression.total ?? '…'} emails envoyés
-              {progression.total && (
-                <span className="muted"> · {Math.round((progression.envoyes / progression.total) * 100)}%</span>
-              )}
+              {progression.traites} / {progression.total} traite(s) - {progression.envoyes} email(s) envoye(s)
             </p>
           </div>
         )}
@@ -313,21 +447,21 @@ export default function BureauDashboard() {
         <div className="stats">
           <div className="stat">
             <span className="stat-num">{stats.total}</span>
-            <span className="stat-lib">Adhérents</span>
+            <span className="stat-lib">Adherents</span>
           </div>
           <div className="stat stat--ok">
             <span className="stat-num">{stats.aJour}</span>
-            <span className="stat-lib">À jour</span>
+            <span className="stat-lib">A jour</span>
           </div>
           <div className="stat stat--ko">
             <span className="stat-num">{stats.nonAJour}</span>
-            <span className="stat-lib">Non à jour</span>
+            <span className="stat-lib">Non a jour</span>
           </div>
         </div>
 
         <input
           className="dash-search"
-          placeholder="Rechercher un nom, un prénom ou un email…"
+          placeholder="Rechercher un nom ou un prenom..."
           value={recherche}
           onChange={(e) => setRecherche(e.target.value)}
         />
@@ -349,12 +483,12 @@ export default function BureauDashboard() {
           ))}
         </div>
 
-        {chargement && <p>Chargement…</p>}
+        {chargement && <p>Chargement...</p>}
         {erreur && <p className="error">{erreur}</p>}
 
         {!chargement && !erreur && (
           liste.length === 0 ? (
-            <p className="muted dash-empty">Aucun adhérent ne correspond.</p>
+            <p className="muted dash-empty">Aucun adherent ne correspond.</p>
           ) : (
             <div className="dash-table-wrap">
               <table className="dash-table">
@@ -362,7 +496,7 @@ export default function BureauDashboard() {
                   <tr>
                     <th>Nom</th>
                     <th>Statut</th>
-                    <th>Détail</th>
+                    <th>Detail</th>
                     <th></th>
                   </tr>
                 </thead>
@@ -376,7 +510,7 @@ export default function BureauDashboard() {
                           {a.email && <div className="muted small">{a.email}</div>}
                         </td>
                         <td><StatusBadge adherent={a} /></td>
-                        <td className="small">{valide ? '—' : anomalies.join(' · ')}</td>
+                        <td className="small">{valide ? '-' : anomalies.join(' - ')}</td>
                         <td className="dash-row-actions">
                           <button className="btn-ghost" onClick={() => setEditeur({ adherent: a })}>
                             Modifier
@@ -393,6 +527,35 @@ export default function BureauDashboard() {
             </div>
           )
         )}
+
+        <section className="history-panel" aria-label="Historique des actions">
+          <div className="history-panel__head">
+            <h3>Historique recent</h3>
+            <span className="muted small">Annulation disponible pendant cette session</span>
+          </div>
+
+          {historique.length === 0 ? (
+            <p className="muted small">Aucune action modifiable pour le moment.</p>
+          ) : (
+            <ul className="history-list">
+              {historique.map((action) => (
+                <li key={action.id} className={`history-item ${action.undone ? 'history-item--done' : ''}`}>
+                  <div>
+                    <strong>{action.label}</strong>
+                    <span className="muted small">{action.date}{action.undone ? ' - annulee' : ''}</span>
+                  </div>
+                  <button
+                    className="btn-ghost"
+                    onClick={() => annulerAction(action)}
+                    disabled={action.undone || annulationId === action.id}
+                  >
+                    {annulationId === action.id ? 'Annulation...' : 'Annuler'}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
       </main>
 
       {editeur && (
@@ -415,37 +578,37 @@ export default function BureauDashboard() {
         />
       )}
 
-      {envoiModalOuvert && (
+      {envoiModal && (
         <EnvoiQrModal
-          adherents={adherentsEligibles}
-          onClose={() => setEnvoiModalOuvert(false)}
-          onConfirm={envoyerAvecIds}
+          adherents={envoiModal.adherents}
+          title={envoiModal.mode === 'reminder' ? 'Relancer les dossiers non a jour' : 'Envoyer les QR Codes par email'}
+          subtitle={
+            envoiModal.mode === 'reminder'
+              ? 'Selectionnez les adherents non a jour a relancer.'
+              : 'Selectionnez les adherents qui doivent recevoir leur lien QR.'
+          }
+          confirmLabel={envoiModal.mode === 'reminder' ? 'Relancer' : 'Envoyer'}
+          onClose={() => setEnvoiModal(null)}
+          onConfirm={envoyerQrSelection}
         />
       )}
 
       {envoi && envoi !== 'loading' && (
         <div className="modal-overlay" onClick={() => setEnvoi(null)}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <h3>Résultat de l'envoi</h3>
+            <h3>{envoi.mode === 'reminder' ? 'Resultat de la relance' : "Resultat de l'envoi"}</h3>
             <p>
-              <strong style={{ color: 'var(--ok)' }}>{envoi.sent} email(s) envoyé(s)</strong>
+              <strong className="send-ok">{envoi.sent} email(s) envoye(s)</strong>
+              {envoi.skipped > 0 && (
+                <span className="muted"> - {envoi.skipped} sans adresse email</span>
+              )}
             </p>
-            {envoi.remaining > 0 && (
-              <p className="muted small" style={{ marginTop: 8 }}>
-                {envoi.remaining} adhérent(s) restant(s) — relancez le bouton demain pour continuer.
-              </p>
-            )}
-            {envoi.remaining === 0 && envoi.sent > 0 && (
-              <p className="small" style={{ color: 'var(--ok)', marginTop: 8 }}>
-                Tous les adhérents ont reçu leur QR Code.
-              </p>
-            )}
-            {envoi.errors.length > 0 && (
+            {envoi.errors?.length > 0 && (
               <>
-                <p className="error">{envoi.errors.length} échec(s) :</p>
-                <ul style={{ margin: '4px 0', paddingLeft: 20 }}>
+                <p className="error">{envoi.errors.length} echec(s) :</p>
+                <ul className="send-errors">
                   {envoi.errors.map((e, i) => (
-                    <li key={i} className="small error">{reparerTexte(e.nom)} — {e.raison}</li>
+                    <li key={i} className="small error">{e.nom} - {e.raison}</li>
                   ))}
                 </ul>
               </>

@@ -6,7 +6,7 @@ const AuthContext = createContext(null);
 // Fournit à toute l'application : utilisateur connecté + rôle + déconnexion.
 export function AuthProvider({ children }) {
   const [session, setSession] = useState(undefined);
-  const [profile, setProfile] = useState(null); // { role, adherent_id, ... }
+  const [profile, setProfile] = useState(null); // { role, nom, prenom }
   const [loading, setLoading] = useState(true);
 
   // 1) Récupère la session au démarrage et écoute connexion/déconnexion.
@@ -36,7 +36,7 @@ export function AuthProvider({ children }) {
 
       const { data, error } = await supabase
         .from('profiles')
-        .select('role, adherent_id, nom, prenom')
+        .select('role, nom, prenom')
         .eq('id', session.user.id)
         .single();
 
@@ -55,8 +55,8 @@ export function AuthProvider({ children }) {
 
   const value = {
     user: session?.user ?? null,
-    role: profile?.role ?? null,         // 'bureau' | 'coach' | 'adherent'
-    adherentId: profile?.adherent_id ?? null,
+    role: profile?.role ?? null,         // 'bureau' | 'coach'
+    adherentId: null,
     profile,
     loading,
     signOut: () => supabase.auth.signOut(),

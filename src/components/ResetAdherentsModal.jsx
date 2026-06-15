@@ -2,28 +2,35 @@ import { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 
+const CONFIRMATION = 'SUPPRIMER';
+
 export default function ResetAdherentsModal({ onClose, onResetCompleted }) {
   const { user } = useAuth();
   const [password, setPassword] = useState('');
+  const [confirmation, setConfirmation] = useState('');
   const [erreur, setErreur] = useState(null);
   const [enCours, setEnCours] = useState(false);
 
   async function valider(e) {
     e.preventDefault();
     setErreur(null);
-    setEnCours(true);
 
-    if (!user || !user.email) {
-      setErreur("Erreur : Impossible de vérifier l'utilisateur connecté.");
-      setEnCours(false);
+    if (confirmation.trim() !== CONFIRMATION) {
+      setErreur(`Tapez ${CONFIRMATION} pour confirmer.`);
       return;
     }
 
+    if (!user || !user.email) {
+      setErreur("Impossible de verifier l'utilisateur connecte.");
+      return;
+    }
+
+    setEnCours(true);
+
     try {
-      // 1) Vérifier le mot de passe en ré-authentifiant l'admin
       const { error: authError } = await supabase.auth.signInWithPassword({
         email: user.email,
-        password: password,
+        password,
       });
 
       if (authError) {
@@ -32,7 +39,16 @@ export default function ResetAdherentsModal({ onClose, onResetCompleted }) {
         return;
       }
 
-      // 2) Supprimer tous les adhérents de la base de données
+      const { data: snapshot, error: snapshotError } = await supabase
+        .from('adherents')
+        .select('*');
+
+      if (snapshotError) {
+        setErreur('Impossible de preparer la sauvegarde avant suppression : ' + snapshotError.message);
+        setEnCours(false);
+        return;
+      }
+
       const { error: deleteError } = await supabase
         .from('adherents')
         .delete()
@@ -44,49 +60,60 @@ export default function ResetAdherentsModal({ onClose, onResetCompleted }) {
         return;
       }
 
-      // 3) Succès
-      onResetCompleted();
+      onResetCompleted(snapshot ?? []);
       onClose();
     } catch (err) {
-      setErreur("Une erreur inattendue est survenue : " + err.message);
+      setErreur('Une erreur inattendue est survenue : ' + err.message);
       setEnCours(false);
     }
   }
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal" onClick={(e) => e.stopPropagation()}>
-        <h3 style={{ color: 'var(--ko)' }}>Confirmer la réinitialisation</h3>
-        <p className="muted small" style={{ marginBottom: '16px' }}>
-          Attention : cette action est <strong>définitive</strong> et <strong>irréversible</strong>.
-          Elle va supprimer tous les adhérents enregistrés dans l'application.
+      <div className="modal danger-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="confirm-icon" aria-hidden="true">!</div>
+        <h3>Reinitialiser les adherents</h3>
+        <p className="danger-copy">
+          Cette action supprime toutes les fiches adherents. L'annulation reste possible
+          dans l'historique recent si l'espace Bureau reste ouvert.
         </p>
 
         <form onSubmit={valider}>
           <label className="champ">
-            Saisissez votre mot de passe pour confirmer
+            Mot de passe du compte bureau
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Votre mot de passe actuel..."
+              placeholder="Mot de passe actuel"
               required
               autoFocus
             />
           </label>
 
-          {erreur && <p className="error" style={{ marginTop: '10px' }}>{erreur}</p>}
+          <label className="champ">
+            Tapez SUPPRIMER
+            <input
+              type="text"
+              value={confirmation}
+              onChange={(e) => setConfirmation(e.target.value)}
+              placeholder="SUPPRIMER"
+              required
+            />
+          </label>
 
-          <div className="modal-actions" style={{ marginTop: '20px' }}>
+          {erreur && <p className="error">{erreur}</p>}
+
+          <div className="modal-actions">
             <button type="button" className="btn-ghost" onClick={onClose} disabled={enCours}>
               Annuler
             </button>
             <button
               type="submit"
-              disabled={enCours}
-              style={{ backgroundColor: 'var(--ko)', color: 'white' }}
+              className="btn-danger"
+              disabled={enCours || confirmation.trim() !== CONFIRMATION}
             >
-              {enCours ? 'Réinitialisation…' : 'Confirmer la suppression'}
+              {enCours ? 'Reinitialisation...' : 'Supprimer toutes les fiches'}
             </button>
           </div>
         </form>
