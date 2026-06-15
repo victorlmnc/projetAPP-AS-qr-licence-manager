@@ -2,10 +2,22 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 
-// Connexion par email + mot de passe.
+// Domaine interne ajouté automatiquement aux identifiants courts.
+// Les comptes doivent être créés avec ces e-mails : par ex. "bureau@as-licences.fr"
+// et "coach@as-licences.fr". L'utilisateur tape alors juste "bureau" ou "coach".
+const DOMAINE_LOGIN = 'as-licences.fr';
+
+// Transforme l'identifiant saisi en e-mail pour Supabase.
+// Si l'utilisateur tape déjà une adresse complète (avec @), on la garde telle quelle.
+function versEmail(identifiant) {
+  const v = identifiant.trim();
+  return v.includes('@') ? v : `${v}@${DOMAINE_LOGIN}`;
+}
+
+// Connexion par identifiant + mot de passe.
 // Après succès, on redirige vers "/" qui oriente selon le rôle.
 export default function Login() {
-  const [email, setEmail] = useState('');
+  const [identifiant, setIdentifiant] = useState('');
   const [password, setPassword] = useState('');
   const [erreur, setErreur] = useState(null);
   const [enCours, setEnCours] = useState(false);
@@ -16,7 +28,10 @@ export default function Login() {
     setErreur(null);
     setEnCours(true);
 
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { error } = await supabase.auth.signInWithPassword({
+      email: versEmail(identifiant),
+      password,
+    });
 
     setEnCours(false);
     if (error) {
@@ -33,12 +48,13 @@ export default function Login() {
         <p className="muted">Connectez-vous pour continuer.</p>
 
         <label>
-          Email
+          Identifiant
           <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            autoComplete="email"
+            type="text"
+            value={identifiant}
+            onChange={(e) => setIdentifiant(e.target.value)}
+            placeholder="ex. bureau"
+            autoComplete="username"
             required
           />
         </label>

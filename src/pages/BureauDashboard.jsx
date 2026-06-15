@@ -5,6 +5,8 @@ import Header from '../components/Header';
 import StatusBadge from '../components/StatusBadge';
 import AdherentEditor from '../components/AdherentEditor';
 import QrCodeModal from '../components/QrCodeModal';
+import ImportCsvModal from '../components/ImportCsvModal';
+import ChangePasswordModal from '../components/ChangePasswordModal';
 import './BureauDashboard.css';
 
 // Liste des filtres. `test(adherent)` renvoie true si l'adhérent doit
@@ -36,6 +38,8 @@ export default function BureauDashboard() {
   // editeur : null = fermé ; { adherent: objet } = édition ; { adherent: null } = création
   const [editeur, setEditeur] = useState(null);
   const [qrAdherent, setQrAdherent] = useState(null);
+  const [importOuvert, setImportOuvert] = useState(false);
+  const [mdpOuvert, setMdpOuvert] = useState(false);
 
   // Chargement initial depuis Supabase.
   useEffect(() => {
@@ -91,6 +95,13 @@ export default function BureauDashboard() {
     setEditeur(null);
   }
 
+  // Après un import CSV : on ajoute les nouvelles fiches à la liste, triées par nom.
+  function onImported(nouveaux) {
+    setAdherents((prev) =>
+      [...prev, ...nouveaux].sort((a, b) => a.nom.localeCompare(b.nom))
+    );
+  }
+
   // Exporte la liste actuellement affichée (filtre + recherche) au format CSV.
   function exporterCsv() {
     const entetes = ['Nom', 'Prénom', 'Email', 'Fiche', 'Paiement', 'Statut', 'Détail'];
@@ -126,6 +137,12 @@ export default function BureauDashboard() {
         <div className="dash-top">
           <h2>Adhérents <span className="muted">({adherents.length})</span></h2>
           <div className="dash-top-actions">
+            <button className="btn-ghost" onClick={() => setMdpOuvert(true)}>
+              Mon mot de passe
+            </button>
+            <button className="btn-ghost" onClick={() => setImportOuvert(true)}>
+              Importer CSV
+            </button>
             <button className="btn-ghost" onClick={exporterCsv} disabled={liste.length === 0}>
               Exporter en CSV
             </button>
@@ -225,6 +242,15 @@ export default function BureauDashboard() {
       {qrAdherent && (
         <QrCodeModal adherent={qrAdherent} onClose={() => setQrAdherent(null)} />
       )}
+
+      {importOuvert && (
+        <ImportCsvModal
+          onClose={() => setImportOuvert(false)}
+          onImported={onImported}
+        />
+      )}
+
+      {mdpOuvert && <ChangePasswordModal onClose={() => setMdpOuvert(false)} />}
     </div>
   );
 }

@@ -298,3 +298,51 @@
 }
 
 .btn-danger:disabled { opacity: 0.6; }
+
+/* ============================================================
+   Ajouts : modales formulaire (mot de passe) et import CSV
+   ============================================================ */
+
+/* Modale plus large pour l'import CSV */
+.modal--wide { width: min(520px, 94%); }
+
+/* Dans une modale, les formulaires et infos s'alignent à gauche */
+.modal form,
+.modal .import-aide,
+.modal .import-etat,
+.modal input[type='file'] {
+  text-align: left;
+}
+
+/* Champ de formulaire dans une modale (label en colonne) */
+.champ {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.champ input {
+  font: inherit;
+  padding: 9px 11px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.champ input:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.import-aide { margin-top: 4px; }
+
+.import-etat {
+  margin-top: 12px;
+  padding: 10px 12px;
+  background: #fafbfc;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  font-size: 14px;
+}
