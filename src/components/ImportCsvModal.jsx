@@ -19,7 +19,7 @@ function versBool(v) {
 // Modale d'import CSV. Fichier attendu (1re ligne = en-têtes) :
 //   nom, prenom, email                                   -> obligatoires
 //   fiche, paiement                                      -> Oui/Non, facultatifs
-//   manque_paiement, manque_yeps, manque_passsport       -> Oui/Non, facultatifs
+//   manque_paiement, manque_yeps, manque_passport       -> Oui/Non, facultatifs
 // onImported(nouveauxAdherents) est appelé après un import réussi.
 export default function ImportCsvModal({ onClose, onImported }) {
   const [etat, setEtat] = useState(null);
@@ -63,7 +63,7 @@ export default function ImportCsvModal({ onClose, onImported }) {
         paiement_global: paiement,
         manque_paiement: paiement ? false : versBool(l.manque_paiement),
         manque_yeps: paiement ? false : versBool(l.manque_yeps),
-        manque_passsport: paiement ? false : versBool(l.manque_passsport),
+        manque_passport: paiement ? false : versBool(l.manque_passport),
       });
     }
 
@@ -96,7 +96,7 @@ export default function ImportCsvModal({ onClose, onImported }) {
         <p className="muted import-aide">
           Fichier CSV avec une ligne d'en-têtes. Colonnes <code>nom</code>, <code>prenom</code>,{' '}
           <code>email</code> obligatoires ; <code>fiche</code>, <code>paiement</code>,{' '}
-          <code>manque_paiement</code>, <code>manque_yeps</code>, <code>manque_passsport</code>{' '}
+          <code>manque_paiement</code>, <code>manque_yeps</code>, <code>manque_passport</code>{' '}
           facultatives (valeurs Oui/Non).
         </p>
 

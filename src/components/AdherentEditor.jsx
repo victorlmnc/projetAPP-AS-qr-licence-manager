@@ -18,7 +18,7 @@ export default function AdherentEditor({ adherent, onClose, onSaved, onDeleted }
     paiement_global: adherent?.paiement_global ?? false,
     manque_paiement: adherent?.manque_paiement ?? false,
     manque_yeps: adherent?.manque_yeps ?? false,
-    manque_passsport: adherent?.manque_passsport ?? false,
+    manque_passport: adherent?.manque_passport ?? false,
   });
   const [erreur, setErreur] = useState(null);
   const [enCours, setEnCours] = useState(false);
@@ -53,7 +53,7 @@ export default function AdherentEditor({ adherent, onClose, onSaved, onDeleted }
       paiement_global: form.paiement_global,
       manque_paiement: form.paiement_global ? false : form.manque_paiement,
       manque_yeps: form.paiement_global ? false : form.manque_yeps,
-      manque_passsport: form.paiement_global ? false : form.manque_passsport,
+      manque_passport: form.paiement_global ? false : form.manque_passport,
     };
 
     setEnCours(true);
@@ -144,8 +144,8 @@ export default function AdherentEditor({ adherent, onClose, onSaved, onDeleted }
                 Aide YEPS
               </label>
               <label className="check">
-                <input type="checkbox" checked={form.manque_passsport}
-                       onChange={(e) => set('manque_passsport', e.target.checked)} />
+                <input type="checkbox" checked={form.manque_passport}
+                       onChange={(e) => set('manque_passport', e.target.checked)} />
                 Aide PASS'SPORT
               </label>
             </fieldset>

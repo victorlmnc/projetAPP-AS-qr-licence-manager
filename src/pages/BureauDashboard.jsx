@@ -17,7 +17,7 @@ const FILTRES = [
   { cle: 'non_a_jour', libelle: 'Non à jour',        test: (a) => !calculerStatutLicence(a).valide },
   { cle: 'fiche',      libelle: 'Fiche manquante',   test: (a) => !a.fiche_renseignement },
   { cle: 'yeps',       libelle: 'Manque YEPS',       test: (a) => a.manque_yeps },
-  { cle: 'passsport',  libelle: "Manque PASS'SPORT", test: (a) => a.manque_passsport },
+  { cle: 'passport',  libelle: "Manque PASS'SPORT", test: (a) => a.manque_passport },
   { cle: 'paiement',   libelle: 'Manque paiement',   test: (a) => a.manque_paiement },
 ];
 
@@ -130,7 +130,7 @@ export default function BureauDashboard() {
         adherent.paiement_global ? 'Oui' : 'Non',
         adherent.manque_paiement ? 'Oui' : 'Non',
         adherent.manque_yeps ? 'Oui' : 'Non',
-        adherent.manque_passsport ? 'Oui' : 'Non',
+        adherent.manque_passport ? 'Oui' : 'Non',
         adherent.id,
       ].map(champCsv).join(';');
     });

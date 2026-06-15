@@ -21,7 +21,7 @@ create table adherents (
   -- Détails de ce qui manque si paiement_global = false
   manque_paiement boolean not null default false,
   manque_yeps boolean not null default false,
-  manque_passsport boolean not null default false,
+  manque_passport boolean not null default false,
 
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()

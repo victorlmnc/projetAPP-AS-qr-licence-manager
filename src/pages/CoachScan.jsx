@@ -45,7 +45,7 @@ async function nettoyerScanner(scanner) {
 export default function CoachScan() {
   const [adherent, setAdherent] = useState(null);
   const [erreur, setErreur] = useState(null);
-  const [cameraMessage, setCameraMessage] = useState('Initialisation de la camera...');
+  const [cameraMessage, setCameraMessage] = useState('Initialisation de la caméra…');
   const [texteLu, setTexteLu] = useState('');
   const [scanActif, setScanActif] = useState(false);
   const [scanKey, setScanKey] = useState(0);
@@ -86,7 +86,7 @@ export default function CoachScan() {
     generationScannerRef.current = generation;
     lectureEnCoursRef.current = false;
     setScanActif(false);
-    setCameraMessage('Initialisation de la camera...');
+    setCameraMessage('Initialisation de la caméra…');
 
     async function lancerScanner() {
       try {
@@ -107,7 +107,7 @@ export default function CoachScan() {
 
               const identifiant = extraireIdentifiantQr(resultat);
               setTexteLu(identifiant);
-              setCameraMessage('QR code lu. Recherche en cours...');
+              setCameraMessage('QR code lu. Recherche en cours…');
               setScanActif(false);
 
               await nettoyerScanner(scanner);
@@ -123,15 +123,15 @@ export default function CoachScan() {
               return;
             }
             setScanActif(true);
-            setCameraMessage('Camera active : presentez le QR code devant l objectif.');
+            setCameraMessage('Caméra active : présentez le QR code devant l\'objectif.');
           })
           .catch(async () => {
             await nettoyerScanner(scanner);
             if (!annule && generation === generationScannerRef.current) {
               setScanActif(false);
-              setCameraMessage('Camera indisponible.');
+              setCameraMessage('Caméra indisponible.');
               setErreur(
-                "Impossible d'acceder a la camera. Verifiez l'autorisation navigateur et l'acces HTTPS."
+                "Impossible d'accéder à la caméra. Vérifiez l'autorisation navigateur et l'accès HTTPS."
               );
             }
           });
@@ -172,7 +172,7 @@ export default function CoachScan() {
         <div className="scan-heading">
           <h2>Scanner une licence</h2>
           <p className="muted">
-            Visez le QR code de l'adherent. La camera se coupe automatiquement apres lecture.
+            Visez le QR code de l'adhérent. La caméra se coupe automatiquement après lecture.
           </p>
         </div>
 
@@ -192,7 +192,7 @@ export default function CoachScan() {
         {adherent && (
           <section className="scan-result" aria-live="polite">
             <div className="scan-result__identity">
-              <span className="muted">Adherent controle</span>
+              <span className="muted">Adhérent contrôlé</span>
               <strong>
                 {adherent.prenom} {adherent.nom}
               </strong>

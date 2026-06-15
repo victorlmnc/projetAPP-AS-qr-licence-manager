@@ -13,7 +13,7 @@
 //     paiement_global:     boolean,   // case du Bureau
 //     manque_paiement:     boolean,   // détail si paiement non à jour
 //     manque_yeps:         boolean,
-//     manque_passsport:    boolean,
+//     manque_passport:    boolean,
 //   }
 
 // Règle officielle (cahier des charges) :
@@ -33,7 +33,7 @@ export function calculerStatutLicence(adherent) {
     const manques = [];
     if (adherent?.manque_paiement) manques.push('Paiement');
     if (adherent?.manque_yeps) manques.push('Aide YEPS');
-    if (adherent?.manque_passsport) manques.push("Aide PASS'SPORT");
+    if (adherent?.manque_passport) manques.push("Aide PASS'SPORT");
 
     anomalies.push(
       manques.length > 0
