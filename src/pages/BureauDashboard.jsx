@@ -7,7 +7,6 @@ import StatusBadge from '../components/StatusBadge';
 import AdherentEditor from '../components/AdherentEditor';
 import QrCodeModal from '../components/QrCodeModal';
 import ImportCsvModal from '../components/ImportCsvModal';
-import ChangePasswordModal from '../components/ChangePasswordModal';
 import ResetAdherentsModal from '../components/ResetAdherentsModal';
 import './BureauDashboard.css';
 
@@ -33,13 +32,12 @@ export default function BureauDashboard() {
   const [erreur, setErreur] = useState(null);
 
   const [recherche, setRecherche] = useState('');
-  const [filtre, setFiltre] = useState('tous');
+  const [filtresActifs, setFiltresActifs] = useState([]);
 
   // editeur : null = fermé ; { adherent: objet } = édition ; { adherent: null } = création
   const [editeur, setEditeur] = useState(null);
   const [qrAdherent, setQrAdherent] = useState(null);
   const [importOuvert, setImportOuvert] = useState(false);
-  const [mdpOuvert, setMdpOuvert] = useState(false);
   const [resetOuvert, setResetOuvert] = useState(false);
 
   // État de l'envoi groupé des QR codes
@@ -90,19 +88,20 @@ export default function BureauDashboard() {
     };
   }, []);
 
-  // Liste affichée = filtre actif + recherche texte.
+  // Liste affichée = filtres actifs + recherche texte.
   const liste = useMemo(() => {
-    const f = FILTRES.find((x) => x.cle === filtre) ?? FILTRES[0];
     const q = recherche.trim().toLowerCase();
+    const filtres = FILTRES.filter((x) => x.cle !== 'tous' && filtresActifs.includes(x.cle));
+
     return adherents
-      .filter(f.test)
+      .filter((a) => filtres.every((f) => f.test(a)))
       .filter((a) =>
         !q ||
         a.nom.toLowerCase().includes(q) ||
         a.prenom.toLowerCase().includes(q) ||
         a.email?.toLowerCase().includes(q)
       );
-  }, [adherents, filtre, recherche]);
+  }, [adherents, filtresActifs, recherche]);
 
   // Statistiques globales (sur tous les adhérents, pas seulement la liste filtrée).
   const stats = useMemo(() => {
@@ -135,6 +134,19 @@ export default function BureauDashboard() {
   function onImported(nouveaux) {
     setAdherents((prev) =>
       [...prev, ...nouveaux].sort((a, b) => a.nom.localeCompare(b.nom))
+    );
+  }
+
+  function basculerFiltre(cle) {
+    if (cle === 'tous') {
+      setFiltresActifs([]);
+      return;
+    }
+
+    setFiltresActifs((prev) =>
+      prev.includes(cle)
+        ? prev.filter((x) => x !== cle)
+        : [...prev, cle]
     );
   }
 
@@ -206,9 +218,6 @@ export default function BureauDashboard() {
         <div className="dash-top">
           <h2>Adhérents <span className="muted">({adherents.length})</span></h2>
           <div className="dash-top-actions">
-            <button className="btn-ghost" onClick={() => setMdpOuvert(true)}>
-              Mon mot de passe
-            </button>
             <button className="btn-ghost" onClick={() => setImportOuvert(true)}>
               Importer CSV
             </button>
@@ -252,8 +261,13 @@ export default function BureauDashboard() {
           {FILTRES.map((f) => (
             <button
               key={f.cle}
-              className={`chip ${filtre === f.cle ? 'chip--on' : ''}`}
-              onClick={() => setFiltre(f.cle)}
+              className={`chip ${
+                (f.cle === 'tous' ? filtresActifs.length === 0 : filtresActifs.includes(f.cle))
+                  ? 'chip--on'
+                  : ''
+              }`}
+              onClick={() => basculerFiltre(f.cle)}
+              aria-pressed={f.cle === 'tous' ? filtresActifs.length === 0 : filtresActifs.includes(f.cle)}
             >
               {f.libelle}
             </button>
@@ -338,8 +352,6 @@ export default function BureauDashboard() {
           onImported={onImported}
         />
       )}
-
-      {mdpOuvert && <ChangePasswordModal onClose={() => setMdpOuvert(false)} />}
 
       {resetOuvert && (
         <ResetAdherentsModal
