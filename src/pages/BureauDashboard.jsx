@@ -45,17 +45,11 @@ export default function BureauDashboard() {
   const [envoi, setEnvoi] = useState(null); // null | 'loading' | { sent, remaining, errors }
   const [progression, setProgression] = useState(null); // null | { envoyes, total }
 
-  // Adhérents éligibles à l'envoi : email présent + jamais reçu le QR
+  // Adhérents éligibles à l'envoi : email présent
   const adherentsEligibles = useMemo(
-    () => adherents.filter((a) => a.email && !a.qr_envoye_le),
+    () => adherents.filter((a) => a.email),
     [adherents]
   );
-
-  // Nombre d'emails envoyés aujourd'hui (pour la limite journalière Gmail de 500).
-  const envoiesAujourdhui = useMemo(() => {
-    const aujourd = new Date().toISOString().slice(0, 10);
-    return adherents.filter((a) => a.qr_envoye_le?.startsWith(aujourd)).length;
-  }, [adherents]);
 
   // Chargement initial et abonnement Realtime depuis Supabase.
   useEffect(() => {
@@ -280,7 +274,7 @@ export default function BureauDashboard() {
               className="btn-ghost"
               onClick={() => setEnvoiModalOuvert(true)}
               disabled={envoi === 'loading' || adherentsEligibles.length === 0}
-              title={adherentsEligibles.length === 0 ? 'Tous les adhérents ont déjà reçu leur QR Code' : undefined}
+              title={adherentsEligibles.length === 0 ? 'Aucun adhérent avec une adresse email' : undefined}
             >
               {envoi === 'loading' ? 'Envoi en cours…' : `Envoyer les QR par email (${adherentsEligibles.length})`}
             </button>
@@ -430,16 +424,6 @@ export default function BureauDashboard() {
             <p>
               <strong style={{ color: 'var(--ok)' }}>{envoi.sent} email(s) envoyé(s)</strong>
             </p>
-            {envoi.remaining > 0 && (
-              <p className="muted small" style={{ marginTop: 8 }}>
-                {envoi.remaining} adhérent(s) restant(s) — relancez le bouton demain pour continuer.
-              </p>
-            )}
-            {envoi.remaining === 0 && envoi.sent > 0 && (
-              <p className="small" style={{ color: 'var(--ok)', marginTop: 8 }}>
-                Tous les adhérents ont reçu leur QR Code.
-              </p>
-            )}
             {envoi.errors.length > 0 && (
               <>
                 <p className="error">{envoi.errors.length} échec(s) :</p>

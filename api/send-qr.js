@@ -1,9 +1,6 @@
 import nodemailer from 'nodemailer';
 import { createClient } from '@supabase/supabase-js';
 
-// Taille max par appel pour le mode groupé (évite le timeout Vercel de 10s).
-const LIMITE_PAR_APPEL = 15;
-
 const transporter = nodemailer.createTransport({
   host: 'smtp.gmail.com',
   port: 587,
@@ -87,23 +84,18 @@ export default async function handler(req, res) {
   }
 
   const { adherentIds } = req.body ?? {};
-  const cibleSpecifique = Array.isArray(adherentIds) && adherentIds.length > 0;
 
   let adherents, error;
 
-  if (cibleSpecifique) {
-    // Envoi ciblé (depuis QrCodeModal ou sélection manuelle) :
-    // on bypass le filtre qr_envoye_le, on envoie toujours.
+  if (Array.isArray(adherentIds) && adherentIds.length > 0) {
     ({ data: adherents, error } = await supabase
       .from('adherents')
       .select('id, nom, prenom, email')
       .in('id', adherentIds));
   } else {
-    // Envoi groupé : seulement ceux qui n'ont pas encore reçu le mail.
     ({ data: adherents, error } = await supabase
       .from('adherents')
       .select('id, nom, prenom, email')
-      .is('qr_envoye_le', null)
       .not('email', 'is', null)
       .order('nom'));
   }
@@ -112,19 +104,13 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'Erreur Supabase : ' + error.message });
   }
 
-  const totalRestant = (adherents ?? []).length;
-  const batch = cibleSpecifique
-    ? (adherents ?? [])
-    : (adherents ?? []).slice(0, LIMITE_PAR_APPEL);
+  const batch = adherents ?? [];
 
   const baseUrl = `https://${req.headers.host}`;
   const results = {
     sent: 0,
-    remaining: cibleSpecifique ? 0 : Math.max(0, totalRestant - LIMITE_PAR_APPEL),
     errors: [],
   };
-  const idEnvoyes = [];
-
   for (const a of batch) {
     if (!a.email) continue;
     const lien = `${baseUrl}/adherent/${a.id}`;
@@ -136,18 +122,10 @@ export default async function handler(req, res) {
         text: `Bonjour ${a.prenom} ${a.nom},\n\nVotre QR Code de licence est disponible. Présentez-le à votre responsable sportif lors des entraînements et des matchs.\n\nAccéder à votre QR Code : ${lien}\n\nVous pouvez enregistrer cette page en favori sur votre téléphone.\n\n— Le bureau de l'Association Sportive`,
         html: emailHtml(a.prenom, a.nom, lien),
       });
-      idEnvoyes.push(a.id);
       results.sent++;
     } catch (err) {
       results.errors.push({ nom: `${a.prenom} ${a.nom}`, raison: err.message });
     }
-  }
-
-  if (idEnvoyes.length > 0) {
-    await supabase
-      .from('adherents')
-      .update({ qr_envoye_le: new Date().toISOString() })
-      .in('id', idEnvoyes);
   }
 
   return res.status(200).json(results);
