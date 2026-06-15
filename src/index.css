@@ -169,6 +169,44 @@ code {
   line-height: 1;
 }
 
+.settings-modal {
+  text-align: left;
+}
+
+.settings-actions {
+  display: grid;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.settings-action {
+  display: grid;
+  width: 100%;
+  gap: 4px;
+  padding: 16px;
+  text-align: left;
+}
+
+.settings-action__title {
+  color: var(--as-purple-900);
+  font-weight: 800;
+}
+
+.settings-action__text {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.settings-action--danger {
+  color: var(--ko);
+  border-color: rgba(192, 54, 44, 0.32);
+}
+
+.settings-action--danger .settings-action__title {
+  color: var(--ko);
+}
+
 .topbar__logo {
   width: 56px;
   height: 56px;

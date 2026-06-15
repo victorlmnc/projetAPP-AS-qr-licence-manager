@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import InstallButton from './InstallButton';
-import ChangePasswordModal from './ChangePasswordModal';
+import SettingsModal from './SettingsModal';
 
 export default function Header({ titre }) {
   const { role, signOut } = useAuth();
@@ -31,6 +31,7 @@ export default function Header({ titre }) {
           </div>
           {role && <span className="badge">{role}</span>}
         </div>
+
         <div className="topbar__actions">
           <InstallButton />
           <button
@@ -39,14 +40,14 @@ export default function Header({ titre }) {
             aria-label="Parametres"
             title="Parametres"
           >
-            ⚙
+            {'\u2699'}
           </button>
           <button className="btn-ghost" onClick={signOut}>Se deconnecter</button>
         </div>
       </header>
 
       {parametresOuverts && (
-        <ChangePasswordModal onClose={() => setParametresOuverts(false)} />
+        <SettingsModal onClose={() => setParametresOuverts(false)} />
       )}
     </>
   );

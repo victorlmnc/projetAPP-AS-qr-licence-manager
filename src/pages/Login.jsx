@@ -45,8 +45,6 @@ export default function Login() {
           </div>
         </div>
 
-        <p className="muted">Connexion bureau, coach et adherent.</p>
-
         {supabaseConfigMissing && (
           <p className="error">
             Configuration Supabase manquante : creez un fichier .env avec les cles du projet.
