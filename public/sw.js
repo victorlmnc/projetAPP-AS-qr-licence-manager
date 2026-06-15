@@ -1,5 +1,5 @@
-const CACHE_NAME = 'licences-qr-v1';
-const APP_ASSETS = ['/', '/manifest.json', '/icon-192.png', '/icon-512.png'];
+const CACHE_NAME = 'licences-qr-v2';
+const APP_ASSETS = ['/', '/manifest.json', '/icon-192.png', '/icon-512.png', '/logo.png'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -27,22 +27,24 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
   if (url.origin !== self.location.origin) return;
 
+  // Navigation requests: network-first, fallback to cached shell
   if (event.request.mode === 'navigate') {
     event.respondWith(fetch(event.request).catch(() => caches.match('/')));
     return;
   }
 
+  // For all other same-origin assets: network-first strategy.
+  // Try network first — if it succeeds, cache the fresh response.
+  // Only fall back to cache when the network fails (offline).
   event.respondWith(
-    caches.match(event.request).then((cached) => {
-      if (cached) return cached;
-
-      return fetch(event.request).then((response) => {
+    fetch(event.request)
+      .then((response) => {
         if (response.ok) {
           const copy = response.clone();
           caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
         }
         return response;
-      });
-    })
+      })
+      .catch(() => caches.match(event.request))
   );
 });
