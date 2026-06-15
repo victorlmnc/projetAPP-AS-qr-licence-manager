@@ -37,7 +37,7 @@ export default function AdherentEditor({ adherent, onClose, onSaved, onDeleted }
     setErreur(null);
 
     if (!form.nom.trim() || !form.prenom.trim()) {
-      setErreur(‘Le nom et le prénom sont obligatoires.’);
+      setErreur("Le nom et le prénom sont obligatoires.");
       return;
     }
     if (form.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(form.email.trim())) {
