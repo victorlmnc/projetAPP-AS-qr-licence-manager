@@ -1,15 +1,13 @@
 import { calculerStatutLicence } from '../lib/licence';
 
-// Bandeau de résultat réutilisable.
-//   Vert  = licence à jour.
-//   Rouge = non à jour + liste des motifs.
 export default function StatusBanner({ adherent }) {
   const { valide, anomalies } = calculerStatutLicence(adherent);
 
   return (
     <div className={`banner ${valide ? 'banner--ok' : 'banner--ko'}`}>
+      <p className="banner__eyebrow">{valide ? 'Controle valide' : 'Controle bloque'}</p>
       <p className="banner__title">
-        {valide ? '✓ Licence à jour' : '✗ Licence non à jour'}
+        {valide ? 'Licence a jour' : 'Licence non a jour'}
       </p>
 
       {!valide && (
