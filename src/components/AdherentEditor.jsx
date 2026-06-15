@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { supabase } from '../lib/supabase';
+import { api } from '../lib/api';
 import { calculerStatutLicence } from '../lib/licence';
 
 // Panneau latéral de saisie.
@@ -57,18 +57,16 @@ export default function AdherentEditor({ adherent, onClose, onSaved, onDeleted }
     };
 
     setEnCours(true);
-    const requete = creation
-      ? supabase.from('adherents').insert(donnees).select().single()
-      : supabase.from('adherents').update(donnees).eq('id', adherent.id).select().single();
-
-    const { data, error } = await requete;
-    setEnCours(false);
-
-    if (error) {
+    try {
+      const data = creation
+        ? await api.createAdherent(donnees)
+        : await api.updateAdherent(adherent.id, donnees);
+      onSaved(data);
+    } catch (error) {
       setErreur('Enregistrement impossible : ' + error.message);
-      return;
+    } finally {
+      setEnCours(false);
     }
-    onSaved(data);
   }
 
   // Supprime définitivement la fiche, après confirmation.
@@ -80,14 +78,14 @@ export default function AdherentEditor({ adherent, onClose, onSaved, onDeleted }
 
     setErreur(null);
     setSuppression(true);
-    const { error } = await supabase.from('adherents').delete().eq('id', adherent.id);
-    setSuppression(false);
-
-    if (error) {
+    try {
+      await api.deleteAdherent(adherent.id);
+      onDeleted(adherent.id);
+    } catch (error) {
       setErreur('Suppression impossible : ' + error.message);
-      return;
+    } finally {
+      setSuppression(false);
     }
-    onDeleted(adherent.id);
   }
 
   return (

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { QRCodeCanvas } from 'qrcode.react';
-import { supabase } from '../lib/supabase';
+import { api } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
 import { messageAdherent } from '../lib/licence';
 import Header from '../components/Header';
@@ -21,19 +21,15 @@ export default function AdherentProfile() {
         return;
       }
 
-      const { data, error } = await supabase
-        .from('adherents')
-        .select('*')
-        .eq('id', adherentId)
-        .single();
-
-      if (error) {
+      try {
+        const data = await api.getAdherent(adherentId);
+        setAdherent(data);
+      } catch {
         setErreur('Chargement de la licence impossible.');
         setAdherent(null);
-      } else {
-        setAdherent(data);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     }
     load();
   }, [adherentId]);
@@ -43,13 +39,13 @@ export default function AdherentProfile() {
       <Header titre="Ma licence" />
 
       <main className="container">
-        {loading && <p>Chargement…</p>}
+        {loading && <p>Chargement...</p>}
 
         {erreur && <p className="error">{erreur}</p>}
 
         {!loading && !erreur && !adherent && (
           <p className="muted">
-            Aucune fiche associée à votre compte. Contactez le Bureau.
+            Aucune fiche associee a votre compte. Contactez le Bureau.
           </p>
         )}
 
@@ -71,7 +67,7 @@ export default function AdherentProfile() {
                 <QRCodeCanvas value={adherent.id} size={220} />
               </div>
               <p className="muted small">
-                Présentez ce QR Code au responsable sportif lors du contrôle terrain.
+                Presentez ce QR Code au responsable sportif lors du controle terrain.
               </p>
             </section>
           </article>

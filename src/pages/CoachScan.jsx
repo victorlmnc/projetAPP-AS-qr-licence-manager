@@ -1,15 +1,37 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { supabase } from '../lib/supabase';
+import { api } from '../lib/api';
 import Header from '../components/Header';
 import StatusBanner from '../components/StatusBanner';
+import './CoachScan.css';
 
-async function arreterScanner(scanner) {
+const READER_ID = 'reader';
+
+function extraireIdentifiantQr(texteLu) {
+  const valeur = texteLu.trim();
+
+  try {
+    const url = new URL(valeur);
+    const depuisParams =
+      url.searchParams.get('id') ||
+      url.searchParams.get('token') ||
+      url.searchParams.get('adherent_id');
+
+    if (depuisParams) return depuisParams.trim();
+
+    const segments = url.pathname.split('/').filter(Boolean);
+    return segments.at(-1)?.trim() || valeur;
+  } catch {
+    return valeur;
+  }
+}
+
+async function nettoyerScanner(scanner) {
   if (!scanner) return;
 
   try {
     await scanner.stop();
   } catch {
-    // Le scanner peut déjà être arrêté.
+    // Le scanner peut deja etre arrete.
   }
 
   try {
@@ -23,9 +45,12 @@ async function arreterScanner(scanner) {
 export default function CoachScan() {
   const [adherent, setAdherent] = useState(null);
   const [erreur, setErreur] = useState(null);
+  const [cameraMessage, setCameraMessage] = useState('Initialisation de la camera...');
+  const [texteLu, setTexteLu] = useState('');
   const [scanActif, setScanActif] = useState(false);
   const [scanKey, setScanKey] = useState(0);
   const scannerRef = useRef(null);
+  const generationScannerRef = useRef(0);
   const lectureEnCoursRef = useRef(false);
 
   const chercherAdherent = useCallback(async (id) => {
@@ -38,70 +63,80 @@ export default function CoachScan() {
       return;
     }
 
-    const { data, error } = await supabase
-      .from('adherents')
-      .select('*')
-      .eq('id', identifiant)
-      .single();
-
-    if (error) {
-      setErreur('Adhérent introuvable ou QR invalide.');
-      return;
+    try {
+      const data = await api.getAdherent(identifiant);
+      setAdherent(data);
+    } catch {
+      setErreur('Adherent introuvable ou QR invalide.');
     }
-    setAdherent(data);
   }, []);
 
   useEffect(() => {
     let annule = false;
     let scanner = null;
     let demarrage = Promise.resolve();
+    const generation = generationScannerRef.current + 1;
+
+    generationScannerRef.current = generation;
     lectureEnCoursRef.current = false;
     setScanActif(false);
+    setCameraMessage('Initialisation de la camera...');
 
     async function lancerScanner() {
       try {
         const { Html5Qrcode } = await import('html5-qrcode');
-        if (annule) return;
+        if (annule || generation !== generationScannerRef.current) return;
 
-        scanner = new Html5Qrcode('reader');
+        scanner = new Html5Qrcode(READER_ID);
         scannerRef.current = scanner;
 
         demarrage = scanner
           .start(
             { facingMode: 'environment' },
             { fps: 10, qrbox: { width: 250, height: 250 } },
-            async (texteLu) => {
+            async (resultat) => {
               if (lectureEnCoursRef.current) return;
+              if (annule || generation !== generationScannerRef.current) return;
               lectureEnCoursRef.current = true;
+
+              const identifiant = extraireIdentifiantQr(resultat);
+              setTexteLu(identifiant);
+              setCameraMessage('QR code lu. Recherche en cours...');
               setScanActif(false);
-              await arreterScanner(scanner);
-              if (!annule) await chercherAdherent(texteLu);
+
+              await nettoyerScanner(scanner);
+              if (!annule && generation === generationScannerRef.current) {
+                await chercherAdherent(identifiant);
+              }
             },
             () => {}
           )
           .then(async () => {
-            if (annule) {
-              await arreterScanner(scanner);
+            if (annule || generation !== generationScannerRef.current) {
+              await nettoyerScanner(scanner);
               return;
             }
             setScanActif(true);
+            setCameraMessage('Camera active : presentez le QR code devant l objectif.');
           })
           .catch(async () => {
-            await arreterScanner(scanner);
-            if (!annule) {
+            await nettoyerScanner(scanner);
+            if (!annule && generation === generationScannerRef.current) {
               setScanActif(false);
+              setCameraMessage('Camera indisponible.');
               setErreur(
-                "Impossible d'accéder à la caméra. Vérifiez l'autorisation navigateur et l'accès HTTPS."
+                "Impossible d'acceder a la camera. Verifiez l'autorisation navigateur et l'acces HTTPS."
               );
             }
           });
       } catch {
-        if (!annule) {
+        if (!annule && generation === generationScannerRef.current) {
           setErreur('Le module de scan QR est indisponible.');
           setScanActif(false);
+          setCameraMessage('Scanner indisponible.');
         }
         if (scanner) {
-          await arreterScanner(scanner);
+          await nettoyerScanner(scanner);
         }
       }
     }
@@ -110,14 +145,16 @@ export default function CoachScan() {
 
     return () => {
       annule = true;
+      generationScannerRef.current += 1;
       if (scannerRef.current === scanner) scannerRef.current = null;
-      demarrage.finally(() => arreterScanner(scanner));
+      demarrage.finally(() => nettoyerScanner(scanner));
     };
   }, [chercherAdherent, scanKey]);
 
   function scannerUnAutre() {
     setAdherent(null);
     setErreur(null);
+    setTexteLu('');
     setScanKey((key) => key + 1);
   }
 
@@ -125,23 +162,46 @@ export default function CoachScan() {
     <div className="page">
       <Header titre="Scan terrain" />
 
-      <main className="container">
-        <div className="scan-head">
+      <main className="container scan-page">
+        <div className="scan-heading">
           <h2>Scanner une licence</h2>
-          <button className="btn-ghost" type="button" onClick={scannerUnAutre}>
-            Scanner un autre
-          </button>
+          <p className="muted">
+            Visez le QR code de l'adherent. La camera se coupe automatiquement apres lecture.
+          </p>
         </div>
 
-        <div className="scanner-card">
-          <div id="reader" className="scanner-frame" />
-          {!scanActif && !adherent && !erreur && (
-            <p className="muted scan-status">Initialisation de la caméra…</p>
-          )}
-        </div>
+        <section className="scan-reader" aria-label="Scanner QR code">
+          <div id={READER_ID} className="scan-reader__camera" />
+          <p className="scan-reader__status">{cameraMessage}</p>
+        </section>
+
+        {texteLu && (
+          <p className="scan-token">
+            Identifiant lu : <code>{texteLu}</code>
+          </p>
+        )}
 
         {erreur && <p className="error">{erreur}</p>}
-        {adherent && <StatusBanner adherent={adherent} />}
+
+        {adherent && (
+          <section className="scan-result" aria-live="polite">
+            <div className="scan-result__identity">
+              <span className="muted">Adherent controle</span>
+              <strong>
+                {adherent.prenom} {adherent.nom}
+              </strong>
+              {adherent.email && <span>{adherent.email}</span>}
+            </div>
+
+            <StatusBanner adherent={adherent} />
+          </section>
+        )}
+
+        <div className="scan-actions">
+          <button type="button" onClick={scannerUnAutre}>
+            {scanActif ? 'Relancer le scanner' : 'Scanner un autre'}
+          </button>
+        </div>
       </main>
     </div>
   );

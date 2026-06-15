@@ -1,73 +1,68 @@
 import { createContext, useContext, useEffect, useState } from 'react';
-import { supabase } from '../lib/supabase';
+import { api } from '../lib/api';
 
 const AuthContext = createContext(null);
 
-// Fournit à toute l'application : utilisateur connecté + rôle + déconnexion.
 export function AuthProvider({ children }) {
-  const [session, setSession] = useState(undefined);
-  const [profile, setProfile] = useState(null); // { role, adherent_id, ... }
+  const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // 1) Récupère la session au démarrage et écoute connexion/déconnexion.
   useEffect(() => {
-    supabase.auth
-      .getSession()
-      .then(({ data }) => setSession(data.session ?? null))
-      .catch(() => setSession(null));
-
-    const { data: listener } = supabase.auth.onAuthStateChange(
-      (_event, newSession) => setSession(newSession)
-    );
-
-    return () => listener.subscription.unsubscribe();
+    async function initAuth() {
+      try {
+        const data = await api.getMe();
+        setUser(data?.user ?? null);
+      } catch (error) {
+        console.error('Failed to restore session:', error);
+        setUser(null);
+      } finally {
+        setLoading(false);
+      }
+    }
+    initAuth();
   }, []);
 
-  // 2) Quand la session change, charge le profil (rôle) de l'utilisateur.
-  useEffect(() => {
-    async function loadProfile() {
-      if (session === undefined) return;
-
-      if (!session?.user) {
-        setProfile(null);
-        setLoading(false);
-        return;
-      }
-
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('role, adherent_id, nom, prenom')
-        .eq('id', session.user.id)
-        .single();
-
-      if (error) {
-        console.error('Erreur chargement profil :', error.message);
-        setProfile(null);
-      } else {
-        setProfile(data);
-      }
+  async function login(loginName, password) {
+    setLoading(true);
+    try {
+      const data = await api.login(loginName, password);
+      setUser(data.user);
+      return data;
+    } catch (error) {
+      setUser(null);
+      throw error;
+    } finally {
       setLoading(false);
     }
+  }
 
+  async function signOut() {
     setLoading(true);
-    loadProfile();
-  }, [session]);
+    try {
+      await api.logout();
+      setUser(null);
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   const value = {
-    user: session?.user ?? null,
-    role: profile?.role ?? null,         // 'bureau' | 'coach' | 'adherent'
-    adherentId: profile?.adherent_id ?? null,
-    profile,
+    user,
+    role: user?.role ?? null,
+    adherentId: user?.adherent_id ?? null,
+    profile: user,
     loading,
-    signOut: () => supabase.auth.signOut(),
+    login,
+    signOut,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
-// Raccourci pour consommer le contexte dans n'importe quel composant.
 export function useAuth() {
   const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error('useAuth doit être utilisé dans un AuthProvider');
+  if (!ctx) throw new Error('useAuth doit etre utilise dans un AuthProvider');
   return ctx;
 }
