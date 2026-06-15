@@ -83,6 +83,25 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  // Vérification que l'appelant est un utilisateur bureau authentifié.
+  const authHeader = req.headers.authorization ?? '';
+  const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
+  if (!token) {
+    return res.status(401).json({ error: 'Non authentifié' });
+  }
+  const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+  if (authError || !user) {
+    return res.status(401).json({ error: 'Token invalide' });
+  }
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single();
+  if (profile?.role !== 'bureau') {
+    return res.status(403).json({ error: 'Accès refusé — rôle bureau requis' });
+  }
+
   const { adherentIds } = req.body ?? {};
 
   let adherents, error;

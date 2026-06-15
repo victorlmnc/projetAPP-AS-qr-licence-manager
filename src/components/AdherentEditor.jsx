@@ -36,12 +36,12 @@ export default function AdherentEditor({ adherent, onClose, onSaved, onDeleted }
     e.preventDefault();
     setErreur(null);
 
-    if (!form.nom.trim() || !form.prenom.trim() || !form.email.trim()) {
-      setErreur('Le nom, le prénom et l’e-mail sont obligatoires.');
+    if (!form.nom.trim() || !form.prenom.trim()) {
+      setErreur(‘Le nom et le prénom sont obligatoires.’);
       return;
     }
-    if (!form.email.includes('@')) {
-      setErreur('L’e-mail ne semble pas valide.');
+    if (form.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(form.email.trim())) {
+      setErreur("L’adresse e-mail n’est pas valide.");
       return;
     }
 
@@ -49,7 +49,7 @@ export default function AdherentEditor({ adherent, onClose, onSaved, onDeleted }
     const donnees = {
       nom: reparerTexte(form.nom).trim(),
       prenom: reparerTexte(form.prenom).trim(),
-      email: form.email.trim(),
+      email: form.email.trim() || null,
       fiche_renseignement: form.fiche_renseignement,
       paiement_global: form.paiement_global,
       manque_paiement: form.paiement_global ? false : form.manque_paiement,

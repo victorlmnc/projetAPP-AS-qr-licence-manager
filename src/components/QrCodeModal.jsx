@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import { QRCodeCanvas } from 'qrcode.react';
+import { supabase } from '../lib/supabase';
 import { nomComplet, reparerTexte } from '../lib/texte';
 
 export default function QrCodeModal({ adherent, onClose }) {
@@ -19,9 +20,13 @@ export default function QrCodeModal({ adherent, onClose }) {
     if (!adherent.email) return;
     setEnvoi('loading');
     try {
+      const { data: { session } } = await supabase.auth.getSession();
       const res = await fetch('/api/send-qr', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.access_token}`,
+        },
         body: JSON.stringify({ adherentIds: [adherent.id] }),
       });
       const data = await res.json();
