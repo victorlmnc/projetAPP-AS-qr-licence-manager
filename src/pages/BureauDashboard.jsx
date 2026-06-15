@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '../lib/supabase';
+import { useAuth } from '../context/AuthContext';
 import { calculerStatutLicence } from '../lib/licence';
 import Header from '../components/Header';
 import StatusBadge from '../components/StatusBadge';
@@ -7,6 +8,7 @@ import AdherentEditor from '../components/AdherentEditor';
 import QrCodeModal from '../components/QrCodeModal';
 import ImportCsvModal from '../components/ImportCsvModal';
 import ChangePasswordModal from '../components/ChangePasswordModal';
+import ResetAdherentsModal from '../components/ResetAdherentsModal';
 import './BureauDashboard.css';
 
 // Liste des filtres. `test(adherent)` renvoie true si l'adhérent doit
@@ -38,6 +40,7 @@ export default function BureauDashboard() {
   const [qrAdherent, setQrAdherent] = useState(null);
   const [importOuvert, setImportOuvert] = useState(false);
   const [mdpOuvert, setMdpOuvert] = useState(false);
+  const [resetOuvert, setResetOuvert] = useState(false);
 
   // Chargement initial depuis Supabase.
   useEffect(() => {
@@ -246,6 +249,19 @@ export default function BureauDashboard() {
         )}
       </main>
 
+      <footer className="container" style={{ marginTop: '40px', padding: '20px', borderTop: '2px dashed #f5c2c2', backgroundColor: '#fff7f7', borderRadius: 'var(--radius)', marginBottom: '40px' }}>
+        <h4 style={{ color: 'var(--ko)', margin: '0 0 10px 0' }}>Zone de Danger</h4>
+        <p className="small muted" style={{ margin: '0 0 15px 0' }}>
+          La réinitialisation supprimera définitivement tous les adhérents de la base de données. Les comptes utilisateurs associés ne pourront plus être liés à ces fiches adhérents.
+        </p>
+        <button
+          onClick={() => setResetOuvert(true)}
+          style={{ backgroundColor: 'var(--ko)', color: 'white' }}
+        >
+          Réinitialiser les adhérents
+        </button>
+      </footer>
+
       {editeur && (
         <AdherentEditor
           adherent={editeur.adherent}
@@ -267,6 +283,13 @@ export default function BureauDashboard() {
       )}
 
       {mdpOuvert && <ChangePasswordModal onClose={() => setMdpOuvert(false)} />}
+
+      {resetOuvert && (
+        <ResetAdherentsModal
+          onClose={() => setResetOuvert(false)}
+          onResetCompleted={() => setAdherents([])}
+        />
+      )}
     </div>
   );
 }
