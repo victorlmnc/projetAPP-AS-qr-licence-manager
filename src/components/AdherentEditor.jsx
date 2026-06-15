@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { supabase } from '../lib/supabase';
+import { api } from '../lib/api';
 import { calculerStatutLicence } from '../lib/licence';
 
 // Panneau latéral de saisie.
@@ -51,18 +51,16 @@ export default function AdherentEditor({ adherent, onClose, onSaved }) {
     };
 
     setEnCours(true);
-    const requete = creation
-      ? supabase.from('adherents').insert(donnees).select().single()
-      : supabase.from('adherents').update(donnees).eq('id', adherent.id).select().single();
-
-    const { data, error } = await requete;
-    setEnCours(false);
-
-    if (error) {
+    try {
+      const data = creation
+        ? await api.createAdherent(donnees)
+        : await api.updateAdherent(adherent.id, donnees);
+      onSaved(data);
+    } catch (error) {
       setErreur('Enregistrement impossible : ' + error.message);
-      return;
+    } finally {
+      setEnCours(false);
     }
-    onSaved(data);
   }
 
   return (

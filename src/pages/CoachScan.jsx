@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { supabase } from '../lib/supabase';
+import { api } from '../lib/api';
 import Header from '../components/Header';
 import StatusBanner from '../components/StatusBanner';
 
@@ -16,17 +16,12 @@ export default function CoachScan() {
     setErreur(null);
     setAdherent(null);
 
-    const { data, error } = await supabase
-      .from('adherents')
-      .select('*')
-      .eq('id', id)
-      .single();
-
-    if (error) {
+    try {
+      const data = await api.getAdherent(id);
+      setAdherent(data);
+    } catch (error) {
       setErreur('Adhérent introuvable ou QR invalide.');
-      return;
     }
-    setAdherent(data);
   }
 
   return (

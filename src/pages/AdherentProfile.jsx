@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { supabase } from '../lib/supabase';
+import { api } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
 import { messageAdherent } from '../lib/licence';
 import Header from '../components/Header';
@@ -19,13 +19,14 @@ export default function AdherentProfile() {
         setLoading(false);
         return;
       }
-      const { data } = await supabase
-        .from('adherents')
-        .select('*')
-        .eq('id', adherentId)
-        .single();
-      setAdherent(data);
-      setLoading(false);
+      try {
+        const data = await api.getAdherent(adherentId);
+        setAdherent(data);
+      } catch (error) {
+        console.error('Failed to load own profile:', error);
+      } finally {
+        setLoading(false);
+      }
     }
     load();
   }, [adherentId]);
