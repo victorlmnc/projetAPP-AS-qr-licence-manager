@@ -149,12 +149,18 @@ Avec Vercel :
 ### Miroir automatique vers le dépôt connecté à Vercel
 
 Le workflow `.github/workflows/mirror-to-vercel-repo.yml` se lance à chaque push
-sur `main` du dépôt de groupe et pousse la même version vers
+sur `main` du dépôt de groupe et crée un nouveau commit miroir vers
 `Mathishrn/as-licences-cvl` sur sa branche `main`.
+
+Ce commit miroir est créé avec l'identité GitHub du compte qui possède le token
+`MIRROR_TOKEN`. Cela permet au dépôt connecté à Vercel de recevoir un commit
+attribué à `Mathishrn`, même si le commit source du dépôt de groupe vient d'une
+autre personne.
 
 À faire une seule fois dans le dépôt de groupe GitHub :
 1. Depuis le compte qui possède `Mathishrn/as-licences-cvl`, créer un token GitHub
-   limité à ce dépôt, avec le droit `Contents: Read and write`.
+   limité à ce dépôt, avec les droits `Contents: Read and write` et
+   `Workflows: Read and write`.
 2. Dans le dépôt de groupe : **Settings > Secrets and variables > Actions**.
 3. Créer un secret nommé `MIRROR_TOKEN` avec la valeur du token.
 
