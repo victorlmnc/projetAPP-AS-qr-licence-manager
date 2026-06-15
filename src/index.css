@@ -142,7 +142,7 @@ code {
   align-items: center;
   justify-content: space-between;
   gap: 18px;
-  padding: 14px 24px;
+  padding: 16px 26px;
   border-bottom: 1px solid rgba(232, 222, 239, 0.85);
   background: rgba(255, 250, 242, 0.82);
   backdrop-filter: blur(16px);
@@ -162,11 +162,11 @@ code {
 }
 
 .topbar__logo {
-  width: 46px;
-  height: 46px;
+  width: 56px;
+  height: 56px;
   object-fit: contain;
-  padding: 7px;
-  border-radius: 14px;
+  padding: 8px;
+  border-radius: 16px;
   background: #fff;
   border: 1px solid rgba(80, 35, 124, 0.16);
   box-shadow: var(--shadow-sm);
@@ -180,14 +180,14 @@ code {
 
 .topbar__title span {
   color: var(--as-purple-700);
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 800;
   text-transform: uppercase;
 }
 
 .topbar__title strong {
   color: var(--ink);
-  font-size: 19px;
+  font-size: 24px;
   font-weight: 800;
 }
 
@@ -665,6 +665,19 @@ button:disabled {
     align-items: flex-start;
     flex-direction: column;
     padding: 14px 16px;
+  }
+
+  .topbar__logo {
+    width: 50px;
+    height: 50px;
+  }
+
+  .topbar__title span {
+    font-size: 12px;
+  }
+
+  .topbar__title strong {
+    font-size: 21px;
   }
 
   .topbar__actions {
