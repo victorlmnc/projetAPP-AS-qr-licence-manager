@@ -1,290 +1,196 @@
-/* ============================================================
-   Styles du dashboard Bureau.
-   Co-localisés ici (importés par BureauDashboard.jsx) pour ne pas
-   alourdir le index.css global. Réutilisent les variables de couleur
-   définies dans index.css (--ink, --ok, --ko, etc.).
-   ============================================================ */
+.dash {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
 
 .dash-top {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: space-between;
-  gap: 12px;
+  gap: 16px;
   flex-wrap: wrap;
 }
 
-.dash-top h2 { margin: 0; }
+.dash-top h2 {
+  margin: 0;
+  color: var(--as-purple-950);
+  font-size: 30px;
+  font-weight: 800;
+}
 
 .dash-top-actions {
   display: flex;
+  justify-content: flex-end;
   gap: 10px;
   flex-wrap: wrap;
-  justify-content: flex-end;
 }
 
-/* ---------- Statistiques ---------- */
 .stats {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-  margin: 16px 0 4px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
 }
 
 .stat {
-  flex: 1 1 120px;
+  position: relative;
+  overflow: hidden;
+  min-height: 104px;
+  padding: 18px;
+  border: 1px solid rgba(232, 222, 239, 0.95);
+  border-radius: 20px;
   background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  padding: 14px 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+  box-shadow: var(--shadow-sm);
 }
 
-.stat-num { font-size: 26px; font-weight: 700; line-height: 1.1; }
-.stat-lib { font-size: 13px; color: var(--muted); }
+.stat::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 5px;
+  background: var(--as-purple-700);
+}
 
-.stat--ok .stat-num { color: var(--ok); }
-.stat--ko .stat-num { color: var(--ko); }
+.stat-num {
+  display: block;
+  color: var(--as-purple-900);
+  font-size: 34px;
+  font-weight: 800;
+  line-height: 1;
+}
 
-/* ---------- Recherche ---------- */
+.stat-lib {
+  display: block;
+  margin-top: 8px;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.stat--ok::before {
+  background: var(--ok);
+}
+
+.stat--ok .stat-num {
+  color: var(--ok);
+}
+
+.stat--ko::before {
+  background: var(--ko);
+}
+
+.stat--ko .stat-num {
+  color: var(--ko);
+}
+
 .dash-search {
   width: 100%;
-  margin: 16px 0 12px;
-  padding: 10px 12px;
-  font: inherit;
+  margin-top: 4px;
+  padding: 15px 18px;
   border: 1px solid var(--line);
-  border-radius: var(--radius);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.86);
+  box-shadow: var(--shadow-sm);
 }
 
-.dash-search:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 1px;
+.dash-search:focus {
+  outline: none;
+  border-color: var(--as-purple-600);
+  box-shadow: 0 0 0 4px rgba(111, 66, 168, 0.14);
 }
 
-/* ---------- Filtres (chips) ---------- */
 .chips {
   display: flex;
+  gap: 9px;
   flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 20px;
 }
 
 .chip {
-  background: var(--surface);
-  color: var(--ink);
-  border: 1px solid var(--line);
+  padding: 9px 14px;
+  border: 1px solid rgba(80, 35, 124, 0.18);
   border-radius: 999px;
-  padding: 6px 13px;
-  font-size: 14px;
-  font-weight: 500;
+  color: var(--as-purple-800);
+  background: rgba(255, 255, 255, 0.78);
+  box-shadow: none;
 }
 
-.chip--on {
-  background: var(--ink);
+.chip:hover {
+  background: #fff;
+}
+
+.chip--on,
+.chip--on:hover {
   color: #fff;
-  border-color: var(--ink);
+  background: var(--as-purple-800);
+  border-color: var(--as-purple-800);
+  box-shadow: 0 10px 22px rgba(80, 35, 124, 0.2);
 }
 
-/* ---------- Tableau ---------- */
-.dash-table-wrap { overflow-x: auto; }
+.dash-table-wrap {
+  overflow-x: auto;
+  border: 1px solid rgba(232, 222, 239, 0.95);
+  border-radius: 22px;
+  background: var(--surface);
+  box-shadow: var(--shadow-md);
+}
 
 .dash-table {
   width: 100%;
+  min-width: 760px;
   border-collapse: collapse;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  overflow: hidden;
 }
 
 .dash-table th,
 .dash-table td {
+  padding: 16px 18px;
+  border-bottom: 1px solid rgba(232, 222, 239, 0.78);
   text-align: left;
-  padding: 12px 14px;
-  border-bottom: 1px solid var(--line);
   vertical-align: middle;
 }
 
 .dash-table th {
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
   color: var(--muted);
-  background: #fafbfc;
+  background: rgba(250, 247, 253, 0.86);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
-.dash-table tr:last-child td { border-bottom: none; }
-.dash-table tbody tr:hover { background: #fafbfc; }
+.dash-table tr:last-child td {
+  border-bottom: 0;
+}
 
-.small { font-size: 13px; }
-.muted.small { font-size: 12px; }
-.dash-empty { padding: 24px 0; }
+.dash-table tbody tr {
+  transition: background 0.18s var(--ease);
+}
+
+.dash-table tbody tr:hover {
+  background: rgba(243, 237, 248, 0.45);
+}
 
 .dash-row-actions {
   display: flex;
-  gap: 8px;
   justify-content: flex-end;
+  gap: 8px;
   white-space: nowrap;
 }
 
-/* ---------- Pastille de statut ---------- */
-.status-badge {
-  display: inline-block;
-  font-size: 13px;
-  font-weight: 600;
-  padding: 3px 10px;
-  border-radius: 999px;
-  white-space: nowrap;
+.dash-row-actions .btn-ghost {
+  padding: 9px 12px;
 }
 
-.status-badge--ok { background: var(--ok-bg); color: var(--ok); }
-.status-badge--ko { background: var(--ko-bg); color: var(--ko); }
-
-/* ============================================================
-   Couche modale partagée (panneau d'édition + modale QR)
-   ============================================================ */
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.4);
-  display: flex;
-  z-index: 50;
-}
-
-.modal {
-  margin: auto;
-  background: var(--surface);
-  border-radius: 14px;
-  padding: 24px;
-  width: min(360px, 92%);
+.dash-empty {
+  padding: 26px;
+  border: 1px dashed rgba(80, 35, 124, 0.28);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.72);
   text-align: center;
 }
 
-.modal--wide { width: min(520px, 94%); }
-.modal h3 { margin-top: 0; }
-
-.editor {
-  margin-left: auto;
-  height: 100%;
-  width: min(440px, 100%);
-  background: var(--surface);
-  padding: 24px;
-  overflow-y: auto;
-  animation: slide-in 0.18s ease-out;
-}
-
-@keyframes slide-in {
-  from { transform: translateX(20px); opacity: 0; }
-  to   { transform: translateX(0); opacity: 1; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .editor { animation: none; }
-}
-
-.editor h3 { margin-top: 0; }
-.editor hr { border: none; border-top: 1px solid var(--line); margin: 18px 0; }
-
-.editor-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-}
-
-.editor label:not(.check) {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  font-size: 14px;
-  font-weight: 600;
-  margin-bottom: 12px;
-}
-
-.editor input:not([type='checkbox']) {
-  font: inherit;
-  padding: 9px 11px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-}
-
-.editor input:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 1px;
-}
-
-.check {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  font-size: 15px;
-  font-weight: 500;
-  margin: 10px 0;
-  cursor: pointer;
-}
-
-.check input { width: 17px; height: 17px; }
-
-.manques {
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  padding: 10px 14px 12px;
-  margin: 10px 0;
-}
-
-.manques legend {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--muted);
-  padding: 0 6px;
-}
-
-.apercu {
-  margin: 16px 0;
-  padding: 11px 14px;
-  border-radius: var(--radius);
-  font-size: 15px;
-}
-
-.apercu--ok { background: var(--ok-bg); color: var(--ok); }
-.apercu--ko { background: var(--ko-bg); color: var(--ko); }
-
 .editor-danger {
   margin-top: 22px;
-  padding-top: 16px;
+  padding-top: 18px;
   border-top: 1px solid var(--line);
-}
-
-.btn-danger {
-  background: var(--ko);
-  color: #fff;
-}
-
-.btn-danger:disabled { opacity: 0.6; }
-
-/* ---------- QR Code ---------- */
-.qr-wrap {
-  display: inline-block;
-  background: #fff;
-  padding: 14px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  margin: 8px 0;
-}
-
-.qr-id {
-  font-size: 11px;
-  color: var(--muted);
-  word-break: break-all;
-  margin: 6px 0 0;
-}
-
-.modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin-top: 18px;
 }
 
 .modal form,
@@ -294,46 +200,34 @@
   text-align: left;
 }
 
-.champ {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  font-size: 14px;
-  font-weight: 600;
-  margin-bottom: 12px;
+.import-aide {
+  margin-top: 4px;
 }
-
-.champ input {
-  font: inherit;
-  padding: 9px 11px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-}
-
-.champ input:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 1px;
-}
-
-.import-aide { margin-top: 4px; }
 
 .import-etat {
-  margin-top: 12px;
-  padding: 10px 12px;
-  background: #fafbfc;
+  background: var(--as-purple-50);
   border: 1px solid var(--line);
-  border-radius: var(--radius);
-  font-size: 14px;
 }
 
-@media (max-width: 700px) {
-  .dash-top-actions,
-  .dash-row-actions {
-    justify-content: flex-start;
-    flex-wrap: wrap;
+@media (max-width: 760px) {
+  .stats {
+    grid-template-columns: 1fr;
   }
 
-  .editor-grid {
-    grid-template-columns: 1fr;
+  .dash-top {
+    align-items: stretch;
+  }
+
+  .dash-top-actions {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .dash-top-actions button {
+    flex: 1 1 150px;
+  }
+
+  .dash-row-actions {
+    justify-content: flex-start;
   }
 }

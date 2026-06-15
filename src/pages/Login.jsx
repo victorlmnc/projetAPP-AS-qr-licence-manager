@@ -2,20 +2,13 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase, supabaseConfigMissing } from '../lib/supabase';
 
-// Domaine interne ajouté automatiquement aux identifiants courts.
-// Les comptes doivent être créés avec ces e-mails : par ex. "bureau@as-licences.fr"
-// et "coach@as-licences.fr". L'utilisateur tape alors juste "bureau" ou "coach".
 const DOMAINE_LOGIN = 'as-licences.fr';
 
-// Transforme l'identifiant saisi en e-mail pour Supabase.
-// Si l'utilisateur tape déjà une adresse complète (avec @), on la garde telle quelle.
 function versEmail(identifiant) {
   const v = identifiant.trim();
   return v.includes('@') ? v : `${v}@${DOMAINE_LOGIN}`;
 }
 
-// Connexion par identifiant + mot de passe.
-// Après succès, on redirige vers "/" qui oriente selon le rôle.
 export default function Login() {
   const [identifiant, setIdentifiant] = useState('');
   const [password, setPassword] = useState('');
@@ -43,13 +36,20 @@ export default function Login() {
 
   return (
     <main className="auth">
-      <form className="card" onSubmit={handleSubmit}>
-        <h1>Contrôle des licences</h1>
-        <p className="muted">Connectez-vous pour continuer.</p>
+      <form className="card auth-card" onSubmit={handleSubmit}>
+        <div className="auth-brand">
+          <img src="/logo.png" alt="Logo AS" />
+          <div>
+            <span>AS INSA</span>
+            <h1>Controle des licences</h1>
+          </div>
+        </div>
+
+        <p className="muted">Connexion bureau, coach et adherent.</p>
 
         {supabaseConfigMissing && (
           <p className="error">
-            Configuration Supabase manquante : créez un fichier .env avec les clés du projet.
+            Configuration Supabase manquante : creez un fichier .env avec les cles du projet.
           </p>
         )}
 
@@ -59,7 +59,7 @@ export default function Login() {
             type="text"
             value={identifiant}
             onChange={(e) => setIdentifiant(e.target.value)}
-            placeholder="ex. bureau"
+            placeholder="ex. coach"
             autoComplete="username"
             required
           />
@@ -79,7 +79,7 @@ export default function Login() {
         {erreur && <p className="error">{erreur}</p>}
 
         <button type="submit" disabled={enCours}>
-          {enCours ? 'Connexion…' : 'Se connecter'}
+          {enCours ? 'Connexion...' : 'Se connecter'}
         </button>
       </form>
     </main>
