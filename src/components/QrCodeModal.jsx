@@ -1,40 +1,34 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { QRCodeCanvas } from 'qrcode.react';
 
-// Affiche le QR Code de l'adhérent et permet de le télécharger.
-// Le QR encode uniquement l'id (UUID) : c'est ce que le Coach lira au scan.
 export default function QrCodeModal({ adherent, onClose }) {
   const wrapRef = useRef(null);
+  const [envoi, setEnvoi] = useState(null); // null | 'loading' | 'ok' | 'error'
 
   function telechargerPng() {
-    // qrcode.react rend un <canvas> : on le récupère pour l'exporter en image.
     const canvas = wrapRef.current?.querySelector('canvas');
     if (!canvas) return;
-
     const lien = document.createElement('a');
     lien.href = canvas.toDataURL('image/png');
     lien.download = `licence-${adherent.nom}-${adherent.prenom}.png`;
     lien.click();
   }
 
-  function envoyerParMail() {
+  async function envoyerParMail() {
     if (!adherent.email) return;
-
-    const sujet = `Votre QR Code licence - ${adherent.prenom} ${adherent.nom}`;
-    const profilUrl = `${window.location.origin}/profil`;
-    const corps = [
-      `Bonjour ${adherent.prenom},`,
-      'Voici les informations de votre licence.',
-      `Identifiant QR : ${adherent.id}`,
-      `Vous pouvez consulter votre profil ici : ${profilUrl}`,
-      'Vous pouvez aussi présenter le QR Code envoyé ou imprimé au coach.',
-      'Sportivement,',
-      'Le bureau',
-    ].join('\n\n');
-
-    window.location.href = `mailto:${encodeURIComponent(adherent.email)}?subject=${encodeURIComponent(
-      sujet
-    )}&body=${encodeURIComponent(corps)}`;
+    setEnvoi('loading');
+    try {
+      const res = await fetch('/api/send-qr', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ adherentIds: [adherent.id] }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? 'Erreur inconnue');
+      setEnvoi('ok');
+    } catch {
+      setEnvoi('error');
+    }
   }
 
   return (
@@ -49,15 +43,26 @@ export default function QrCodeModal({ adherent, onClose }) {
 
         <p className="qr-id">id : {adherent.id}</p>
 
+        {envoi === 'ok' && (
+          <p className="small" style={{ color: 'var(--ok)', textAlign: 'center', margin: '8px 0 0' }}>
+            Email envoyé à {adherent.email}
+          </p>
+        )}
+        {envoi === 'error' && (
+          <p className="error" style={{ textAlign: 'center', margin: '8px 0 0' }}>
+            Échec de l'envoi. Vérifiez la configuration email.
+          </p>
+        )}
+
         <div className="modal-actions">
           <button className="btn-ghost" onClick={onClose}>Fermer</button>
           <button className="btn-ghost" onClick={telechargerPng}>Télécharger le PNG</button>
           <button
             onClick={envoyerParMail}
-            disabled={!adherent.email}
-            title={!adherent.email ? "Aucun e-mail enregistré pour cet adhérent" : undefined}
+            disabled={!adherent.email || envoi === 'loading' || envoi === 'ok'}
+            title={!adherent.email ? 'Aucun e-mail enregistré pour cet adhérent' : undefined}
           >
-            Envoyer par e-mail
+            {envoi === 'loading' ? 'Envoi…' : envoi === 'ok' ? 'Envoyé ✓' : 'Envoyer par e-mail'}
           </button>
         </div>
 

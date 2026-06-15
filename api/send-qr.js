@@ -1,8 +1,7 @@
 import nodemailer from 'nodemailer';
 import { createClient } from '@supabase/supabase-js';
 
-// Petit batch par appel pour rester sous le timeout Vercel (10s).
-// Le client boucle jusqu'à remaining === 0, avec une limite de 450/jour côté BDD.
+// Taille max par appel pour le mode groupé (évite le timeout Vercel de 10s).
 const LIMITE_PAR_APPEL = 15;
 
 const transporter = nodemailer.createTransport({
@@ -87,26 +86,47 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  // Récupère tous les adhérents qui n'ont jamais reçu le mail et qui ont un email
-  const { data: adherents, error } = await supabase
-    .from('adherents')
-    .select('id, nom, prenom, email')
-    .is('qr_envoye_le', null)
-    .not('email', 'is', null)
-    .order('nom');
+  const { adherentIds } = req.body ?? {};
+  const cibleSpecifique = Array.isArray(adherentIds) && adherentIds.length > 0;
+
+  let adherents, error;
+
+  if (cibleSpecifique) {
+    // Envoi ciblé (depuis QrCodeModal ou sélection manuelle) :
+    // on bypass le filtre qr_envoye_le, on envoie toujours.
+    ({ data: adherents, error } = await supabase
+      .from('adherents')
+      .select('id, nom, prenom, email')
+      .in('id', adherentIds));
+  } else {
+    // Envoi groupé : seulement ceux qui n'ont pas encore reçu le mail.
+    ({ data: adherents, error } = await supabase
+      .from('adherents')
+      .select('id, nom, prenom, email')
+      .is('qr_envoye_le', null)
+      .not('email', 'is', null)
+      .order('nom'));
+  }
 
   if (error) {
     return res.status(500).json({ error: 'Erreur Supabase : ' + error.message });
   }
 
-  const totalRestant = adherents.length;
-  const batch = adherents.slice(0, LIMITE_PAR_APPEL);
-  const baseUrl = `https://${req.headers.host}`;
-  const results = { sent: 0, remaining: Math.max(0, totalRestant - LIMITE_PAR_APPEL), errors: [] };
+  const totalRestant = (adherents ?? []).length;
+  const batch = cibleSpecifique
+    ? (adherents ?? [])
+    : (adherents ?? []).slice(0, LIMITE_PAR_APPEL);
 
+  const baseUrl = `https://${req.headers.host}`;
+  const results = {
+    sent: 0,
+    remaining: cibleSpecifique ? 0 : Math.max(0, totalRestant - LIMITE_PAR_APPEL),
+    errors: [],
+  };
   const idEnvoyes = [];
 
   for (const a of batch) {
+    if (!a.email) continue;
     const lien = `${baseUrl}/adherent/${a.id}`;
     try {
       await transporter.sendMail({
@@ -123,7 +143,6 @@ export default async function handler(req, res) {
     }
   }
 
-  // Marque les envois réussis en base
   if (idEnvoyes.length > 0) {
     await supabase
       .from('adherents')

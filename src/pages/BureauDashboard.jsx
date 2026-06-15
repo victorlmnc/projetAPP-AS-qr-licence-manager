@@ -7,6 +7,7 @@ import StatusBadge from '../components/StatusBadge';
 import AdherentEditor from '../components/AdherentEditor';
 import QrCodeModal from '../components/QrCodeModal';
 import ImportCsvModal from '../components/ImportCsvModal';
+import EnvoiQrModal from '../components/EnvoiQrModal';
 import './BureauDashboard.css';
 
 // Liste des filtres. `test(adherent)` renvoie true si l'adhérent doit
@@ -39,8 +40,15 @@ export default function BureauDashboard() {
   const [importOuvert, setImportOuvert] = useState(false);
 
   // État de l'envoi groupé des QR codes
+  const [envoiModalOuvert, setEnvoiModalOuvert] = useState(false);
   const [envoi, setEnvoi] = useState(null); // null | 'loading' | { sent, remaining, errors }
   const [progression, setProgression] = useState(null); // null | { envoyes, total }
+
+  // Adhérents éligibles à l'envoi : email présent + jamais reçu le QR
+  const adherentsEligibles = useMemo(
+    () => adherents.filter((a) => a.email && !a.qr_envoye_le),
+    [adherents]
+  );
 
   // Chargement initial et abonnement Realtime depuis Supabase.
   useEffect(() => {
@@ -158,33 +166,31 @@ export default function BureauDashboard() {
     );
   }
 
-  // Envoie les QR codes par lots successifs jusqu'à ce que tout soit parti.
-  async function envoyerQrATous() {
+  // Envoie les QR codes par lots de 15 pour une liste d'IDs donnée.
+  async function envoyerAvecIds(ids) {
+    setEnvoiModalOuvert(false);
     setEnvoi('loading');
-    setProgression({ envoyes: 0, total: null });
+    setProgression({ envoyes: 0, total: ids.length });
 
     let totalEnvoyes = 0;
-    let total = null;
     const tousLesErreurs = [];
+    let i = 0;
 
     try {
-      while (true) {
+      while (i < ids.length) {
+        const batch = ids.slice(i, i + 15);
         const res = await fetch('/api/send-qr', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({}),
+          body: JSON.stringify({ adherentIds: batch }),
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error ?? 'Erreur inconnue');
 
         totalEnvoyes += data.sent;
         tousLesErreurs.push(...data.errors);
-
-        // On calcule le total dès le premier appel
-        if (total === null) total = totalEnvoyes + data.remaining;
-        setProgression({ envoyes: totalEnvoyes, total });
-
-        if (data.remaining === 0 || data.sent === 0) break;
+        i += batch.length;
+        setProgression({ envoyes: totalEnvoyes, total: ids.length });
       }
       setEnvoi({ sent: totalEnvoyes, remaining: 0, errors: tousLesErreurs });
     } catch (err) {
@@ -253,10 +259,11 @@ export default function BureauDashboard() {
             </button>
             <button
               className="btn-ghost"
-              onClick={envoyerQrATous}
-              disabled={envoi === 'loading' || adherents.length === 0}
+              onClick={() => setEnvoiModalOuvert(true)}
+              disabled={envoi === 'loading' || adherentsEligibles.length === 0}
+              title={adherentsEligibles.length === 0 ? 'Tous les adhérents ont déjà reçu leur QR Code' : undefined}
             >
-              {envoi === 'loading' ? 'Envoi en cours…' : 'Envoyer les QR par email'}
+              {envoi === 'loading' ? 'Envoi en cours…' : `Envoyer les QR par email (${adherentsEligibles.length})`}
             </button>
             <button onClick={() => setEditeur({ adherent: null })}>+ Nouvel adhérent</button>
           </div>
@@ -385,6 +392,14 @@ export default function BureauDashboard() {
         <ImportCsvModal
           onClose={() => setImportOuvert(false)}
           onImported={onImported}
+        />
+      )}
+
+      {envoiModalOuvert && (
+        <EnvoiQrModal
+          adherents={adherentsEligibles}
+          onClose={() => setEnvoiModalOuvert(false)}
+          onConfirm={envoyerAvecIds}
         />
       )}
 
