@@ -1,6 +1,8 @@
 import { useState } from 'react';
-import { api } from '../lib/api';
+import { supabase } from '../lib/supabase';
 
+// Permet à l'utilisateur connecté (le bureau) de changer son mot de passe.
+// updateUser met à jour le compte courant : pas besoin de redonner l'ancien.
 export default function ChangePasswordModal({ onClose }) {
   const [mdp, setMdp] = useState('');
   const [confirme, setConfirme] = useState('');
@@ -13,7 +15,7 @@ export default function ChangePasswordModal({ onClose }) {
     setErreur(null);
 
     if (mdp.length < 8) {
-      setErreur('Le mot de passe doit faire au moins 8 caracteres.');
+      setErreur('Le mot de passe doit faire au moins 8 caractères.');
       return;
     }
     if (mdp !== confirme) {
@@ -22,16 +24,16 @@ export default function ChangePasswordModal({ onClose }) {
     }
 
     setEnCours(true);
-    try {
-      await api.updatePassword(mdp);
-      setOk(true);
-      setMdp('');
-      setConfirme('');
-    } catch (error) {
+    const { error } = await supabase.auth.updateUser({ password: mdp });
+    setEnCours(false);
+
+    if (error) {
       setErreur('Modification impossible : ' + error.message);
-    } finally {
-      setEnCours(false);
+      return;
     }
+    setOk(true);
+    setMdp('');
+    setConfirme('');
   }
 
   return (
@@ -41,7 +43,7 @@ export default function ChangePasswordModal({ onClose }) {
 
         {ok ? (
           <>
-            <p className="apercu apercu--ok">Mot de passe modifie.</p>
+            <p className="apercu apercu--ok">Mot de passe modifié.</p>
             <div className="modal-actions">
               <button onClick={onClose}>Fermer</button>
             </div>
@@ -72,7 +74,7 @@ export default function ChangePasswordModal({ onClose }) {
             <div className="modal-actions">
               <button type="button" className="btn-ghost" onClick={onClose}>Annuler</button>
               <button type="submit" disabled={enCours}>
-                {enCours ? 'Modification...' : 'Valider'}
+                {enCours ? 'Modification…' : 'Valider'}
               </button>
             </div>
           </form>
