@@ -7,7 +7,6 @@ import StatusBadge from '../components/StatusBadge';
 import AdherentEditor from '../components/AdherentEditor';
 import QrCodeModal from '../components/QrCodeModal';
 import ImportCsvModal from '../components/ImportCsvModal';
-import ResetAdherentsModal from '../components/ResetAdherentsModal';
 import './BureauDashboard.css';
 
 // Liste des filtres. `test(adherent)` renvoie true si l'adhérent doit
@@ -38,7 +37,6 @@ export default function BureauDashboard() {
   const [editeur, setEditeur] = useState(null);
   const [qrAdherent, setQrAdherent] = useState(null);
   const [importOuvert, setImportOuvert] = useState(false);
-  const [resetOuvert, setResetOuvert] = useState(false);
 
   // État de l'envoi groupé des QR codes
   const [envoi, setEnvoi] = useState(null); // null | 'loading' | { sent, skipped, errors }
@@ -89,6 +87,15 @@ export default function BureauDashboard() {
   }, []);
 
   // Liste affichée = filtres actifs + recherche texte.
+  useEffect(() => {
+    function handleReset() {
+      setAdherents([]);
+    }
+
+    window.addEventListener('adherents:reset', handleReset);
+    return () => window.removeEventListener('adherents:reset', handleReset);
+  }, []);
+
   const liste = useMemo(() => {
     const q = recherche.trim().toLowerCase();
     const filtres = FILTRES.filter((x) => x.cle !== 'tous' && filtresActifs.includes(x.cle));
@@ -320,19 +327,6 @@ export default function BureauDashboard() {
         )}
       </main>
 
-      <footer className="container" style={{ marginTop: '40px', padding: '20px', borderTop: '2px dashed #f5c2c2', backgroundColor: '#fff7f7', borderRadius: 'var(--radius)', marginBottom: '40px' }}>
-        <h4 style={{ color: 'var(--ko)', margin: '0 0 10px 0' }}>Réinitialiser les adhérents</h4>
-        <p className="small muted" style={{ margin: '0 0 15px 0' }}>
-          Attention cela supprimera définitivement tous les adhérents de la base de données. Les comptes utilisateurs associés ne pourront plus être liés à ces fiches adhérents.
-        </p>
-        <button
-          onClick={() => setResetOuvert(true)}
-          style={{ backgroundColor: 'var(--ko)', color: 'white' }}
-        >
-          Réinitialiser les adhérents
-        </button>
-      </footer>
-
       {editeur && (
         <AdherentEditor
           adherent={editeur.adherent}
@@ -350,13 +344,6 @@ export default function BureauDashboard() {
         <ImportCsvModal
           onClose={() => setImportOuvert(false)}
           onImported={onImported}
-        />
-      )}
-
-      {resetOuvert && (
-        <ResetAdherentsModal
-          onClose={() => setResetOuvert(false)}
-          onResetCompleted={() => setAdherents([])}
         />
       )}
 
