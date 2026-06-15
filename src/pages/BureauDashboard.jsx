@@ -39,6 +39,9 @@ export default function BureauDashboard() {
   const [importOuvert, setImportOuvert] = useState(false);
   const [mdpOuvert, setMdpOuvert] = useState(false);
 
+  // État de l'envoi groupé des QR codes
+  const [envoi, setEnvoi] = useState(null); // null | 'loading' | { sent, skipped, errors }
+
   // Chargement initial depuis Supabase.
   useEffect(() => {
     async function charger() {
@@ -102,6 +105,23 @@ export default function BureauDashboard() {
     );
   }
 
+  // Envoie les QR codes par email à tous les adhérents ayant une adresse email.
+  async function envoyerQrATous() {
+    setEnvoi('loading');
+    try {
+      const res = await fetch('/api/send-qr', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? 'Erreur inconnue');
+      setEnvoi(data);
+    } catch (err) {
+      setEnvoi({ sent: 0, skipped: 0, errors: [{ nom: 'Serveur', raison: err.message }] });
+    }
+  }
+
   // Exporte la liste actuellement affichée (filtre + recherche) au format CSV.
   function exporterCsv() {
     const entetes = [
@@ -161,6 +181,13 @@ export default function BureauDashboard() {
             </button>
             <button className="btn-ghost" onClick={exporterCsv} disabled={liste.length === 0}>
               Exporter en CSV
+            </button>
+            <button
+              className="btn-ghost"
+              onClick={envoyerQrATous}
+              disabled={envoi === 'loading' || adherents.length === 0}
+            >
+              {envoi === 'loading' ? 'Envoi en cours…' : 'Envoyer les QR par email'}
             </button>
             <button onClick={() => setEditeur({ adherent: null })}>+ Nouvel adhérent</button>
           </div>
@@ -267,6 +294,33 @@ export default function BureauDashboard() {
       )}
 
       {mdpOuvert && <ChangePasswordModal onClose={() => setMdpOuvert(false)} />}
+
+      {envoi && envoi !== 'loading' && (
+        <div className="modal-overlay" onClick={() => setEnvoi(null)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <h3>Résultat de l'envoi</h3>
+            <p>
+              <strong style={{ color: 'var(--ok)' }}>{envoi.sent} email(s) envoyé(s)</strong>
+              {envoi.skipped > 0 && (
+                <span className="muted"> · {envoi.skipped} sans adresse email (ignoré(s))</span>
+              )}
+            </p>
+            {envoi.errors.length > 0 && (
+              <>
+                <p className="error">{envoi.errors.length} échec(s) :</p>
+                <ul style={{ margin: '4px 0', paddingLeft: 20 }}>
+                  {envoi.errors.map((e, i) => (
+                    <li key={i} className="small error">{e.nom} — {e.raison}</li>
+                  ))}
+                </ul>
+              </>
+            )}
+            <div className="modal-actions">
+              <button onClick={() => setEnvoi(null)}>Fermer</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

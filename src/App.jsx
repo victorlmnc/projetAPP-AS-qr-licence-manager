@@ -5,6 +5,7 @@ import Login from './pages/Login';
 import BureauDashboard from './pages/BureauDashboard';
 import CoachScan from './pages/CoachScan';
 import AdherentProfile from './pages/AdherentProfile';
+import AdherentPublic from './pages/AdherentPublic';
 
 // Page "/" : envoie chacun vers l'écran de son rôle.
 function Home() {
@@ -56,6 +57,9 @@ export default function App() {
               </ProtectedRoute>
             }
           />
+
+          {/* Page publique : QR code + statut, sans login requis */}
+          <Route path="/adherent/:id" element={<AdherentPublic />} />
 
           {/* Toute URL inconnue retombe sur l'accueil. */}
           <Route path="*" element={<Navigate to="/" replace />} />
