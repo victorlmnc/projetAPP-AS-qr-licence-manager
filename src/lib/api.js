@@ -1,5 +1,4 @@
-// Client API pour communiquer avec notre backend Express local.
-// Remplace l'ancien client Supabase.
+// Client API pour communiquer avec le backend Express + SQLite.
 
 const TOKEN_KEY = 'licence_qr_auth_token';
 

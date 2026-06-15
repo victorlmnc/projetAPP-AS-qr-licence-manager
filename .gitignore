@@ -2,6 +2,9 @@ node_modules
 dist
 .env
 .env.local
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
 .DS_Store
 *.log
 *.pdf

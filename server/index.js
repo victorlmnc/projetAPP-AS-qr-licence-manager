@@ -1,60 +1,31 @@
 import express from 'express';
 import cors from 'cors';
-import fs from 'fs';
-import path from 'path';
 import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
+import { db, initDB } from './database.js';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
-const DB_FILE = path.join(process.cwd(), 'server', 'database.json');
-const ADMIN_KEY = 'INSA-AS-ADMIN-KEY-2026-SECURITY-ACTIVE99'; // Fixed 40-character key
+const ADMIN_KEY = 'INSA-AS-ADMIN-KEY-2026-SECURITY-ACTIVE99'; // Clé fixe 40 caractères
 
 app.use(cors());
 app.use(express.json());
 
-// In-memory database structure (Starts empty)
-let db = {
-  adherents: [],
-  users: []
-};
-
-// In-memory sessions (token -> user)
+// Sessions en mémoire (token -> user)
 const sessions = new Map();
 
-// Helper to save DB to file
-function saveDB() {
-  try {
-    fs.writeFileSync(DB_FILE, JSON.stringify(db, null, 2), 'utf-8');
-  } catch (error) {
-    console.error('Error saving database:', error);
-  }
-}
+// --- HELPERS ---
 
-// Database initialization
-async function initDB() {
-  const serverDir = path.dirname(DB_FILE);
-  if (!fs.existsSync(serverDir)) {
-    fs.mkdirSync(serverDir, { recursive: true });
-  }
-
-  if (fs.existsSync(DB_FILE)) {
-    try {
-      db = JSON.parse(fs.readFileSync(DB_FILE, 'utf-8'));
-      console.log('Database loaded successfully.');
-      return;
-    } catch (e) {
-      console.warn('Error reading database, starting fresh.');
-    }
-  }
-
-  console.log('Initializing empty database...');
-  db = {
-    adherents: [],
-    users: []
+// Convertit un row SQLite (integers 0/1) en objet avec booleans
+function rowToAdherent(row) {
+  return {
+    ...row,
+    fiche_renseignement: !!row.fiche_renseignement,
+    paiement_global: !!row.paiement_global,
+    manque_paiement: !!row.manque_paiement,
+    manque_yeps: !!row.manque_yeps,
+    manque_passsport: !!row.manque_passsport,
   };
-  saveDB();
-  console.log('Database initialized empty.');
 }
 
 // --- AUTHENTICATION MIDDLEWARE ---
@@ -72,13 +43,13 @@ function authenticateToken(req, res, next) {
     return res.status(403).json({ error: 'Session expirée ou invalide.' });
   }
 
-  const freshUser = db.users.find(u => u.id === sessionUser.id);
+  // Vérifier que l'utilisateur existe encore en base
+  const freshUser = db.prepare('SELECT id, login, role, adherent_id, nom, prenom, created_at FROM users WHERE id = ?').get(sessionUser.id);
   if (!freshUser) {
     return res.status(403).json({ error: 'Utilisateur introuvable.' });
   }
 
-  const { password_hash, ...profile } = freshUser;
-  req.user = profile;
+  req.user = freshUser;
   next();
 }
 
@@ -93,18 +64,18 @@ function authorizeRoles(...allowedRoles) {
 
 // --- API ROUTES ---
 
-// 1) Setup Status: check if any admin exists
+// 1) Setup Status
 app.get('/api/setup/status', (req, res) => {
-  const hasAdmin = db.users.some(u => u.role === 'bureau');
-  res.json({ initialized: hasAdmin });
+  const row = db.prepare("SELECT COUNT(*) as count FROM users WHERE role = 'bureau'").get();
+  res.json({ initialized: row.count > 0 });
 });
 
-// 2) Setup Initialize: verify key and create primary admin
+// 2) Setup Initialize
 app.post('/api/setup/initialize', async (req, res) => {
   const { key, login, password } = req.body;
 
-  const hasAdmin = db.users.some(u => u.role === 'bureau');
-  if (hasAdmin) {
+  const row = db.prepare("SELECT COUNT(*) as count FROM users WHERE role = 'bureau'").get();
+  if (row.count > 0) {
     return res.status(400).json({ error: "L'application est déjà initialisée." });
   }
 
@@ -117,23 +88,14 @@ app.post('/api/setup/initialize', async (req, res) => {
   }
 
   try {
-    const saltRounds = 10;
-    const passwordHash = await bcrypt.hash(password, saltRounds);
+    const passwordHash = await bcrypt.hash(password, 10);
+    const id = crypto.randomUUID();
+    const now = new Date().toISOString();
 
-    const adminUser = {
-      id: crypto.randomUUID(),
-      login: login.trim(),
-      password_hash: passwordHash,
-      role: 'bureau',
-      adherent_id: null,
-      nom: 'Bureau',
-      prenom: 'Admin',
-      created_at: new Date().toISOString()
-    };
+    db.prepare('INSERT INTO users (id, login, password_hash, role, adherent_id, nom, prenom, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)')
+      .run(id, login.trim(), passwordHash, 'bureau', null, 'Bureau', 'Admin', now);
 
-    db.users.push(adminUser);
-    saveDB();
-    console.log('Primary administrator account initialized.');
+    console.log('Compte administrateur principal créé.');
     res.status(201).json({ success: true, message: 'Administrateur créé avec succès.' });
   } catch (error) {
     console.error('Setup initialization error:', error);
@@ -141,7 +103,7 @@ app.post('/api/setup/initialize', async (req, res) => {
   }
 });
 
-// 3) Setup Destroy: wipe all database contents using security key
+// 3) Setup Destroy
 app.post('/api/setup/destroy', authenticateToken, authorizeRoles('bureau'), (req, res) => {
   const { key } = req.body;
 
@@ -149,17 +111,12 @@ app.post('/api/setup/destroy', authenticateToken, authorizeRoles('bureau'), (req
     return res.status(401).json({ error: "Clé de sécurité incorrecte. Destruction annulée." });
   }
 
-  try {
-    db.adherents = [];
-    db.users = [];
-    sessions.clear(); // Invalidate all session tokens
-    saveDB();
-    console.log('Database wiped completely by administrator.');
-    res.json({ success: true, message: 'Base de données réinitialisée avec succès.' });
-  } catch (error) {
-    console.error('Database destruction error:', error);
-    res.status(500).json({ error: 'Erreur lors de la destruction de la base de données.' });
-  }
+  db.prepare('DELETE FROM adherents').run();
+  db.prepare('DELETE FROM users').run();
+  sessions.clear();
+
+  console.log('Base de données vidée par l\'administrateur.');
+  res.json({ success: true, message: 'Base de données réinitialisée avec succès.' });
 });
 
 // 4) Auth - Login
@@ -170,7 +127,7 @@ app.post('/api/auth/login', async (req, res) => {
     return res.status(400).json({ error: 'Saisir identifiant et mot de passe.' });
   }
 
-  const user = db.users.find(u => u.login.toLowerCase() === login.toLowerCase());
+  const user = db.prepare('SELECT * FROM users WHERE login = ? COLLATE NOCASE').get(login);
   if (!user) {
     return res.status(401).json({ error: 'Identifiant ou mot de passe incorrect.' });
   }
@@ -192,7 +149,7 @@ app.get('/api/auth/me', authenticateToken, (req, res) => {
   res.json({ user: req.user });
 });
 
-// 5b) Auth - Change current user's password
+// 5b) Auth - Change password
 app.put('/api/auth/password', authenticateToken, async (req, res) => {
   const { password } = req.body;
 
@@ -200,14 +157,9 @@ app.put('/api/auth/password', authenticateToken, async (req, res) => {
     return res.status(400).json({ error: 'Le mot de passe doit faire au moins 8 caracteres.' });
   }
 
-  const userIndex = db.users.findIndex(u => u.id === req.user.id);
-  if (userIndex === -1) {
-    return res.status(404).json({ error: 'Utilisateur introuvable.' });
-  }
-
   try {
-    db.users[userIndex].password_hash = await bcrypt.hash(password, 10);
-    saveDB();
+    const newHash = await bcrypt.hash(password, 10);
+    db.prepare('UPDATE users SET password_hash = ? WHERE id = ?').run(newHash, req.user.id);
     res.json({ success: true });
   } catch (error) {
     console.error('Password update error:', error);
@@ -217,8 +169,8 @@ app.put('/api/auth/password', authenticateToken, async (req, res) => {
 
 // 6) Users - List all (Bureau only)
 app.get('/api/users', authenticateToken, authorizeRoles('bureau'), (req, res) => {
-  const list = db.users.map(({ password_hash, ...u }) => u);
-  res.json(list);
+  const users = db.prepare('SELECT id, login, role, adherent_id, nom, prenom, created_at FROM users').all();
+  res.json(users);
 });
 
 // 7) Users - Create (Bureau only)
@@ -229,30 +181,20 @@ app.post('/api/users', authenticateToken, authorizeRoles('bureau'), async (req, 
     return res.status(400).json({ error: 'Identifiant, mot de passe et rôle requis.' });
   }
 
-  if (db.users.some(u => u.login.toLowerCase() === login.toLowerCase())) {
+  const existing = db.prepare('SELECT id FROM users WHERE login = ? COLLATE NOCASE').get(login);
+  if (existing) {
     return res.status(400).json({ error: 'Cet identifiant existe déjà.' });
   }
 
   try {
-    const saltRounds = 10;
-    const passwordHash = await bcrypt.hash(password, saltRounds);
+    const passwordHash = await bcrypt.hash(password, 10);
+    const id = crypto.randomUUID();
+    const now = new Date().toISOString();
 
-    const newUser = {
-      id: crypto.randomUUID(),
-      login: login.trim(),
-      password_hash: passwordHash,
-      role,
-      adherent_id: adherent_id || null,
-      nom: nom || '',
-      prenom: prenom || '',
-      created_at: new Date().toISOString()
-    };
+    db.prepare('INSERT INTO users (id, login, password_hash, role, adherent_id, nom, prenom, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)')
+      .run(id, login.trim(), passwordHash, role, adherent_id || null, nom || '', prenom || '', now);
 
-    db.users.push(newUser);
-    saveDB();
-
-    const { password_hash: _, ...profile } = newUser;
-    res.status(201).json(profile);
+    res.status(201).json({ id, login: login.trim(), role, adherent_id: adherent_id || null, nom: nom || '', prenom: prenom || '', created_at: now });
   } catch (error) {
     console.error('User creation error:', error);
     res.status(500).json({ error: "Erreur lors de la création de l'utilisateur." });
@@ -261,11 +203,11 @@ app.post('/api/users', authenticateToken, authorizeRoles('bureau'), async (req, 
 
 // 8) Adherents - Get all (Bureau & Coach only)
 app.get('/api/adherents', authenticateToken, authorizeRoles('bureau', 'coach'), (req, res) => {
-  const sorted = [...db.adherents].sort((a, b) => a.nom.localeCompare(b.nom));
-  res.json(sorted);
+  const rows = db.prepare('SELECT * FROM adherents ORDER BY nom ASC').all();
+  res.json(rows.map(rowToAdherent));
 });
 
-// 9) Adherents - Get single (Bureau, Coach, or the Adherent themselves)
+// 9) Adherents - Get single
 app.get('/api/adherents/:id', authenticateToken, (req, res) => {
   const { id } = req.params;
 
@@ -273,11 +215,12 @@ app.get('/api/adherents/:id', authenticateToken, (req, res) => {
     return res.status(403).json({ error: 'Accès interdit.' });
   }
 
-  const adherent = db.adherents.find(a => a.id === id);
-  if (!adherent) {
+  const row = db.prepare('SELECT * FROM adherents WHERE id = ?').get(id);
+  if (!row) {
     return res.status(404).json({ error: 'Adhérent introuvable.' });
   }
-  res.json(adherent);
+
+  res.json(rowToAdherent(row));
 });
 
 // 10) Adherents - Create (Bureau only)
@@ -287,23 +230,22 @@ app.post('/api/adherents', authenticateToken, authorizeRoles('bureau'), (req, re
     return res.status(400).json({ error: 'Nom et prénom obligatoires.' });
   }
 
-  const newAdherent = {
-    id: crypto.randomUUID(),
-    nom: nom.trim(),
-    prenom: prenom.trim(),
-    email: req.body.email || null,
-    fiche_renseignement: !!req.body.fiche_renseignement,
-    paiement_global: !!req.body.paiement_global,
-    manque_paiement: !!req.body.manque_paiement,
-    manque_yeps: !!req.body.manque_yeps,
-    manque_passsport: !!req.body.manque_passsport,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
-  };
+  const id = crypto.randomUUID();
+  const now = new Date().toISOString();
 
-  db.adherents.push(newAdherent);
-  saveDB();
-  res.status(201).json(newAdherent);
+  db.prepare(`INSERT INTO adherents (id, nom, prenom, email, fiche_renseignement, paiement_global, manque_paiement, manque_yeps, manque_passsport, created_at, updated_at)
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+    .run(id, nom.trim(), prenom.trim(), req.body.email || null,
+      req.body.fiche_renseignement ? 1 : 0, req.body.paiement_global ? 1 : 0,
+      req.body.manque_paiement ? 1 : 0, req.body.manque_yeps ? 1 : 0,
+      req.body.manque_passsport ? 1 : 0, now, now);
+
+  res.status(201).json({
+    id, nom: nom.trim(), prenom: prenom.trim(), email: req.body.email || null,
+    fiche_renseignement: !!req.body.fiche_renseignement, paiement_global: !!req.body.paiement_global,
+    manque_paiement: !!req.body.manque_paiement, manque_yeps: !!req.body.manque_yeps,
+    manque_passsport: !!req.body.manque_passsport, created_at: now, updated_at: now,
+  });
 });
 
 // 10b) Adherents - Bulk import (Bureau only)
@@ -311,47 +253,54 @@ app.post('/api/adherents/import', authenticateToken, authorizeRoles('bureau'), (
   const adherents = Array.isArray(req.body.adherents) ? req.body.adherents : [];
   const created = [];
 
-  for (const item of adherents) {
-    const nom = item.nom?.trim();
-    const prenom = item.prenom?.trim();
-    const email = item.email?.trim();
+  const insertStmt = db.prepare(`INSERT INTO adherents (id, nom, prenom, email, fiche_renseignement, paiement_global, manque_paiement, manque_yeps, manque_passsport, created_at, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`);
 
-    if (!nom || !prenom || !email) {
-      continue;
+  const insertMany = db.transaction((items) => {
+    for (const item of items) {
+      const nom = item.nom?.trim();
+      const prenom = item.prenom?.trim();
+      const email = item.email?.trim();
+      if (!nom || !prenom || !email) continue;
+
+      const paiementGlobal = !!item.paiement_global;
+      const id = crypto.randomUUID();
+      const now = new Date().toISOString();
+
+      insertStmt.run(id, nom, prenom, email,
+        item.fiche_renseignement ? 1 : 0, paiementGlobal ? 1 : 0,
+        paiementGlobal ? 0 : (item.manque_paiement ? 1 : 0),
+        paiementGlobal ? 0 : (item.manque_yeps ? 1 : 0),
+        paiementGlobal ? 0 : (item.manque_passsport ? 1 : 0),
+        now, now);
+
+      created.push({
+        id, nom, prenom, email,
+        fiche_renseignement: !!item.fiche_renseignement, paiement_global: paiementGlobal,
+        manque_paiement: paiementGlobal ? false : !!item.manque_paiement,
+        manque_yeps: paiementGlobal ? false : !!item.manque_yeps,
+        manque_passsport: paiementGlobal ? false : !!item.manque_passsport,
+        created_at: now, updated_at: now,
+      });
     }
+  });
 
-    const paiementGlobal = !!item.paiement_global;
-    const newAdherent = {
-      id: crypto.randomUUID(),
-      nom,
-      prenom,
-      email,
-      fiche_renseignement: !!item.fiche_renseignement,
-      paiement_global: paiementGlobal,
-      manque_paiement: paiementGlobal ? false : !!item.manque_paiement,
-      manque_yeps: paiementGlobal ? false : !!item.manque_yeps,
-      manque_passsport: paiementGlobal ? false : !!item.manque_passsport,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    };
-
-    db.adherents.push(newAdherent);
-    created.push(newAdherent);
-  }
-
-  saveDB();
+  insertMany(adherents);
   res.status(201).json(created);
 });
 
 // 11) Adherents - Update (Bureau only)
 app.put('/api/adherents/:id', authenticateToken, authorizeRoles('bureau'), (req, res) => {
   const { id } = req.params;
-  const index = db.adherents.findIndex(a => a.id === id);
-  if (index === -1) {
+
+  const existing = db.prepare('SELECT * FROM adherents WHERE id = ?').get(id);
+  if (!existing) {
     return res.status(404).json({ error: 'Adhérent introuvable.' });
   }
 
+  const current = rowToAdherent(existing);
   const { nom, prenom } = req.body;
+
   if (nom !== undefined && (!nom || !nom.trim())) {
     return res.status(400).json({ error: 'Le nom ne peut pas être vide.' });
   }
@@ -359,56 +308,48 @@ app.put('/api/adherents/:id', authenticateToken, authorizeRoles('bureau'), (req,
     return res.status(400).json({ error: 'Le prénom ne peut pas être vide.' });
   }
 
-  const current = db.adherents[index];
-  const updated = {
-    ...current,
-    nom: nom !== undefined ? nom.trim() : current.nom,
-    prenom: prenom !== undefined ? prenom.trim() : current.prenom,
-    email: req.body.email !== undefined ? req.body.email : current.email,
-    fiche_renseignement: req.body.fiche_renseignement !== undefined ? !!req.body.fiche_renseignement : current.fiche_renseignement,
-    paiement_global: req.body.paiement_global !== undefined ? !!req.body.paiement_global : current.paiement_global,
-    manque_paiement: req.body.manque_paiement !== undefined ? !!req.body.manque_paiement : current.manque_paiement,
-    manque_yeps: req.body.manque_yeps !== undefined ? !!req.body.manque_yeps : current.manque_yeps,
-    manque_passsport: req.body.manque_passsport !== undefined ? !!req.body.manque_passsport : current.manque_passsport,
-    updated_at: new Date().toISOString()
-  };
+  const updNom = nom !== undefined ? nom.trim() : current.nom;
+  const updPrenom = prenom !== undefined ? prenom.trim() : current.prenom;
+  const updEmail = req.body.email !== undefined ? req.body.email : current.email;
+  const updFiche = req.body.fiche_renseignement !== undefined ? !!req.body.fiche_renseignement : current.fiche_renseignement;
+  const updPaiement = req.body.paiement_global !== undefined ? !!req.body.paiement_global : current.paiement_global;
+  const updManquePaiement = req.body.manque_paiement !== undefined ? !!req.body.manque_paiement : current.manque_paiement;
+  const updManqueYeps = req.body.manque_yeps !== undefined ? !!req.body.manque_yeps : current.manque_yeps;
+  const updManquePasssport = req.body.manque_passsport !== undefined ? !!req.body.manque_passsport : current.manque_passsport;
+  const now = new Date().toISOString();
 
-  db.adherents[index] = updated;
+  db.prepare(`UPDATE adherents SET nom=?, prenom=?, email=?, fiche_renseignement=?, paiement_global=?, manque_paiement=?, manque_yeps=?, manque_passsport=?, updated_at=? WHERE id=?`)
+    .run(updNom, updPrenom, updEmail, updFiche ? 1 : 0, updPaiement ? 1 : 0,
+      updManquePaiement ? 1 : 0, updManqueYeps ? 1 : 0, updManquePasssport ? 1 : 0, now, id);
 
-  const linkedUserIndex = db.users.findIndex(u => u.adherent_id === id);
-  if (linkedUserIndex !== -1) {
-    db.users[linkedUserIndex].nom = updated.nom;
-    db.users[linkedUserIndex].prenom = updated.prenom;
-  }
+  // Mettre à jour nom/prénom dans users si lié
+  db.prepare('UPDATE users SET nom=?, prenom=? WHERE adherent_id=?').run(updNom, updPrenom, id);
 
-  saveDB();
-  res.json(updated);
+  res.json({
+    ...current, nom: updNom, prenom: updPrenom, email: updEmail,
+    fiche_renseignement: updFiche, paiement_global: updPaiement,
+    manque_paiement: updManquePaiement, manque_yeps: updManqueYeps,
+    manque_passsport: updManquePasssport, updated_at: now,
+  });
 });
 
 // 12) Adherents - Delete (Bureau only)
 app.delete('/api/adherents/:id', authenticateToken, authorizeRoles('bureau'), (req, res) => {
   const { id } = req.params;
-  const index = db.adherents.findIndex(a => a.id === id);
 
-  if (index === -1) {
+  const existing = db.prepare('SELECT id FROM adherents WHERE id = ?').get(id);
+  if (!existing) {
     return res.status(404).json({ error: 'Adherent introuvable.' });
   }
 
-  db.adherents.splice(index, 1);
+  db.prepare('DELETE FROM adherents WHERE id = ?').run(id);
+  db.prepare('UPDATE users SET adherent_id = NULL WHERE adherent_id = ?').run(id);
 
-  for (const user of db.users) {
-    if (user.adherent_id === id) {
-      user.adherent_id = null;
-    }
-  }
-
-  saveDB();
   res.json({ success: true });
 });
 
-// Run server
-initDB().then(() => {
-  app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-  });
+// Démarrage
+initDB();
+app.listen(PORT, () => {
+  console.log(`Serveur lancé sur le port ${PORT}`);
 });
