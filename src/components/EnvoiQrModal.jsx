@@ -11,11 +11,16 @@ export default function EnvoiQrModal({ adherents, onClose, onConfirm }) {
   const filtres = useMemo(() => {
     const q = recherche.trim().toLowerCase();
     if (!q) return adherents;
-    return adherents.filter(
-      (a) =>
-        reparerTexte(a.nom).toLowerCase().includes(q) ||
-        reparerTexte(a.prenom).toLowerCase().includes(q)
-    );
+    return adherents.filter((a) => {
+      const nom = reparerTexte(a.nom).toLowerCase();
+      const prenom = reparerTexte(a.prenom).toLowerCase();
+      return (
+        nom.includes(q) ||
+        prenom.includes(q) ||
+        `${prenom} ${nom}`.includes(q) ||
+        `${nom} ${prenom}`.includes(q)
+      );
+    });
   }, [adherents, recherche]);
 
   function toggleTout() {

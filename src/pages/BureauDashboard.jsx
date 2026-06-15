@@ -118,11 +118,17 @@ export default function BureauDashboard() {
 
     return adherents
       .filter((a) => filtres.every((f) => f.test(a)))
-      .filter((a) =>
-        !q ||
-        reparerTexte(a.nom).toLowerCase().includes(q) ||
-        reparerTexte(a.prenom).toLowerCase().includes(q)
-      );
+      .filter((a) => {
+        if (!q) return true;
+        const nom = reparerTexte(a.nom).toLowerCase();
+        const prenom = reparerTexte(a.prenom).toLowerCase();
+        return (
+          nom.includes(q) ||
+          prenom.includes(q) ||
+          `${prenom} ${nom}`.includes(q) ||
+          `${nom} ${prenom}`.includes(q)
+        );
+      });
   }, [adherents, filtresActifs, recherche]);
 
   // Statistiques globales (sur tous les adhérents, pas seulement la liste filtrée).
