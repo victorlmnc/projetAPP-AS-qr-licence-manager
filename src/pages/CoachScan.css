@@ -1,66 +1,89 @@
 .scan-page {
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
+  display: grid;
+  gap: 20px;
+}
+
+.scan-heading {
+  max-width: 720px;
 }
 
 .scan-heading h2 {
   margin-bottom: 6px;
+  color: var(--as-purple-950);
+  font-size: 32px;
 }
 
 .scan-heading p {
-  margin-top: 0;
+  margin-bottom: 0;
 }
 
 .scan-reader {
+  position: relative;
+  overflow: hidden;
+  padding: 18px;
+  border: 1px solid rgba(232, 222, 239, 0.95);
+  border-radius: 24px;
   background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  padding: 16px;
+  box-shadow: var(--shadow-md);
+}
+
+.scan-reader::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: 6px;
+  background: linear-gradient(90deg, var(--as-purple-800), var(--as-coral), var(--as-pink));
 }
 
 .scan-reader__camera {
   overflow: hidden;
-  min-height: 280px;
-  background: #111827;
-  border-radius: var(--radius);
+  min-height: 330px;
+  border-radius: 18px;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.08), transparent),
+    #12091f;
 }
 
 .scan-reader__camera video {
   display: block;
   width: 100%;
-  border-radius: var(--radius);
+  border-radius: 18px;
 }
 
 .scan-reader__status {
-  margin: 12px 0 0;
+  margin: 14px 0 0;
   color: var(--muted);
   font-size: 14px;
+  font-weight: 700;
 }
 
 .scan-token {
   margin: 0;
+  padding: 12px 14px;
+  border: 1px solid rgba(80, 35, 124, 0.18);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.78);
   word-break: break-word;
 }
 
 .scan-result {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+  display: grid;
+  gap: 14px;
 }
 
 .scan-result__identity {
-  display: flex;
-  flex-direction: column;
+  display: grid;
   gap: 2px;
+  padding: 18px 20px;
+  border: 1px solid rgba(232, 222, 239, 0.95);
+  border-radius: 20px;
   background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  padding: 14px 16px;
+  box-shadow: var(--shadow-sm);
 }
 
 .scan-result__identity strong {
-  font-size: 20px;
+  color: var(--as-purple-950);
+  font-size: 24px;
 }
 
 .scan-actions {
@@ -68,13 +91,13 @@
   justify-content: flex-end;
 }
 
-@media (max-width: 520px) {
+@media (max-width: 560px) {
   .scan-reader {
-    padding: 10px;
+    padding: 12px;
   }
 
   .scan-reader__camera {
-    min-height: 240px;
+    min-height: 250px;
   }
 
   .scan-actions button {

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '../lib/supabase';
+import { useAuth } from '../context/AuthContext';
 import { calculerStatutLicence } from '../lib/licence';
 import Header from '../components/Header';
 import StatusBadge from '../components/StatusBadge';
@@ -7,18 +8,19 @@ import AdherentEditor from '../components/AdherentEditor';
 import QrCodeModal from '../components/QrCodeModal';
 import ImportCsvModal from '../components/ImportCsvModal';
 import ChangePasswordModal from '../components/ChangePasswordModal';
+import ResetAdherentsModal from '../components/ResetAdherentsModal';
 import './BureauDashboard.css';
 
 // Liste des filtres. `test(adherent)` renvoie true si l'adhérent doit
 // apparaître quand ce filtre est actif.
 const FILTRES = [
-  { cle: 'tous',       libelle: 'Tous',              test: () => true },
-  { cle: 'a_jour',     libelle: 'À jour',            test: (a) => calculerStatutLicence(a).valide },
-  { cle: 'non_a_jour', libelle: 'Non à jour',        test: (a) => !calculerStatutLicence(a).valide },
-  { cle: 'fiche',      libelle: 'Fiche manquante',   test: (a) => !a.fiche_renseignement },
-  { cle: 'yeps',       libelle: 'Manque YEPS',       test: (a) => a.manque_yeps },
-  { cle: 'passport',  libelle: "Manque PASS'SPORT", test: (a) => a.manque_passport },
-  { cle: 'paiement',   libelle: 'Manque paiement',   test: (a) => a.manque_paiement },
+  { cle: 'tous', libelle: 'Tous', test: () => true },
+  { cle: 'a_jour', libelle: 'À jour', test: (a) => calculerStatutLicence(a).valide },
+  { cle: 'non_a_jour', libelle: 'Non à jour', test: (a) => !calculerStatutLicence(a).valide },
+  { cle: 'fiche', libelle: 'Fiche manquante', test: (a) => !a.fiche_renseignement },
+  { cle: 'yeps', libelle: 'Manque YEPS', test: (a) => a.manque_yeps },
+  { cle: 'passport', libelle: "Manque PASS'SPORT", test: (a) => a.manque_passport },
+  { cle: 'paiement', libelle: 'Manque paiement', test: (a) => a.manque_paiement },
 ];
 
 function champCsv(valeur) {
@@ -38,11 +40,12 @@ export default function BureauDashboard() {
   const [qrAdherent, setQrAdherent] = useState(null);
   const [importOuvert, setImportOuvert] = useState(false);
   const [mdpOuvert, setMdpOuvert] = useState(false);
+  const [resetOuvert, setResetOuvert] = useState(false);
 
   // État de l'envoi groupé des QR codes
   const [envoi, setEnvoi] = useState(null); // null | 'loading' | { sent, skipped, errors }
 
-  // Chargement initial depuis Supabase.
+  // Chargement initial et abonnement Realtime depuis Supabase.
   useEffect(() => {
     async function charger() {
       const { data, error } = await supabase
@@ -55,6 +58,36 @@ export default function BureauDashboard() {
       setChargement(false);
     }
     charger();
+
+    const canal = supabase
+      .channel('adherents_bureau_changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'adherents' },
+        (payload) => {
+          if (payload.eventType === 'INSERT') {
+            const nv = payload.new;
+            setAdherents((prev) => {
+              if (prev.some((a) => a.id === nv.id)) return prev;
+              return [...prev, nv].sort((a, b) => a.nom.localeCompare(b.nom));
+            });
+          } else if (payload.eventType === 'UPDATE') {
+            const nv = payload.new;
+            setAdherents((prev) => {
+              const maj = prev.map((a) => (a.id === nv.id ? nv : a));
+              return maj.sort((a, b) => a.nom.localeCompare(b.nom));
+            });
+          } else if (payload.eventType === 'DELETE') {
+            const anc = payload.old;
+            setAdherents((prev) => prev.filter((a) => a.id !== anc.id));
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(canal);
+    };
   }, []);
 
   // Liste affichée = filtre actif + recherche texte.
@@ -273,6 +306,19 @@ export default function BureauDashboard() {
         )}
       </main>
 
+      <footer className="container" style={{ marginTop: '40px', padding: '20px', borderTop: '2px dashed #f5c2c2', backgroundColor: '#fff7f7', borderRadius: 'var(--radius)', marginBottom: '40px' }}>
+        <h4 style={{ color: 'var(--ko)', margin: '0 0 10px 0' }}>Réinitialiser les adhérents</h4>
+        <p className="small muted" style={{ margin: '0 0 15px 0' }}>
+          Attention cela supprimera définitivement tous les adhérents de la base de données. Les comptes utilisateurs associés ne pourront plus être liés à ces fiches adhérents.
+        </p>
+        <button
+          onClick={() => setResetOuvert(true)}
+          style={{ backgroundColor: 'var(--ko)', color: 'white' }}
+        >
+          Réinitialiser les adhérents
+        </button>
+      </footer>
+
       {editeur && (
         <AdherentEditor
           adherent={editeur.adherent}
@@ -295,6 +341,7 @@ export default function BureauDashboard() {
 
       {mdpOuvert && <ChangePasswordModal onClose={() => setMdpOuvert(false)} />}
 
+<<<<<<< HEAD
       {envoi && envoi !== 'loading' && (
         <div className="modal-overlay" onClick={() => setEnvoi(null)}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
@@ -320,6 +367,13 @@ export default function BureauDashboard() {
             </div>
           </div>
         </div>
+=======
+      {resetOuvert && (
+        <ResetAdherentsModal
+          onClose={() => setResetOuvert(false)}
+          onResetCompleted={() => setAdherents([])}
+        />
+>>>>>>> 4ff0e115391d1d0cbd56cad9ff5ee340baf03e73
       )}
     </div>
   );

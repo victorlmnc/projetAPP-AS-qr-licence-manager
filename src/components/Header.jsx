@@ -1,7 +1,6 @@
 import { useAuth } from '../context/AuthContext';
 import InstallButton from './InstallButton';
 
-// Barre du haut réutilisée par chaque écran.
 export default function Header({ titre }) {
   const { role, signOut } = useAuth();
 
@@ -12,15 +11,25 @@ export default function Header({ titre }) {
           src="/logo.png"
           className="topbar__logo"
           alt="Logo AS"
-          onError={(e) => (e.target.style.display = 'none')}
-          style={{ height: '36px', marginRight: '4px', objectFit: 'contain' }}
+          onError={(e) => {
+            const retries = Number(e.target.dataset.retries || 0);
+            if (retries < 2) {
+              e.target.dataset.retries = retries + 1;
+              e.target.src = `/logo.png?v=${Date.now()}`;
+            } else {
+              e.target.style.display = 'none';
+            }
+          }}
         />
-        <strong>{titre}</strong>
+        <div className="topbar__title">
+          <span>AS INSA</span>
+          <strong>{titre}</strong>
+        </div>
         {role && <span className="badge">{role}</span>}
       </div>
       <div className="topbar__actions">
         <InstallButton />
-        <button className="btn-ghost" onClick={signOut}>Se déconnecter</button>
+        <button className="btn-ghost" onClick={signOut}>Se deconnecter</button>
       </div>
     </header>
   );
