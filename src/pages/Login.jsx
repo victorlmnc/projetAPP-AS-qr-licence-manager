@@ -73,8 +73,16 @@ export default function Login() {
   return (
     <main className="auth">
       <form className="card" onSubmit={handleSubmit}>
-        <h1>Controle des licences</h1>
-        <p className="muted">Connectez-vous pour continuer.</p>
+        <div style={{ textAlign: 'center' }}>
+          <img
+            src="/logo.png"
+            alt="Logo AS"
+            onError={(e) => (e.target.style.display = 'none')}
+            style={{ height: '70px', objectFit: 'contain', margin: '0 auto 12px', display: 'block' }}
+          />
+          <h1 style={{ fontSize: '24px', margin: '0 0 4px 0' }}>Contrôle des licences</h1>
+          <p className="muted" style={{ margin: 0 }}>Connectez-vous pour continuer.</p>
+        </div>
 
         <label>
           Identifiant

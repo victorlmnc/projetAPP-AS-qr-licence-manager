@@ -8,6 +8,13 @@ export default function Header({ titre }) {
   return (
     <header className="topbar">
       <div className="topbar__left">
+        <img
+          src="/logo.png"
+          className="topbar__logo"
+          alt="Logo AS"
+          onError={(e) => (e.target.style.display = 'none')}
+          style={{ height: '36px', marginRight: '4px', objectFit: 'contain' }}
+        />
         <strong>{titre}</strong>
         {role && <span className="badge">{role}</span>}
       </div>
