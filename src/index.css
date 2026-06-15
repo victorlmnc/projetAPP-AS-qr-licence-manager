@@ -159,3 +159,67 @@ button:disabled { opacity: 0.6; cursor: default; }
 
 /* ---------- Listes de tâches (placeholders) ---------- */
 .todo { line-height: 1.7; }
+
+/* ---------- Profil adherent ---------- */
+.profile {
+  display: grid;
+  gap: 18px;
+}
+
+.profile__intro h2 {
+  margin-bottom: 6px;
+}
+
+.profile__intro p {
+  margin-top: 0;
+}
+
+.profile-card {
+  display: grid;
+  justify-items: center;
+  gap: 14px;
+  margin-top: 4px;
+  padding: 24px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  text-align: center;
+}
+
+.profile-card h3 {
+  margin: 0 0 6px;
+}
+
+.profile-card .muted {
+  margin: 0;
+}
+
+.profile-qr {
+  display: inline-flex;
+  padding: 14px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+/* ---------- Configuration manquante ---------- */
+.config-warning {
+  max-width: 560px;
+  margin: 48px auto;
+  padding: 24px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+}
+
+.config-warning h1 {
+  margin-top: 0;
+  font-size: 24px;
+}
+
+.config-warning pre {
+  overflow-x: auto;
+  padding: 12px;
+  background: #eef0f3;
+  border-radius: var(--radius);
+}

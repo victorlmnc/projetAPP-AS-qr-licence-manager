@@ -1,16 +1,19 @@
 import { createContext, useContext, useEffect, useState } from 'react';
-import { supabase } from '../lib/supabase';
+import { supabase, supabaseConfigured } from '../lib/supabase';
 
 const AuthContext = createContext(null);
 
-// Fournit à toute l'application : utilisateur connecté + rôle + déconnexion.
 export function AuthProvider({ children }) {
   const [session, setSession] = useState(null);
-  const [profile, setProfile] = useState(null); // { role, adherent_id, ... }
+  const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // 1) Récupère la session au démarrage et écoute connexion/déconnexion.
   useEffect(() => {
+    if (!supabaseConfigured) {
+      setLoading(false);
+      return undefined;
+    }
+
     supabase.auth.getSession().then(({ data }) => setSession(data.session));
 
     const { data: listener } = supabase.auth.onAuthStateChange(
@@ -20,9 +23,14 @@ export function AuthProvider({ children }) {
     return () => listener.subscription.unsubscribe();
   }, []);
 
-  // 2) Quand la session change, charge le profil (rôle) de l'utilisateur.
   useEffect(() => {
     async function loadProfile() {
+      if (!supabaseConfigured) {
+        setProfile(null);
+        setLoading(false);
+        return;
+      }
+
       if (!session?.user) {
         setProfile(null);
         setLoading(false);
@@ -41,6 +49,7 @@ export function AuthProvider({ children }) {
       } else {
         setProfile(data);
       }
+
       setLoading(false);
     }
 
@@ -50,19 +59,19 @@ export function AuthProvider({ children }) {
 
   const value = {
     user: session?.user ?? null,
-    role: profile?.role ?? null,         // 'bureau' | 'coach' | 'adherent'
+    role: profile?.role ?? null,
     adherentId: profile?.adherent_id ?? null,
     profile,
     loading,
-    signOut: () => supabase.auth.signOut(),
+    supabaseConfigured,
+    signOut: () => supabase?.auth.signOut(),
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
-// Raccourci pour consommer le contexte dans n'importe quel composant.
 export function useAuth() {
   const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error('useAuth doit être utilisé dans un AuthProvider');
+  if (!ctx) throw new Error('useAuth doit etre utilise dans un AuthProvider');
   return ctx;
 }
