@@ -23,6 +23,9 @@ create table adherents (
   manque_yeps boolean not null default false,
   manque_passport boolean not null default false,
 
+  -- Dernière date d'envoi du QR Code par email (null = jamais envoyé)
+  qr_envoye_le timestamptz,
+
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );

@@ -1,6 +1,8 @@
 import nodemailer from 'nodemailer';
 import { createClient } from '@supabase/supabase-js';
 
+const LIMITE_PAR_JOUR = 450;
+
 const transporter = nodemailer.createTransport({
   host: 'smtp.gmail.com',
   port: 587,
@@ -83,29 +85,27 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { adherentIds } = req.body ?? {};
+  // Récupère tous les adhérents qui n'ont jamais reçu le mail et qui ont un email
+  const { data: adherents, error } = await supabase
+    .from('adherents')
+    .select('id, nom, prenom, email')
+    .is('qr_envoye_le', null)
+    .not('email', 'is', null)
+    .order('nom');
 
-  let query = supabase.from('adherents').select('id, nom, prenom, email');
-  if (Array.isArray(adherentIds) && adherentIds.length > 0) {
-    query = query.in('id', adherentIds);
-  }
-
-  const { data: adherents, error } = await query.order('nom');
   if (error) {
     return res.status(500).json({ error: 'Erreur Supabase : ' + error.message });
   }
 
+  const totalRestant = adherents.length;
+  const batch = adherents.slice(0, LIMITE_PAR_JOUR);
   const baseUrl = `https://${req.headers.host}`;
-  const results = { sent: 0, skipped: 0, errors: [] };
+  const results = { sent: 0, remaining: Math.max(0, totalRestant - LIMITE_PAR_JOUR), errors: [] };
 
-  for (const a of adherents) {
-    if (!a.email) {
-      results.skipped++;
-      continue;
-    }
+  const idEnvoyes = [];
 
+  for (const a of batch) {
     const lien = `${baseUrl}/adherent/${a.id}`;
-
     try {
       await transporter.sendMail({
         from: `"Association Sportive" <${process.env.GMAIL_USER}>`,
@@ -114,10 +114,19 @@ export default async function handler(req, res) {
         text: `Bonjour ${a.prenom} ${a.nom},\n\nVotre QR Code de licence est disponible. Présentez-le à votre responsable sportif lors des entraînements et des matchs.\n\nAccéder à votre QR Code : ${lien}\n\nVous pouvez enregistrer cette page en favori sur votre téléphone.\n\n— Le bureau de l'Association Sportive`,
         html: emailHtml(a.prenom, a.nom, lien),
       });
+      idEnvoyes.push(a.id);
       results.sent++;
     } catch (err) {
       results.errors.push({ nom: `${a.prenom} ${a.nom}`, raison: err.message });
     }
+  }
+
+  // Marque les envois réussis en base
+  if (idEnvoyes.length > 0) {
+    await supabase
+      .from('adherents')
+      .update({ qr_envoye_le: new Date().toISOString() })
+      .in('id', idEnvoyes);
   }
 
   return res.status(200).json(results);

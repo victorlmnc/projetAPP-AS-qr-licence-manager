@@ -366,10 +366,17 @@ export default function BureauDashboard() {
             <h3>Résultat de l'envoi</h3>
             <p>
               <strong style={{ color: 'var(--ok)' }}>{envoi.sent} email(s) envoyé(s)</strong>
-              {envoi.skipped > 0 && (
-                <span className="muted"> · {envoi.skipped} sans adresse email (ignoré(s))</span>
-              )}
             </p>
+            {envoi.remaining > 0 && (
+              <p className="muted small" style={{ marginTop: 8 }}>
+                {envoi.remaining} adhérent(s) restant(s) — relancez le bouton demain pour continuer.
+              </p>
+            )}
+            {envoi.remaining === 0 && envoi.sent > 0 && (
+              <p className="small" style={{ color: 'var(--ok)', marginTop: 8 }}>
+                Tous les adhérents ont reçu leur QR Code.
+              </p>
+            )}
             {envoi.errors.length > 0 && (
               <>
                 <p className="error">{envoi.errors.length} échec(s) :</p>
