@@ -1,4 +1,5 @@
 import { useAuth } from '../context/AuthContext';
+import InstallButton from './InstallButton';
 
 // Barre du haut réutilisée par chaque écran.
 export default function Header({ titre }) {
@@ -10,7 +11,10 @@ export default function Header({ titre }) {
         <strong>{titre}</strong>
         {role && <span className="badge">{role}</span>}
       </div>
-      <button className="btn-ghost" onClick={signOut}>Se déconnecter</button>
+      <div className="topbar__actions">
+        <InstallButton />
+        <button className="btn-ghost" onClick={signOut}>Se déconnecter</button>
+      </div>
     </header>
   );
 }

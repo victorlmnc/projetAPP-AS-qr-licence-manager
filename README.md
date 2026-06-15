@@ -77,9 +77,9 @@ Noms de branches : `feature/socle` · `feature/bureau` · `feature/coach-scan` �
 | Partie | Responsable | État |
 |--------|-------------|------|
 | Socle (auth, rôles, routing) | Personne 1 | ✅ fait |
-| Espace Bureau (liste, filtres, formulaire, QR) | Personnes 2 & 3 | ✅ base fournie, à finir |
-| Scanner du Coach | Personne 4 | ⬜ à faire |
-| Espace Adhérent + PWA | Personne 5 | ⬜ à faire |
+| Espace Bureau (liste, filtres, formulaire, QR) | Personnes 2 & 3 | ✅ fait |
+| Scanner du Coach | Personne 4 | ✅ fait |
+| Espace Adhérent + PWA | Personne 5 | ✅ fait côté application |
 | Déploiement (HTTPS) | Personne 1 | ⬜ à faire |
 
 ---
@@ -94,103 +94,41 @@ Noms de branches : `feature/socle` · `feature/bureau` · `feature/coach-scan` �
 - Déployer l'app (voir section 6) — **indispensable** car la caméra du Coach exige HTTPS.
 
 ### Personnes 2 & 3 — Espace Bureau
-**Base fournie** dans `pages/BureauDashboard.jsx` + `components/AdherentEditor.jsx`,
-`QrCodeModal.jsx`, `StatusBadge.jsx`. Elle couvre : liste, recherche, 7 filtres,
-formulaire de création/mise à jour, génération + téléchargement du QR Code.
+**Fait** dans `pages/BureauDashboard.jsx` + `components/AdherentEditor.jsx`,
+`QrCodeModal.jsx`, `StatusBadge.jsx`. L'espace couvre : liste, recherche, 7 filtres,
+statistiques à jour / non à jour, formulaire de création/mise à jour, suppression,
+génération + téléchargement du QR Code, envoi `mailto:` et export CSV de la liste filtrée.
 
-**Ce qu'il reste à faire (à se répartir à 2) :**
-- [ ] **Lire et comprendre le code fourni** : c'est votre référence pour lire/écrire en base.
-- [ ] **Bandeau de statistiques** en haut : nombre d'adhérents à jour / non à jour.
-- [ ] **Supprimer un adhérent** (bouton + confirmation) → `supabase.from('adherents').delete().eq('id', id)`.
-- [ ] **« Envoi » du QR Code** : ajouter un lien `mailto:` pré-rempli vers `adherent.email`
-      depuis la modale QR (le cahier demande « envoi OU génération »).
-- [ ] **Export CSV** de la liste filtrée (pratique pour le Bureau).
-- [ ] **Documenter** la procédure de création d'un compte Adhérent (section 2) pour l'équipe.
-- [ ] **Tester** tous les cas (paiement coché/décoché, filtres, statut résultant).
+**À vérifier manuellement :**
+- [ ] Tester tous les cas (paiement coché/décoché, filtres, suppression, export CSV, statut résultant).
 
 ### Personne 4 — Scanner du Coach
-Fichier : `pages/CoachScan.jsx`. La recherche en base (`chercherAdherent`) et l'affichage
-du bandeau vert/rouge (`StatusBanner`) sont **déjà câblés**. Il manque la caméra.
+Fichier : `pages/CoachScan.jsx`.
 
-Étapes :
-- [ ] Ajouter un conteneur caméra dans le JSX : `<div id="reader" />`.
-- [ ] Initialiser le scanner avec `html5-qrcode` (déjà installé) dans un `useEffect`.
-- [ ] À la lecture, appeler `chercherAdherent(texteLu)` puis arrêter le scanner.
-- [ ] Gérer le refus d'accès caméra (afficher un message).
-- [ ] Ajouter un bouton « Scanner un autre » qui réinitialise l'écran.
-- [ ] **Bien libérer la caméra** au démontage du composant (sinon elle reste allumée).
-
-Squelette de l'intégration caméra :
-
-```jsx
-import { useEffect, useRef } from 'react';
-import { Html5Qrcode } from 'html5-qrcode';
-
-// ... dans le composant :
-const scannerRef = useRef(null);
-
-useEffect(() => {
-  const scanner = new Html5Qrcode('reader');
-  scannerRef.current = scanner;
-
-  scanner.start(
-    { facingMode: 'environment' },     // caméra arrière du téléphone
-    { fps: 10, qrbox: 250 },
-    (texteLu) => {                     // QR détecté
-      scanner.stop();
-      chercherAdherent(texteLu);       // (fonction déjà présente dans le fichier)
-    },
-    () => {}                           // erreurs de lecture ignorées
-  ).catch(() => setErreur("Impossible d'accéder à la caméra."));
-
-  return () => { scannerRef.current?.stop().catch(() => {}); }; // libère la caméra
-}, []);
-```
+**Fait :**
+- Scanner caméra avec `html5-qrcode`.
+- Lecture du QR Code, recherche Supabase par identifiant, arrêt automatique du scanner.
+- Bandeau vert/rouge détaillé avec `StatusBanner`.
+- Message si la caméra est refusée ou indisponible.
+- Bouton « Scanner un autre ».
+- Libération de la caméra au démontage du composant.
 
 > Important : l'accès caméra ne marche qu'en **HTTPS** (ou sur `localhost` en dev).
 > Pour tester sur un vrai téléphone, il faut que l'app soit déployée (section 6).
 
 ### Personne 5 — Espace Adhérent + PWA
-Fichier : `pages/AdherentProfile.jsx`. Le chargement de la fiche et le message
-d'avancement (`messageAdherent`) sont **déjà câblés**.
+Fichier : `pages/AdherentProfile.jsx`.
 
-**Partie Adhérent :**
-- [ ] Afficher le QR Code de l'adhérent (réutiliser le composant `QRCodeCanvas`,
-      comme dans `QrCodeModal.jsx`, avec `value={adherent.id}`).
-- [ ] Soigner l'affichage du statut (visuel clair : à jour / en attente).
+**Fait :**
+- Chargement de la fiche personnelle reliée au profil Supabase.
+- Affichage du message d'avancement avec `messageAdherent`.
+- Affichage du bandeau vert/rouge et du QR Code personnel.
+- PWA sans dépendance supplémentaire : `public/manifest.json`, `public/sw.js`,
+  `public/icon-192.png`, `public/icon-512.png` et bouton d'installation dans le `Header`.
 
-**Partie PWA (installable + rapide) :**
-- [ ] Installer le plugin : `npm install -D vite-plugin-pwa`.
-- [ ] Le configurer dans `vite.config.js` :
-
-```js
-import { VitePWA } from 'vite-plugin-pwa';
-
-export default defineConfig({
-  plugins: [
-    react(),
-    VitePWA({
-      registerType: 'autoUpdate',
-      manifest: {
-        name: 'Contrôle des licences',
-        short_name: 'Licences',
-        theme_color: '#16181d',
-        background_color: '#16181d',
-        display: 'standalone',
-        icons: [
-          { src: '/icon-192.png', sizes: '192x192', type: 'image/png' },
-          { src: '/icon-512.png', sizes: '512x512', type: 'image/png' },
-        ],
-      },
-    }),
-  ],
-});
-```
-
-- [ ] Ajouter deux icônes dans `public/` : `icon-192.png` (192×192) et `icon-512.png` (512×512).
-- [ ] Le plugin génère le manifest : supprimer alors `public/manifest.json` et la ligne
-      `<link rel="manifest">` de `index.html` pour éviter le doublon.
-- [ ] Vérifier que tout est **responsive** (affichage propre sur mobile) sur les 3 espaces.
+**À vérifier manuellement :**
+- [ ] Tester l'installation PWA après build + déploiement HTTPS.
+- [ ] Vérifier le rendu mobile sur les 3 espaces.
 
 ---
 

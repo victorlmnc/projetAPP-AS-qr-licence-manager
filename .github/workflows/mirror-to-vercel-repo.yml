@@ -1,0 +1,38 @@
+name: Mirror to Vercel repository
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mirror-to-vercel-repo
+  cancel-in-progress: true
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Push main to private Vercel mirror
+        env:
+          MIRROR_TOKEN: ${{ secrets.MIRROR_TOKEN }}
+          MIRROR_REPOSITORY: ${{ secrets.MIRROR_REPOSITORY }}
+        run: |
+          if [ -z "$MIRROR_TOKEN" ] || [ -z "$MIRROR_REPOSITORY" ]; then
+            echo "Missing MIRROR_TOKEN or MIRROR_REPOSITORY secret."
+            exit 1
+          fi
+
+          git remote add mirror "https://x-access-token:${MIRROR_TOKEN}@github.com/${MIRROR_REPOSITORY}.git"
+          git push --force mirror HEAD:main
