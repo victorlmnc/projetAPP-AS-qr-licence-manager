@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '../lib/supabase';
-import { useAuth } from '../context/AuthContext';
 import { calculerStatutLicence } from '../lib/licence';
 import Header from '../components/Header';
 import StatusBadge from '../components/StatusBadge';
