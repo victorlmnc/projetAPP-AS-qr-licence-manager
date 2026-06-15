@@ -11,7 +11,15 @@ export default function Header({ titre }) {
           src="/logo.png"
           className="topbar__logo"
           alt="Logo AS"
-          onError={(e) => (e.target.style.display = 'none')}
+          onError={(e) => {
+            const retries = Number(e.target.dataset.retries || 0);
+            if (retries < 2) {
+              e.target.dataset.retries = retries + 1;
+              e.target.src = `/logo.png?v=${Date.now()}`;
+            } else {
+              e.target.style.display = 'none';
+            }
+          }}
         />
         <div className="topbar__title">
           <span>AS INSA</span>
