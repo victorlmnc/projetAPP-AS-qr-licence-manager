@@ -341,7 +341,13 @@ export default function BureauDashboard() {
 
       {mdpOuvert && <ChangePasswordModal onClose={() => setMdpOuvert(false)} />}
 
-<<<<<<< HEAD
+      {resetOuvert && (
+        <ResetAdherentsModal
+          onClose={() => setResetOuvert(false)}
+          onResetCompleted={() => setAdherents([])}
+        />
+      )}
+
       {envoi && envoi !== 'loading' && (
         <div className="modal-overlay" onClick={() => setEnvoi(null)}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
@@ -367,13 +373,6 @@ export default function BureauDashboard() {
             </div>
           </div>
         </div>
-=======
-      {resetOuvert && (
-        <ResetAdherentsModal
-          onClose={() => setResetOuvert(false)}
-          onResetCompleted={() => setAdherents([])}
-        />
->>>>>>> 4ff0e115391d1d0cbd56cad9ff5ee340baf03e73
       )}
     </div>
   );
