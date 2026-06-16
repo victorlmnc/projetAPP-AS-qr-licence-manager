@@ -165,13 +165,6 @@ code {
   justify-content: flex-end;
 }
 
-.topbar__icon-btn {
-  width: 56px;
-  min-width: 56px;
-  padding: 0;
-  font-size: 22px;
-  line-height: 1;
-}
 
 .settings-modal {
   text-align: left;
