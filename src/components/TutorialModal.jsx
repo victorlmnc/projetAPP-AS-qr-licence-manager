@@ -6,10 +6,9 @@ const SECTIONS_BUREAU = [
     titre: `Fonctionnement du système`,
     images: [],
     contenu: [
-      `L'application utilise seulement deux comptes partagés : "bureau" (gestion) et "respos-sports" (scan sur le terrain).`,
-      `Le bureau gère la base de données et envoie par e-mail un QR Code personnel à chaque adhérent.`,
-      `L'adhérent ouvre le lien reçu sur son téléphone et présente son QR Code au responsable sportif avant l'entraînement.`,
-      `Le responsable sportif (coach) scanne le QR Code pour vérifier instantanément si la licence est valide ou s'il manque des documents.`
+      `⚠️ Important : l'application ne gère pas les inscriptions ni les paiements en ligne (cela reste sur Forms ou HelloAsso).`,
+      `Le site sert uniquement à centraliser vos données, générer les QR Codes personnels, et vérifier l'état des dossiers avant les entraînements.`,
+      `Il utilise deux comptes partagés : "bureau" (gestion de la base et envoi d'e-mails) et "respos-sports" (pour flasher les QR Codes sur le terrain).`
     ],
   },
   {
@@ -62,6 +61,7 @@ const SECTIONS_COACH = [
     titre: `Scan Terrain`,
     images: ['/tuto/scan-coach.png'],
     contenu: [
+      `⚠️ L'application est uniquement un outil de vérification d'accès. Elle ne gère pas l'appel ni les présences.`,
       `Pointez la caméra vers le QR code de l'adhérent.`,
       `Le résultat s'affiche tout de suite : Vert (Tout est en ordre) ou Rouge (Alerte, avec le détail des manques affiché).`,
     ],
@@ -147,7 +147,7 @@ export default function TutorialModal({ onClose }) {
               </div>
             )}
             
-            <div className="tuto-placeholder" style={{ position: 'relative' }}>
+            <div className="tuto-placeholder" style={{ position: 'relative', height: '350px', width: '100%', borderRadius: '8px', overflow: 'hidden', border: '1px solid #e1d8f5' }}>
               <img 
                 src={section.images[imgIndex] || ''} 
                 alt={`Illustration pour ${section.titre}`}
@@ -157,8 +157,9 @@ export default function TutorialModal({ onClose }) {
                   e.target.nextSibling.style.display = 'flex';
                 }}
               />
-              <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#e0d8eb' }}>
+              <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#e0d8eb', color: '#5e3a8c', fontWeight: 'bold' }}>
                 📸 Screen : {section.titre} {section.images.length > 1 ? `(${imgIndex + 1})` : ''}
+                <span style={{ fontSize: '11px', marginTop: '4px', fontWeight: 'normal' }}>(L'image sera affichée ici)</span>
               </div>
             </div>
           </div>
