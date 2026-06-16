@@ -34,10 +34,11 @@ function qrEmailHtml(prenom, nom, lien, valide, anomalies) {
   const p = esc(prenom);
   const n = esc(nom);
   const l = esc(lien);
+  const dateDuJour = new Date().toLocaleDateString('fr-FR', { timeZone: 'Europe/Paris' });
 
   const statusHtml = valide 
     ? `<p style="margin:0 0 20px 0;color:#1e1b29;font-size:14px;font-weight:600;">Dossier complet et à jour.</p>`
-    : `<p style="margin:0 0 10px 0;color:#1e1b29;font-size:14px;font-weight:600;">Attention, dossier incomplet. Il manque :</p>
+    : `<p style="margin:0 0 10px 0;color:#1e1b29;font-size:14px;font-weight:600;">Attention, dossier incomplet (à la date du ${dateDuJour}). Il manque :</p>
        <ul style="margin:0 0 20px 0;padding-left:20px;color:#746d88;font-size:14px;">
          ${anomalies.map((anomalie) => `<li style="margin:4px 0;">${esc(anomalie)}</li>`).join('')}
        </ul>`;
@@ -105,6 +106,7 @@ function qrEmailHtml(prenom, nom, lien, valide, anomalies) {
 function reminderEmailHtml(prenom, nom, anomalies) {
   const p = esc(prenom);
   const n = esc(nom);
+  const dateDuJour = new Date().toLocaleDateString('fr-FR', { timeZone: 'Europe/Paris' });
   const items = anomalies
     .map((anomalie) => `<li style="margin:8px 0;color:#7c211c;font-size:14px;line-height:1.45;">${esc(anomalie)}</li>`)
     .join('');
@@ -133,7 +135,7 @@ function reminderEmailHtml(prenom, nom, anomalies) {
                 Bonjour <strong>${p} ${n}</strong>,
               </p>
               <p style="margin:0 0 16px 0;color:#746d88;font-size:14px;line-height:1.5;">
-                Votre dossier d'inscription n'est pas terminé. Il manque :
+                Votre dossier d'inscription n'est pas terminé (à la date du ${dateDuJour}). Il manque :
               </p>
               <ul style="margin:0 0 20px 0;padding-left:20px;">
                 ${items}
@@ -240,12 +242,13 @@ export default async function handler(req, res) {
       ? `Licence incomplete - ${a.prenom} ${a.nom}`
       : `Votre QR Code de licence - ${a.prenom} ${a.nom}`;
     
+    const dateDuJour = new Date().toLocaleDateString('fr-FR', { timeZone: 'Europe/Paris' });
     const qrTextStatus = statut.valide 
       ? `Dossier complet et a jour.`
-      : `Attention, dossier incomplet. Il manque :\n- ${anomalies.join('\n- ')}`;
+      : `Attention, dossier incomplet (a la date du ${dateDuJour}). Il manque :\n- ${anomalies.join('\n- ')}`;
 
     const text = relance
-      ? `Bonjour ${a.prenom} ${a.nom},\n\nVotre dossier d'inscription n'est pas termine. Il manque :\n- ${anomalies.join('\n- ')}\n\nPensez a regulariser votre situation aupres de l'AS.\n\n- Le bureau de l'AS INSA CVL`
+      ? `Bonjour ${a.prenom} ${a.nom},\n\nVotre dossier d'inscription n'est pas termine (a la date du ${dateDuJour}). Il manque :\n- ${anomalies.join('\n- ')}\n\nPensez a regulariser votre situation aupres de l'AS.\n\n- Le bureau de l'AS INSA CVL`
       : `Bonjour ${a.prenom} ${a.nom},\n\nVoici votre QR Code pour la saison sportive. Il vous sera demande a l'entree des entrainements.\n\n${qrTextStatus}\n\nLien du QR Code : ${lien}\n\n- Le bureau de l'AS INSA CVL`;
 
     try {
