@@ -30,7 +30,7 @@ export default function ProtectedRoute({ allow, children }) {
         aria-label="Tutoriel"
         title="Ouvrir le tutoriel"
       >
-        ?
+        ? Aide
       </button>
       {tutoOuvert && <TutorialModal onClose={() => setTutoOuvert(false)} />}
     </>
