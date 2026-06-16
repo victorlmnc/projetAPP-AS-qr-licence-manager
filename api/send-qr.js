@@ -49,7 +49,7 @@ function qrEmailHtml(prenom, nom, lien) {
         <table width="100%" style="max-width:480px;background:#ffffff;border-radius:16px;box-shadow:0 8px 30px rgba(94,58,140,0.08);overflow:hidden;">
           <tr>
             <td style="background:#5e3a8c;padding:28px 32px;">
-              <p style="margin:0;color:#ffffff;font-size:20px;font-weight:600;">Association Sportive</p>
+              <p style="margin:0;color:#ffffff;font-size:20px;font-weight:600;">AS de l'INSA CVL</p>
               <p style="margin:4px 0 0 0;color:rgba(255,255,255,0.75);font-size:13px;">Votre QR Code de licence</p>
             </td>
           </tr>
@@ -78,8 +78,12 @@ function qrEmailHtml(prenom, nom, lien) {
           </tr>
           <tr>
             <td style="padding:16px 32px;border-top:1px solid #eae4f5;">
-              <p style="margin:0;color:#746d88;font-size:11px;text-align:center;">
-                Envoye par le bureau de l'Association Sportive. Ne pas repondre a cet email.
+              <p style="margin:0 0 6px 0;color:#b5460f;font-size:11px;text-align:center;font-weight:600;">
+                &#9888; Ceci est un e-mail automatique, merci de ne pas y repondre.
+              </p>
+              <p style="margin:0;color:#746d88;font-size:11px;text-align:center;line-height:1.5;">
+                Cette adresse n'est pas surveillee et aucune reponse ne pourra etre traitee.<br/>
+                Pour toute question, contactez directement un membre du bureau de l'AS de l'INSA CVL.
               </p>
             </td>
           </tr>
@@ -112,7 +116,7 @@ function reminderEmailHtml(prenom, nom, anomalies) {
         <table width="100%" style="max-width:480px;background:#ffffff;border-radius:16px;box-shadow:0 8px 30px rgba(94,58,140,0.08);overflow:hidden;">
           <tr>
             <td style="background:#8f241e;padding:28px 32px;">
-              <p style="margin:0;color:#ffffff;font-size:20px;font-weight:600;">Association Sportive</p>
+              <p style="margin:0;color:#ffffff;font-size:20px;font-weight:600;">AS de l'INSA CVL</p>
               <p style="margin:4px 0 0 0;color:rgba(255,255,255,0.82);font-size:13px;">Licence incomplete</p>
             </td>
           </tr>
@@ -128,14 +132,18 @@ function reminderEmailHtml(prenom, nom, anomalies) {
                 ${items}
               </ul>
               <p style="margin:0;color:#746d88;font-size:14px;line-height:1.6;">
-                Merci de contacter un membre du bureau de l'AS pour regulariser votre dossier.
+                Merci de contacter un membre du bureau de l'AS de l'INSA CVL pour regulariser votre dossier.
               </p>
             </td>
           </tr>
           <tr>
             <td style="padding:16px 32px;border-top:1px solid #eae4f5;">
-              <p style="margin:0;color:#746d88;font-size:11px;text-align:center;">
-                Envoye par le bureau de l'Association Sportive. Ne pas repondre a cet email.
+              <p style="margin:0 0 6px 0;color:#b5460f;font-size:11px;text-align:center;font-weight:600;">
+                &#9888; Ceci est un e-mail automatique, merci de ne pas y repondre.
+              </p>
+              <p style="margin:0;color:#746d88;font-size:11px;text-align:center;line-height:1.5;">
+                Cette adresse n'est pas surveillee et aucune reponse ne pourra etre traitee.<br/>
+                Pour toute question, contactez directement un membre du bureau de l'AS de l'INSA CVL.
               </p>
             </td>
           </tr>
@@ -225,12 +233,12 @@ export default async function handler(req, res) {
       ? `Licence incomplete - ${a.prenom} ${a.nom}`
       : `Votre QR Code de licence - ${a.prenom} ${a.nom}`;
     const text = relance
-      ? `Bonjour ${a.prenom} ${a.nom},\n\nVotre licence n'est pas complete.\n\nCe qu'il manque :\n- ${anomalies.join('\n- ')}\n\nMerci de contacter un membre du bureau de l'AS pour regulariser votre dossier.\n\n- Le bureau de l'Association Sportive`
-      : `Bonjour ${a.prenom} ${a.nom},\n\nVotre QR Code de licence est disponible. Presentez-le a votre responsable sportif lors des entrainements et des matchs.\n\nAcceder a votre QR Code : ${lien}\n\nVous pouvez enregistrer cette page en favori sur votre telephone.\n\n- Le bureau de l'Association Sportive`;
+      ? `Bonjour ${a.prenom} ${a.nom},\n\nVotre licence n'est pas complete.\n\nCe qu'il manque :\n- ${anomalies.join('\n- ')}\n\nMerci de contacter un membre du bureau de l'AS de l'INSA CVL pour regulariser votre dossier.\n\n- Le bureau de l'AS de l'INSA CVL\n\n---\nCeci est un e-mail automatique. Merci de ne pas y repondre, cette adresse n'est pas surveillee.`
+      : `Bonjour ${a.prenom} ${a.nom},\n\nVotre QR Code de licence est disponible. Presentez-le a votre responsable sportif lors des entrainements et des matchs.\n\nAcceder a votre QR Code : ${lien}\n\nVous pouvez enregistrer cette page en favori sur votre telephone.\n\n- Le bureau de l'AS de l'INSA CVL\n\n---\nCeci est un e-mail automatique. Merci de ne pas y repondre, cette adresse n'est pas surveillee.`;
 
     try {
       await transporter.sendMail({
-        from: `"Association Sportive" <${process.env.GMAIL_USER}>`,
+        from: `"AS de l'INSA CVL (ne pas repondre)" <${process.env.GMAIL_USER}>`,
         to: a.email,
         subject,
         text,
