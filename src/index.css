@@ -458,8 +458,9 @@ button:disabled {
 
 .banner__title {
   margin: 0;
-  font-size: 24px;
+  font-size: clamp(20px, 4.6vw, 24px);
   font-weight: 800;
+  white-space: nowrap;
 }
 
 .banner--ok .banner__title {
@@ -480,11 +481,15 @@ button:disabled {
 .status-badge {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   min-height: 28px;
+  min-width: 86px;
   padding: 4px 11px;
   border-radius: 999px;
   font-size: 13px;
   font-weight: 800;
+  line-height: 1;
+  white-space: nowrap;
 }
 
 .status-badge--ok {
@@ -680,6 +685,41 @@ button:disabled {
   margin: 4px 0;
   padding-left: 20px;
   text-align: left;
+}
+
+.sending-modal {
+  width: min(430px, 96%);
+  text-align: center;
+}
+
+.sending-spinner {
+  width: 46px;
+  height: 46px;
+  margin: 0 auto 16px;
+  border: 5px solid var(--as-purple-100);
+  border-top-color: var(--as-purple-700);
+  border-radius: 999px;
+  animation: spin 0.9s linear infinite;
+}
+
+.sending-modal h3 {
+  margin-bottom: 10px;
+}
+
+.sending-modal__warning {
+  margin: 0;
+  color: var(--ko);
+  font-weight: 800;
+}
+
+.sending-modal__progress {
+  margin-top: 16px;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* ---------- Modale de confirmation envoi groupé ---------- */

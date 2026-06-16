@@ -30,11 +30,7 @@ function esc(str) {
     .replace(/'/g, '&#x27;');
 }
 
-function emailHtml(prenom, nom, lien, relance = false) {
-  const titre = relance ? 'Votre licence est a regulariser' : 'Votre QR Code de licence';
-  const texte = relance
-    ? 'Votre dossier de licence est incomplet. Consultez votre statut et contactez le bureau pour regulariser.'
-    : 'Votre QR Code de licence est disponible. Presentez-le a votre responsable sportif lors des entrainements et des matchs.';
+function qrEmailHtml(prenom, nom, lien) {
   const p = esc(prenom);
   const n = esc(nom);
   const l = esc(lien);
@@ -44,7 +40,7 @@ function emailHtml(prenom, nom, lien, relance = false) {
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>${esc(titre)}</title>
+  <title>Votre QR Code de licence</title>
 </head>
 <body style="margin:0;padding:0;background:#f5f3f7;font-family:system-ui,sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="padding:40px 16px;">
@@ -54,7 +50,7 @@ function emailHtml(prenom, nom, lien, relance = false) {
           <tr>
             <td style="background:#5e3a8c;padding:28px 32px;">
               <p style="margin:0;color:#ffffff;font-size:20px;font-weight:600;">Association Sportive</p>
-              <p style="margin:4px 0 0 0;color:rgba(255,255,255,0.75);font-size:13px;">${esc(titre)}</p>
+              <p style="margin:4px 0 0 0;color:rgba(255,255,255,0.75);font-size:13px;">Votre QR Code de licence</p>
             </td>
           </tr>
           <tr>
@@ -62,7 +58,9 @@ function emailHtml(prenom, nom, lien, relance = false) {
               <p style="margin:0 0 8px 0;color:#1e1b29;font-size:16px;">
                 Bonjour <strong>${p} ${n}</strong>,
               </p>
-              <p style="margin:0 0 24px 0;color:#746d88;font-size:14px;line-height:1.6;">${esc(texte)}</p>
+              <p style="margin:0 0 24px 0;color:#746d88;font-size:14px;line-height:1.6;">
+                Votre QR Code de licence est disponible. Presentez-le a votre responsable sportif lors des entrainements et des matchs.
+              </p>
               <table width="100%" cellpadding="0" cellspacing="0">
                 <tr>
                   <td align="center">
@@ -75,6 +73,62 @@ function emailHtml(prenom, nom, lien, relance = false) {
               <p style="margin:24px 0 0 0;color:#746d88;font-size:12px;text-align:center;line-height:1.5;">
                 Vous pouvez aussi enregistrer cette page en favori sur votre telephone.<br/>
                 <a href="${l}" style="color:#5e3a8c;word-break:break-all;">${l}</a>
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:16px 32px;border-top:1px solid #eae4f5;">
+              <p style="margin:0;color:#746d88;font-size:11px;text-align:center;">
+                Envoye par le bureau de l'Association Sportive. Ne pas repondre a cet email.
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+}
+
+function reminderEmailHtml(prenom, nom, anomalies) {
+  const p = esc(prenom);
+  const n = esc(nom);
+  const items = anomalies
+    .map((anomalie) => `<li style="margin:8px 0;color:#7c211c;font-size:14px;line-height:1.45;">${esc(anomalie)}</li>`)
+    .join('');
+
+  return `<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Licence incomplete</title>
+</head>
+<body style="margin:0;padding:0;background:#f5f3f7;font-family:system-ui,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="padding:40px 16px;">
+    <tr>
+      <td align="center">
+        <table width="100%" style="max-width:480px;background:#ffffff;border-radius:16px;box-shadow:0 8px 30px rgba(94,58,140,0.08);overflow:hidden;">
+          <tr>
+            <td style="background:#8f241e;padding:28px 32px;">
+              <p style="margin:0;color:#ffffff;font-size:20px;font-weight:600;">Association Sportive</p>
+              <p style="margin:4px 0 0 0;color:rgba(255,255,255,0.82);font-size:13px;">Licence incomplete</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:32px;">
+              <p style="margin:0 0 8px 0;color:#1e1b29;font-size:16px;">
+                Bonjour <strong>${p} ${n}</strong>,
+              </p>
+              <p style="margin:0 0 18px 0;color:#746d88;font-size:14px;line-height:1.6;">
+                Votre licence n'est pas complete. Voici ce qu'il manque :
+              </p>
+              <ul style="margin:0 0 22px 0;padding-left:20px;">
+                ${items}
+              </ul>
+              <p style="margin:0;color:#746d88;font-size:14px;line-height:1.6;">
+                Merci de contacter un membre du bureau de l'AS pour regulariser votre dossier.
               </p>
             </td>
           </tr>
@@ -133,7 +187,7 @@ export default async function handler(req, res) {
 
   let query = supabase
     .from('adherents')
-    .select('id, nom, prenom, email, fiche_renseignement, paiement_global, manque_paiement, manque_yeps, manque_passport');
+    .select('id, nom, prenom, email, public_token, fiche_renseignement, paiement_global, manque_paiement, manque_yeps, manque_passport');
 
   if (Array.isArray(adherentIds) && adherentIds.length > 0) {
     query = query.in('id', adherentIds);
@@ -151,7 +205,7 @@ export default async function handler(req, res) {
     : (data ?? []);
 
   const baseUrl = process.env.APP_BASE_URL;
-  if (!baseUrl) {
+  if (!relance && !baseUrl) {
     return res.status(500).json({ error: 'APP_BASE_URL manquant dans les variables serveur.' });
   }
 
@@ -159,12 +213,19 @@ export default async function handler(req, res) {
 
   for (const a of batch) {
     if (!a.email) continue;
-    const lien = `${baseUrl}/adherent/${a.id}`;
+    if (!relance && !a.public_token) {
+      results.errors.push({ nom: `${a.prenom} ${a.nom}`, raison: 'Token public manquant.' });
+      continue;
+    }
+
+    const statut = calculerStatutLicence(a);
+    const anomalies = statut.anomalies.length > 0 ? statut.anomalies : ['Dossier de licence incomplet'];
+    const lien = relance ? null : `${baseUrl}/adherent/${a.public_token}`;
     const subject = relance
-      ? `Licence a regulariser - ${a.prenom} ${a.nom}`
+      ? `Licence incomplete - ${a.prenom} ${a.nom}`
       : `Votre QR Code de licence - ${a.prenom} ${a.nom}`;
     const text = relance
-      ? `Bonjour ${a.prenom} ${a.nom},\n\nVotre licence est incomplete. Consultez votre statut ici : ${lien}\n\nMerci de contacter le bureau pour regulariser votre dossier.\n\n- Le bureau de l'Association Sportive`
+      ? `Bonjour ${a.prenom} ${a.nom},\n\nVotre licence n'est pas complete.\n\nCe qu'il manque :\n- ${anomalies.join('\n- ')}\n\nMerci de contacter un membre du bureau de l'AS pour regulariser votre dossier.\n\n- Le bureau de l'Association Sportive`
       : `Bonjour ${a.prenom} ${a.nom},\n\nVotre QR Code de licence est disponible. Presentez-le a votre responsable sportif lors des entrainements et des matchs.\n\nAcceder a votre QR Code : ${lien}\n\nVous pouvez enregistrer cette page en favori sur votre telephone.\n\n- Le bureau de l'Association Sportive`;
 
     try {
@@ -173,7 +234,9 @@ export default async function handler(req, res) {
         to: a.email,
         subject,
         text,
-        html: emailHtml(a.prenom, a.nom, lien, relance),
+        html: relance
+          ? reminderEmailHtml(a.prenom, a.nom, anomalies)
+          : qrEmailHtml(a.prenom, a.nom, lien),
       });
       results.sent++;
     } catch (err) {

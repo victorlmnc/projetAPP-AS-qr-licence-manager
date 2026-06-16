@@ -450,6 +450,38 @@ export default function BureauDashboard() {
         />
       )}
 
+      {envoi === 'loading' && (
+        <div className="modal-overlay modal-overlay--top" role="alertdialog" aria-modal="true">
+          <div className="modal sending-modal">
+            <div className="sending-spinner" aria-hidden="true" />
+            <h3>Envoi en cours...</h3>
+            <p className="muted">
+              Les emails sont en train d'etre envoyes.
+            </p>
+            <p className="sending-modal__warning">
+              Ne quittez pas et ne rafraichissez pas la page.
+            </p>
+            {progression && (
+              <div className="sending-modal__progress">
+                <div className="envoi-progress__bar">
+                  <div
+                    className="envoi-progress__fill"
+                    style={{
+                      width: progression.total
+                        ? `${Math.round((progression.envoyes / progression.total) * 100)}%`
+                        : '0%',
+                    }}
+                  />
+                </div>
+                <p className="envoi-progress__label">
+                  {progression.envoyes} / {progression.total ?? '...'} emails envoyes
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {envoi && envoi !== 'loading' && (
         <div className="modal-overlay" onClick={() => setEnvoi(null)}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>

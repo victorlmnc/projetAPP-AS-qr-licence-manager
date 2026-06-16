@@ -6,9 +6,14 @@ import { publicAdherentUrl, publicToken } from '../lib/publicAccess';
 
 export default function QrCodeModal({ adherent, onClose }) {
   const wrapRef = useRef(null);
-  const [envoi, setEnvoi] = useState(null); // null | 'loading' | 'ok' | { error: string }
+  const [envoi, setEnvoi] = useState(null);
   const token = publicToken(adherent);
   const lienPublic = publicAdherentUrl(adherent);
+  const envoiEnCours = envoi === 'loading';
+
+  function fermerSiPossible() {
+    if (!envoiEnCours) onClose();
+  }
 
   function telechargerPng() {
     const canvas = wrapRef.current?.querySelector('canvas');
@@ -35,7 +40,7 @@ export default function QrCodeModal({ adherent, onClose }) {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? 'Erreur inconnue');
       if (data.errors?.length > 0) throw new Error(data.errors[0].raison);
-      if (data.sent === 0) throw new Error('Email non envoyé (vérifiez la config Gmail)');
+      if (data.sent === 0) throw new Error('Email non envoye (verifiez la config Gmail)');
       setEnvoi('ok');
     } catch (err) {
       setEnvoi({ error: err.message });
@@ -43,55 +48,72 @@ export default function QrCodeModal({ adherent, onClose }) {
   }
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal" onClick={(e) => e.stopPropagation()}>
-        <h3>QR Code — {nomComplet(adherent)}</h3>
-        <p className="muted">À remettre à l'adhérent (par mail ou imprimé).</p>
+    <>
+      <div className="modal-overlay" onClick={fermerSiPossible}>
+        <div className="modal" onClick={(e) => e.stopPropagation()}>
+          <h3>QR Code - {nomComplet(adherent)}</h3>
+          <p className="muted">A remettre a l'adherent par mail, lien ou impression.</p>
 
-        {token ? (
-          <div className="qr-wrap" ref={wrapRef}>
-            <QRCodeCanvas value={lienPublic} size={220} />
+          {token ? (
+            <div className="qr-wrap" ref={wrapRef}>
+              <QRCodeCanvas value={lienPublic} size={220} />
+            </div>
+          ) : (
+            <p className="error" style={{ textAlign: 'center' }}>
+              Token public manquant. Relancez le script SQL pour remplir public_token.
+            </p>
+          )}
+
+          {token && (
+            <>
+              <p className="qr-id">Lien public : {lienPublic}</p>
+              <p className="qr-id">Token QR : {token}</p>
+            </>
+          )}
+
+          {envoi === 'ok' && (
+            <p className="small" style={{ color: 'var(--ok)', textAlign: 'center', margin: '8px 0 0' }}>
+              Email envoye a {adherent.email}
+            </p>
+          )}
+          {envoi?.error && (
+            <p className="error" style={{ textAlign: 'center', margin: '8px 0 0', fontSize: 13 }}>
+              Echec : {envoi.error}
+            </p>
+          )}
+
+          <div className="modal-actions">
+            <button className="btn-ghost" onClick={onClose} disabled={envoiEnCours}>Fermer</button>
+            <button className="btn-ghost" onClick={telechargerPng} disabled={!token || envoiEnCours}>
+              Telecharger le PNG
+            </button>
+            <button
+              onClick={envoyerParMail}
+              disabled={!adherent.email || !token || envoiEnCours || envoi === 'ok'}
+              title={!token ? 'Token public manquant' : !adherent.email ? 'Aucun e-mail enregistre pour cet adherent' : undefined}
+            >
+              {envoiEnCours ? 'Envoi...' : envoi === 'ok' ? 'Envoye' : 'Envoyer par e-mail'}
+            </button>
           </div>
-        ) : (
-          <p className="error" style={{ textAlign: 'center' }}>
-            Token public manquant. Relancez le script SQL pour remplir public_token.
-          </p>
-        )}
 
-        {token && (
-          <>
-            <p className="qr-id">Lien public : {lienPublic}</p>
-            <p className="qr-id">Token QR : {token}</p>
-          </>
-        )}
-
-        {envoi === 'ok' && (
-          <p className="small" style={{ color: 'var(--ok)', textAlign: 'center', margin: '8px 0 0' }}>
-            Email envoyé à {adherent.email}
-          </p>
-        )}
-        {envoi?.error && (
-          <p className="error" style={{ textAlign: 'center', margin: '8px 0 0', fontSize: 13 }}>
-            Échec : {envoi.error}
-          </p>
-        )}
-
-        <div className="modal-actions">
-          <button className="btn-ghost" onClick={onClose}>Fermer</button>
-          <button className="btn-ghost" onClick={telechargerPng} disabled={!token}>Télécharger le PNG</button>
-          <button
-            onClick={envoyerParMail}
-            disabled={!adherent.email || !token || envoi === 'loading' || envoi === 'ok'}
-            title={!token ? 'Token public manquant' : !adherent.email ? 'Aucun e-mail enregistré pour cet adhérent' : undefined}
-          >
-            {envoi === 'loading' ? 'Envoi…' : envoi === 'ok' ? 'Envoyé ✓' : 'Envoyer par e-mail'}
-          </button>
+          {!adherent.email && (
+            <p className="qr-id">Aucun e-mail enregistre pour cet adherent.</p>
+          )}
         </div>
-
-        {!adherent.email && (
-          <p className="qr-id">Aucun e-mail enregistré pour cet adhérent.</p>
-        )}
       </div>
-    </div>
+
+      {envoiEnCours && (
+        <div className="modal-overlay modal-overlay--top" role="alertdialog" aria-modal="true">
+          <div className="modal sending-modal">
+            <div className="sending-spinner" aria-hidden="true" />
+            <h3>Envoi en cours...</h3>
+            <p className="muted">L'email est en train d'etre envoye.</p>
+            <p className="sending-modal__warning">
+              Ne quittez pas et ne rafraichissez pas la page.
+            </p>
+          </div>
+        </div>
+      )}
+    </>
   );
 }

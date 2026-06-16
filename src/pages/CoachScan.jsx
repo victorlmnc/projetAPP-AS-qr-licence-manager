@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import Header from '../components/Header';
-import StatusBanner from '../components/StatusBanner';
+import { calculerStatutLicence } from '../lib/licence';
 import { nomComplet } from '../lib/texte';
 import './CoachScan.css';
 
@@ -31,7 +31,7 @@ async function nettoyerScanner(scanner) {
   try {
     await scanner.stop();
   } catch {
-    // Le scanner peut déjà être arrêté.
+    // Le scanner peut deja etre arrete.
   }
 
   try {
@@ -45,7 +45,7 @@ async function nettoyerScanner(scanner) {
 export default function CoachScan() {
   const [adherent, setAdherent] = useState(null);
   const [erreur, setErreur] = useState(null);
-  const [cameraMessage, setCameraMessage] = useState('Initialisation de la caméra…');
+  const [cameraMessage, setCameraMessage] = useState('Initialisation de la camera...');
   const [texteLu, setTexteLu] = useState('');
   const [scanActif, setScanActif] = useState(false);
   const [scanKey, setScanKey] = useState(0);
@@ -70,14 +70,13 @@ export default function CoachScan() {
       .maybeSingle();
 
     if (error || !data) {
-      setErreur('Adhérent introuvable ou QR invalide.');
+      setErreur('Adherent introuvable ou QR invalide.');
       return;
     }
 
     setAdherent(data);
   }, []);
 
-  // S'abonner aux changements en temps réel de l'adhérent affiché
   useEffect(() => {
     if (!adherent?.id) return;
 
@@ -91,7 +90,7 @@ export default function CoachScan() {
             setAdherent(payload.new);
           } else if (payload.eventType === 'DELETE' && payload.old.id === adherent.id) {
             setAdherent(null);
-            setErreur('Cet adhérent a été supprimé de la base de données.');
+            setErreur('Cet adherent a ete supprime de la base de donnees.');
           }
         }
       )
@@ -111,7 +110,7 @@ export default function CoachScan() {
     generationScannerRef.current = generation;
     lectureEnCoursRef.current = false;
     setScanActif(false);
-    setCameraMessage('Initialisation de la caméra…');
+    setCameraMessage('Initialisation de la camera...');
 
     async function lancerScanner() {
       try {
@@ -132,7 +131,7 @@ export default function CoachScan() {
 
               const identifiant = extraireIdentifiantQr(resultat);
               setTexteLu(identifiant);
-              setCameraMessage('QR code lu. Recherche en cours…');
+              setCameraMessage('QR code lu. Recherche en cours...');
               setScanActif(false);
 
               await nettoyerScanner(scanner);
@@ -148,15 +147,15 @@ export default function CoachScan() {
               return;
             }
             setScanActif(true);
-            setCameraMessage('Caméra active : présentez le QR code devant l\'objectif.');
+            setCameraMessage("Camera active : presentez le QR code devant l'objectif.");
           })
           .catch(async () => {
             await nettoyerScanner(scanner);
             if (!annule && generation === generationScannerRef.current) {
               setScanActif(false);
-              setCameraMessage('Caméra indisponible.');
+              setCameraMessage('Camera indisponible.');
               setErreur(
-                "Impossible d'accéder à la caméra. Vérifiez l'autorisation navigateur et l'accès HTTPS."
+                "Impossible d'acceder a la camera. Verifiez l'autorisation navigateur et l'acces HTTPS."
               );
             }
           });
@@ -189,6 +188,9 @@ export default function CoachScan() {
     setScanKey((key) => key + 1);
   }
 
+  const scannerVisible = !texteLu && !adherent && !erreur;
+  const statut = adherent ? calculerStatutLicence(adherent) : null;
+
   return (
     <div className="page">
       <Header titre="Scan terrain" />
@@ -197,34 +199,40 @@ export default function CoachScan() {
         <div className="scan-heading">
           <h2>Scanner une licence</h2>
           <p className="muted">
-            Visez le QR code de l'adhérent. La caméra se coupe automatiquement après lecture.
+            Visez le QR code de l'adherent. La camera se coupe automatiquement apres lecture.
           </p>
         </div>
 
-        <section className="scan-reader" aria-label="Scanner QR code">
-          <div id={READER_ID} className="scan-reader__camera" />
-          <p className="scan-reader__status">{cameraMessage}</p>
-        </section>
-
-        {texteLu && (
-          <p className="scan-token">
-            Identifiant lu : <code>{texteLu}</code>
-          </p>
+        {scannerVisible && (
+          <section className="scan-reader" aria-label="Scanner QR code">
+            <div id={READER_ID} className="scan-reader__camera" />
+            <p className="scan-reader__status">{cameraMessage}</p>
+          </section>
         )}
 
-        {erreur && <p className="error">{erreur}</p>}
+        {texteLu && !adherent && !erreur && (
+          <p className="scan-reader__status">Recherche en cours...</p>
+        )}
 
-        {adherent && (
-          <section className="scan-result" aria-live="polite">
-            <div className="scan-result__identity">
-              <span className="muted">Adhérent contrôlé</span>
-              <strong>
-                {nomComplet(adherent)}
-              </strong>
-              {adherent.email && <span>{adherent.email}</span>}
+        {erreur && <p className="error scan-error">{erreur}</p>}
+
+        {adherent && statut && (
+          <section className={`scan-result ${statut.valide ? 'scan-result--ok' : 'scan-result--ko'}`} aria-live="polite">
+            <div className="scan-result__main">
+              <span className="scan-result__label">Adherent controle</span>
+              <h2>{nomComplet(adherent)}</h2>
+              <p className="scan-result__status-big">
+                {statut.valide ? 'Licence a jour' : 'Licence non a jour'}
+              </p>
             </div>
 
-            <StatusBanner adherent={adherent} />
+            {!statut.valide && (
+              <ul className="scan-result__list">
+                {statut.anomalies.map((motif, i) => (
+                  <li key={i}>{motif}</li>
+                ))}
+              </ul>
+            )}
           </section>
         )}
 
