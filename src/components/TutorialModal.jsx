@@ -45,6 +45,16 @@ const SECTIONS_BUREAU = [
       `Astuce : Utilisez le bouton "Installer l'application" dans le menu pour avoir l'icône directement sur votre bureau d'ordinateur ou votre téléphone.`
     ],
   },
+  {
+    titre: `Aide & Contact`,
+    images: [],
+    contenu: [
+      `En cas de problème, de bug, ou si vous avez des idées d'amélioration pour l'application, n'hésitez pas à contacter les développeurs :`,
+      `mathis.hiron@insa-cvl.fr`,
+      `victor.lemanceau@insa-cvl.fr`,
+      `gabin.pasquier--menard@insa-cvl.fr`
+    ],
+  },
 ];
 
 const SECTIONS_COACH = [
@@ -62,6 +72,13 @@ const SECTIONS_COACH = [
     contenu: [
       `Le système est comme un billet de train : l'adhérent affiche son QR code sur son écran, et vous le validez.`,
       `Sur téléphone, utilisez le bouton "Installer" dans le menu pour ajouter l'application comme une vraie application sur votre écran d'accueil.`,
+    ],
+  },
+  {
+    titre: `Aide & Contact`,
+    images: [],
+    contenu: [
+      `En cas de problème, de bug, ou si vous avez une idée d'amélioration, veuillez contacter un membre du bureau de l'AS.`,
     ],
   },
 ];
