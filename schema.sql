@@ -36,28 +36,10 @@ create table if not exists profiles (
   created_at timestamptz not null default now()
 );
 
--- Migration depuis l'ancien modele avec comptes adherents.
-drop index if exists profiles_adherent_id_idx;
-alter table profiles drop constraint if exists profiles_role_check;
-delete from profiles where role not in ('bureau', 'coach');
-alter table profiles add constraint profiles_role_check check (role in ('bureau', 'coach'));
-alter table profiles drop column if exists adherent_id;
-
-create or replace function get_my_role()
-  returns text language sql security definer stable
-  set search_path = public
-as $$
-  select role from profiles where id = (select auth.uid());
-$$;
-
-revoke execute on function get_my_role() from public;
-grant execute on function get_my_role() to authenticated;
-grant execute on function get_my_role() to service_role;
-
 alter table adherents enable row level security;
 alter table profiles enable row level security;
 
--- Nettoyage des anciennes policies.
+-- Nettoyage des anciennes policies avant de supprimer les colonnes qu'elles peuvent utiliser.
 drop policy if exists "bureau_full_access_adherents" on adherents;
 drop policy if exists "coach_read_adherents" on adherents;
 drop policy if exists "adherent_read_own" on adherents;
@@ -75,6 +57,24 @@ drop policy if exists "bureau_update_profiles" on profiles;
 drop policy if exists "bureau_delete_profiles" on profiles;
 drop policy if exists "bureau_manage_profiles" on profiles;
 drop policy if exists "read_profiles" on profiles;
+
+-- Migration depuis l'ancien modele avec comptes adherents.
+drop index if exists profiles_adherent_id_idx;
+alter table profiles drop constraint if exists profiles_role_check;
+delete from profiles where role not in ('bureau', 'coach');
+alter table profiles add constraint profiles_role_check check (role in ('bureau', 'coach'));
+alter table profiles drop column if exists adherent_id;
+
+create or replace function get_my_role()
+  returns text language sql security definer stable
+  set search_path = public
+as $$
+  select role from profiles where id = (select auth.uid());
+$$;
+
+revoke execute on function get_my_role() from public;
+grant execute on function get_my_role() to authenticated;
+grant execute on function get_my_role() to service_role;
 
 -- Important : aucun acces anonyme direct a la table.
 -- La page /adherent/:public_token passe par /api/public-adherent cote serveur.
