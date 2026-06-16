@@ -56,7 +56,6 @@ export function AuthProvider({ children }) {
   const value = {
     user: session?.user ?? null,
     role: profile?.role ?? null,         // 'bureau' | 'coach'
-    adherentId: null,
     profile,
     loading,
     signOut: () => supabase.auth.signOut(),

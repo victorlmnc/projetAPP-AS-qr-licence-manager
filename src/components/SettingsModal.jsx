@@ -7,8 +7,8 @@ export default function SettingsModal({ onClose }) {
   const { role } = useAuth();
   const [action, setAction] = useState(null);
 
-  function handleResetCompleted(deleted = []) {
-    window.dispatchEvent(new CustomEvent('adherents:reset', { detail: { deleted } }));
+  function handleResetCompleted() {
+    window.dispatchEvent(new CustomEvent('adherents:reset'));
   }
 
   if (action === 'password') {

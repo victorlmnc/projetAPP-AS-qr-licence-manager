@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '../lib/supabase';
-import { useAuth } from '../context/AuthContext';
 import { calculerStatutLicence } from '../lib/licence';
 import Header from '../components/Header';
 import StatusBadge from '../components/StatusBadge';
@@ -202,12 +201,16 @@ export default function BureauDashboard() {
     const tousLesErreurs = [];
     let i = 0;
 
+    const { data: { session } } = await supabase.auth.getSession();
     try {
       while (i < ids.length) {
         const batch = ids.slice(i, i + 15);
         const res = await fetch('/api/send-qr', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session?.access_token}`,
+          },
           body: JSON.stringify({
             adherentIds: batch,
             mode: mode === 'reminder' ? 'reminder' : 'all',
@@ -217,7 +220,7 @@ export default function BureauDashboard() {
         if (!res.ok) throw new Error(data.error ?? 'Erreur inconnue');
 
         totalEnvoyes += data.sent;
-        tousLesErreurs.push(...data.errors);
+        tousLesErreurs.push(...(data.errors ?? []));
         i += batch.length;
         setProgression({ envoyes: totalEnvoyes, total: ids.length });
       }
@@ -278,7 +281,7 @@ export default function BureauDashboard() {
 
       <main className="container dash">
         <div className="dash-top">
-          <h2>Adhérents <span className="muted">({adherents.length})</span></h2>
+          <h2>Adhérents <span className="muted"></span></h2>
           <div className="dash-top-actions">
             <button className="btn-ghost" onClick={() => setImportOuvert(true)}>
               Importer CSV
@@ -344,7 +347,7 @@ export default function BureauDashboard() {
 
         <input
           className="dash-search"
-          placeholder="Rechercher un nom, un prénom ou un email…"
+          placeholder="Rechercher un nom ou un prénom…"
           value={recherche}
           onChange={(e) => setRecherche(e.target.value)}
         />
@@ -439,7 +442,7 @@ export default function BureauDashboard() {
           subtitle={
             envoiModal.mode === 'reminder'
               ? 'Sélectionnez les adhérents non à jour à relancer.'
-              : 'Sélectionnez les adhérents qui doivent recevoir leur lien QR.'
+              : undefined
           }
           confirmLabel={envoiModal.mode === 'reminder' ? 'Relancer' : 'Envoyer'}
           onClose={() => setEnvoiModal(null)}
@@ -452,12 +455,12 @@ export default function BureauDashboard() {
           <div className="modal" onClick={(e) => e.stopPropagation()}>
             <h3>{envoi.mode === 'reminder' ? 'Résultat de la relance' : "Résultat de l'envoi"}</h3>
             <p>
-              <strong style={{ color: 'var(--ok)' }}>{envoi.sent} email(s) envoyé(s)</strong>
+              <strong className="send-ok">{envoi.sent} email(s) envoyé(s)</strong>
             </p>
-            {envoi.errors.length > 0 && (
+            {envoi.errors?.length > 0 && (
               <>
                 <p className="error">{envoi.errors.length} échec(s) :</p>
-                <ul style={{ margin: '4px 0', paddingLeft: 20 }}>
+                <ul className="send-errors">
                   {envoi.errors.map((e, i) => (
                     <li key={i} className="small error">{reparerTexte(e.nom)} — {e.raison}</li>
                   ))}

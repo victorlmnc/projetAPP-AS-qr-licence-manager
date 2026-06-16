@@ -31,7 +31,7 @@ async function nettoyerScanner(scanner) {
   try {
     await scanner.stop();
   } catch {
-    // Le scanner peut deja etre arrete.
+    // Le scanner peut déjà être arrêté.
   }
 
   try {
@@ -63,21 +63,11 @@ export default function CoachScan() {
       return;
     }
 
-    let { data, error } = await supabase
+    const { data, error } = await supabase
       .from('adherents')
       .select('*')
       .eq('public_token', identifiant)
       .maybeSingle();
-
-    if (!data && (!error || error.code === '42703')) {
-      const legacy = await supabase
-        .from('adherents')
-        .select('*')
-        .eq('id', identifiant)
-        .maybeSingle();
-      data = legacy.data;
-      error = legacy.error;
-    }
 
     if (error || !data) {
       setErreur('Adhérent introuvable ou QR invalide.');

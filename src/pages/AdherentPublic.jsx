@@ -17,33 +17,26 @@ async function chargerAdherentPublic(token) {
 
   if (!import.meta.env.DEV) {
     const body = contentType.includes('application/json') ? await res.json() : {};
-    throw new Error(body.error || 'Aucun adherent trouve pour ce QR Code.');
+    throw new Error(body.error || 'Aucun adhérent trouvé pour ce QR Code.');
   }
 
-  // En dev Vite simple, les fonctions Vercel /api ne tournent pas. On garde un fallback local.
-  let fallback = await supabase
+  // En dev Vite simple, les fonctions Vercel /api ne tournent pas.
+  // Fallback local limité aux mêmes champs publics.
+  const { data, error } = await supabase
     .from('adherents')
-    .select('id, public_token, nom, prenom, fiche_renseignement, paiement_global, manque_paiement, manque_yeps, manque_passport')
+    .select('public_token, nom, prenom, fiche_renseignement, paiement_global, manque_paiement, manque_yeps, manque_passport')
     .eq('public_token', token)
     .maybeSingle();
 
-  if (!fallback.data && !fallback.error) {
-    fallback = await supabase
-      .from('adherents')
-      .select('id, public_token, nom, prenom, fiche_renseignement, paiement_global, manque_paiement, manque_yeps, manque_passport')
-      .eq('id', token)
-      .maybeSingle();
+  if (error || !data) {
+    throw new Error('Aucun adhérent trouvé pour ce QR Code.');
   }
 
-  if (fallback.error || !fallback.data) {
-    throw new Error('Aucun adherent trouve pour ce QR Code.');
-  }
-
-  return fallback.data;
+  return data;
 }
 
 export default function AdherentPublic() {
-  const { id: token } = useParams();
+  const { token } = useParams();
   const [adherent, setAdherent] = useState(null);
   const [chargement, setChargement] = useState(true);
   const [erreur, setErreur] = useState(null);
@@ -55,7 +48,6 @@ export default function AdherentPublic() {
     async function charger() {
       setChargement(true);
       setErreur(null);
-
       try {
         const data = await chargerAdherentPublic(token);
         if (!annule) setAdherent(data);
@@ -65,7 +57,6 @@ export default function AdherentPublic() {
         if (!annule) setChargement(false);
       }
     }
-
     charger();
     return () => {
       annule = true;
@@ -84,7 +75,7 @@ export default function AdherentPublic() {
   if (chargement) {
     return (
       <div className="pub-page">
-        <p className="centered">Chargement...</p>
+        <p className="centered">Chargement…</p>
       </div>
     );
   }
@@ -123,12 +114,12 @@ export default function AdherentPublic() {
 
         <p className="muted pub-hint">
           {valide
-            ? 'Nom et statut a verifier par le coach avant participation.'
-            : 'Licence incomplete : merci de contacter le bureau pour regulariser.'}
+            ? 'Nom et statut à vérifier par le coach avant participation.'
+            : 'Votre licence est incomplète. Contactez le bureau pour régulariser votre situation.'}
         </p>
 
         <button className="btn-ghost pub-dl" onClick={telechargerQr}>
-          Telecharger le QR Code
+          Télécharger le QR Code
         </button>
       </div>
     </div>

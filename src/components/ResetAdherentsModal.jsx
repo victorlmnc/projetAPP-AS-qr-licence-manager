@@ -39,16 +39,6 @@ export default function ResetAdherentsModal({ onClose, onResetCompleted }) {
         return;
       }
 
-      const { data: snapshot, error: snapshotError } = await supabase
-        .from('adherents')
-        .select('*');
-
-      if (snapshotError) {
-        setErreur('Impossible de preparer la sauvegarde avant suppression : ' + snapshotError.message);
-        setEnCours(false);
-        return;
-      }
-
       const { error: deleteError } = await supabase
         .from('adherents')
         .delete()
@@ -60,7 +50,7 @@ export default function ResetAdherentsModal({ onClose, onResetCompleted }) {
         return;
       }
 
-      onResetCompleted(snapshot ?? []);
+      onResetCompleted();
       onClose();
     } catch (err) {
       setErreur('Une erreur inattendue est survenue : ' + err.message);
@@ -74,8 +64,8 @@ export default function ResetAdherentsModal({ onClose, onResetCompleted }) {
         <div className="confirm-icon" aria-hidden="true">!</div>
         <h3>Reinitialiser les adherents</h3>
         <p className="danger-copy">
-          Cette action supprime toutes les fiches adherents. L'annulation reste possible
-          dans l'historique recent si l'espace Bureau reste ouvert.
+          Cette action supprime toutes les fiches adherents. Elle est definitive apres
+          confirmation du mot de passe bureau.
         </p>
 
         <form onSubmit={valider}>

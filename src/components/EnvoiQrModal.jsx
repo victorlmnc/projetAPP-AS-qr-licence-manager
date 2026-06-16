@@ -1,10 +1,13 @@
 import { useMemo, useState } from 'react';
 import { nomComplet, reparerTexte } from '../lib/texte';
 
+// Modale de confirmation avant l'envoi groupé des QR codes.
+// `adherents` = liste des adhérents éligibles.
+// `onConfirm(ids)` = appelé avec la liste des IDs sélectionnés.
 export default function EnvoiQrModal({
   adherents,
   title = 'Envoyer les QR Codes par email',
-  subtitle = '',
+  subtitle = null,
   confirmLabel = 'Envoyer',
   onClose,
   onConfirm,
@@ -15,14 +18,13 @@ export default function EnvoiQrModal({
   const filtres = useMemo(() => {
     const norm = (s) =>
       reparerTexte(String(s ?? ''))
-        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        .normalize('NFD').replace(/[̀-ͯ]/g, '')
         .replace(/\s+/g, ' ')
         .toLowerCase()
         .trim();
 
     const q = norm(recherche);
     if (!q) return adherents;
-
     return adherents.filter((a) => {
       const nom = norm(a.nom);
       const prenom = norm(a.prenom);
@@ -35,10 +37,12 @@ export default function EnvoiQrModal({
     });
   }, [adherents, recherche]);
 
-  const tousCoches = selectionnes.size === adherents.length && adherents.length > 0;
-
   function toggleTout() {
-    setSelectionnes(tousCoches ? new Set() : new Set(adherents.map((a) => a.id)));
+    if (selectionnes.size === adherents.length) {
+      setSelectionnes(new Set());
+    } else {
+      setSelectionnes(new Set(adherents.map((a) => a.id)));
+    }
   }
 
   function toggle(id) {
@@ -55,33 +59,46 @@ export default function EnvoiQrModal({
     onConfirm(ids);
   }
 
+  const tousCoches = selectionnes.size === adherents.length && adherents.length > 0;
+
   return (
     <div className="modal-overlay modal-overlay--top" onClick={onClose}>
       <div className="modal modal--envoi" onClick={(e) => e.stopPropagation()}>
         <h3>{title}</h3>
-        <p className="muted">
-          {subtitle || `${selectionnes.size} destinataire(s) selectionne(s) sur ${adherents.length}.`}
+        <p className="muted" style={{ marginBottom: 16 }}>
+          {subtitle ?? `${selectionnes.size} destinataire(s) sélectionné(s) sur ${adherents.length} éligible(s)`}
         </p>
 
         <input
           className="envoi-search"
-          placeholder="Rechercher un nom ou prenom..."
+          placeholder="Rechercher un nom ou prénom…"
           value={recherche}
           onChange={(e) => setRecherche(e.target.value)}
           autoFocus
         />
 
-        <div className="envoi-list">
+        <div className="envoi-list-header">
           <label className="envoi-item envoi-item--header">
-            <input type="checkbox" checked={tousCoches} onChange={toggleTout} />
-            <span>{tousCoches ? 'Tout decocher' : 'Tout cocher'}</span>
-            <span className="muted small envoi-count">{filtres.length} resultat(s)</span>
+            <input
+              type="checkbox"
+              checked={tousCoches}
+              onChange={toggleTout}
+            />
+            <span style={{ fontWeight: 600 }}>
+              {tousCoches ? 'Tout décocher' : 'Tout cocher'}
+            </span>
+            <span className="muted small" style={{ marginLeft: 'auto' }}>
+              {filtres.length} résultat(s)
+            </span>
           </label>
+        </div>
 
+        <div className="envoi-list">
           {filtres.length === 0 && (
-            <p className="muted small envoi-empty">Aucun resultat.</p>
+            <p className="muted small" style={{ padding: '12px 0', textAlign: 'center' }}>
+              Aucun résultat.
+            </p>
           )}
-
           {filtres.map((a) => (
             <label key={a.id} className="envoi-item">
               <input
@@ -89,7 +106,9 @@ export default function EnvoiQrModal({
                 checked={selectionnes.has(a.id)}
                 onChange={() => toggle(a.id)}
               />
-              <span className="envoi-item__name">{nomComplet(a)}</span>
+              <span className="envoi-item__name">
+                {nomComplet(a)}
+              </span>
               <span className="muted small envoi-item__email">{a.email}</span>
             </label>
           ))}

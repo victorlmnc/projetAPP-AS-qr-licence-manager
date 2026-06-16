@@ -1,176 +1,152 @@
-# Controle des licences AS par QR Code
+# Controle des licences par QR Code
 
-Web app / PWA pour suivre les licences d'une association sportive.
+Application web / PWA pour gerer les licences d'une association sportive :
+saisie bureau, scan coach, lien public adherent avec QR code et statut.
 
-Objectif : le Bureau gere les fiches, les coachs scannent les QR codes sur le terrain, et les adherents consultent uniquement leur page publique via un lien/QR.
+Stack : React + Vite, Supabase (Postgres, Auth, RLS), Vercel, Gmail SMTP.
 
-## Roles
+## Installation
 
-Il y a seulement deux comptes connectes :
-
-- `bureau` : saisie, modification, import CSV, QR codes, envoi mail, suppression.
-- `coach` : scan terrain et lecture des informations de licence.
-
-Les adherents n'ont pas de compte. Ils recoivent un lien public de type :
-
-```text
-/adherent/<public_token>
-```
-
-Ce token public est separe de l'ID interne de la fiche.
-
-## Stack
-
-- React + Vite
-- Supabase Auth pour les deux comptes partages `bureau` et `coach`
-- Supabase Postgres pour les fiches adherents
-- Vercel pour le deploiement HTTPS
-- Vercel Functions pour :
-  - `/api/public-adherent`
-  - `/api/send-qr`
-
-## Installation locale
+Prerequis : Node.js 18+.
 
 ```bash
-git clone <URL_DU_DEPOT>
-cd projetAPP-AS-qr-licence-manager
 npm install
 cp .env.example .env
 npm run dev
 ```
 
-L'application tourne sur :
+L'application locale tourne ensuite sur `http://localhost:5173`.
 
-```text
-http://localhost:5173
-```
+Le fichier `.env` ne doit jamais etre pousse sur Git.
 
 ## Variables d'environnement
 
-Dans `.env` en local et dans Vercel :
+Copier `.env.example` en `.env`, puis renseigner :
 
-```text
-VITE_SUPABASE_URL=
-VITE_SUPABASE_ANON_KEY=
-SUPABASE_URL=
-SUPABASE_SERVICE_ROLE_KEY=
-GMAIL_USER=
-GMAIL_APP_PASSWORD=
-```
+| Variable | Role |
+| --- | --- |
+| `VITE_SUPABASE_URL` | URL publique du projet Supabase cote client |
+| `VITE_SUPABASE_ANON_KEY` | Cle anon Supabase cote client |
+| `SUPABASE_URL` | URL Supabase cote fonctions Vercel |
+| `SUPABASE_SERVICE_ROLE_KEY` | Cle service role, uniquement cote serveur |
+| `APP_BASE_URL` | URL publique de l'application, ex. `https://as-licences.vercel.app` |
+| `GMAIL_USER` | Adresse Gmail qui envoie les QR codes |
+| `GMAIL_APP_PASSWORD` | Mot de passe d'application Gmail |
 
-Important :
-
-- `VITE_SUPABASE_ANON_KEY` est publique cote navigateur.
-- `SUPABASE_SERVICE_ROLE_KEY` est privee et doit rester uniquement dans Vercel/env serveur.
-- Ne jamais mettre de vraie cle dans le code, README ou `.env.example`.
+Sur Vercel, ajouter les memes variables dans `Settings > Environment Variables`.
+Ne jamais mettre `SUPABASE_SERVICE_ROLE_KEY` ou `GMAIL_APP_PASSWORD` dans le code front.
 
 ## Base de donnees
 
-Executer `schema.sql` dans l'editeur SQL Supabase.
+Executer `schema.sql` dans le SQL Editor Supabase.
 
-Points importants du schema :
+Le schema utilise seulement deux types de comptes connectes :
 
-- `adherents.id` : ID interne.
-- `adherents.public_token` : token public du QR/lien adherent.
-- La table `profiles` accepte seulement `bureau` et `coach`.
-- Les anonymes ne lisent pas directement la table `adherents`.
-- La page publique passe par `/api/public-adherent`, qui renvoie une seule fiche par `public_token`.
+- `bureau` : gestion complete des adherents, emails et parametrage.
+- `coach` : scan terrain et consultation du resultat de controle.
 
-## Creation des comptes
+Les adherents n'ont pas de compte. Ils recoivent un lien public de type
+`/adherent/:public_token`. Ce token public est separe de l'`id` interne de la fiche.
 
-Les comptes sont crees a l'avance dans Supabase Auth :
+### Creer les comptes
 
-1. Creer un utilisateur `bureau@as-licences.fr`.
-2. Creer un utilisateur `coach@as-licences.fr`.
-3. Ajouter leurs profils dans `profiles`.
-
-Exemple SQL :
+1. Dans Supabase, aller dans `Authentication > Users > Add user`.
+2. Creer le compte `bureau`, puis copier son `UID`.
+3. Creer le compte `coach`, puis copier son `UID`.
+4. Associer les roles :
 
 ```sql
 insert into profiles (id, role, nom, prenom)
-values ('UID_DU_COMPTE_BUREAU', 'bureau', 'Bureau', 'AS');
+values ('UID_BUREAU', 'bureau', 'Bureau', 'AS');
 
 insert into profiles (id, role, nom, prenom)
-values ('UID_DU_COMPTE_COACH', 'coach', 'Coach', 'AS');
+values ('UID_COACH', 'coach', 'AS');
 ```
-
-Le Bureau et les coachs peuvent ensuite changer leur mot de passe depuis l'app.
 
 ## Fonctionnalites
 
-Espace Bureau :
+### Bureau
 
-- liste des adherents
-- filtres multiples
-- recherche nom/prenom/email
-- creation et modification de fiche
-- suppression avec confirmation
-- historique recent avec annulation pendant la session
-- import CSV
-- export CSV
-- QR public par adherent
-- envoi de tous les QR par mail
-- relance mail ciblee des licences non a jour
-- reinitialisation globale avec mot de passe + confirmation `SUPPRIMER`
+- Liste, recherche, filtres et statistiques des adherents.
+- Creation, edition et suppression de fiches.
+- Import CSV et export CSV.
+- Generation du QR code public d'un adherent.
+- Envoi individuel du QR par email.
+- Envoi groupe a tous les adherents avec email.
+- Relance ciblee des adherents non a jour, avec recherche et selection.
+- Popups de confirmation propres pour suppression et reinitialisation.
+- Mise a jour temps reel via Supabase Realtime.
 
-Espace Coach :
+### Coach
 
-- scan QR avec camera
-- lecture du token public
-- affichage vert/rouge
-- details des pieces manquantes
+- Scan camera avec `html5-qrcode`.
+- Lecture du token public du QR.
+- Affichage rapide du statut de licence et des pieces manquantes.
 
-Page publique adherent :
+### Page publique adherent
 
-- nom tres visible pour verification rapide par le coach
-- statut de licence
-- QR telechargeable
-- aucune connexion requise
+Route : `/adherent/:public_token`.
+
+La page publique affiche uniquement :
+
+- le nom de l'adherent, en grand pour faciliter le controle visuel ;
+- le statut de la licence ;
+- le QR code public.
+
+Elle ne donne pas acces aux informations internes de gestion.
+
+## API
+
+### `GET /api/public-adherent?token=...`
+
+Expose uniquement les champs publics necessaires a la page adherent et au scan.
+La recherche se fait par `public_token`, jamais par l'`id` interne.
+
+### `POST /api/send-qr`
+
+Fonction Vercel protegee :
+
+- session Supabase obligatoire ;
+- role `bureau` obligatoire ;
+- `mode: "all"` pour l'envoi groupe ;
+- `mode: "reminder"` pour la relance ciblee des adherents non a jour ;
+- `adherentIds: [...]` pour limiter les destinataires.
+
+Exemple :
+
+```json
+{
+  "mode": "reminder",
+  "adherentIds": ["uuid-1", "uuid-2"]
+}
+```
 
 ## Deploiement Vercel
 
-Vercel detecte Vite automatiquement :
+1. Importer le repo GitHub dans Vercel.
+2. Verifier que Vercel utilise `npm run build` et le dossier `dist`.
+3. Ajouter les variables d'environnement.
+4. Deployer.
 
-- Build command : `npm run build`
-- Output directory : `dist`
+La camera fonctionne en HTTPS sur Vercel et sur `localhost` en developpement.
 
-Ajouter les variables d'environnement dans Vercel.
+## Miroir GitHub
 
-La camera fonctionne sur telephone seulement en HTTPS ou localhost.
+Le workflow `.github/workflows/mirror-to-vercel-repo.yml` peut pousser `main`
+vers le repo connecte a Vercel. Il a besoin d'un secret GitHub `MIRROR_TOKEN`
+ayant les droits `Contents` et `Workflows` sur le repo miroir.
 
-## Miroir vers le repo Vercel
-
-Le workflow `.github/workflows/mirror-to-vercel-repo.yml` copie `main` du repo de groupe vers :
-
-```text
-Mathishrn/as-licences-cvl
-```
-
-Il cree un commit miroir avec l'identite du compte lie au secret `MIRROR_TOKEN`, pour que Vercel accepte le deploiement meme si le commit source vient d'une autre personne.
-
-Secret GitHub requis dans le repo de groupe :
-
-```text
-MIRROR_TOKEN
-```
-
-Permissions du token :
-
-- `Contents: Read and write`
-- `Workflows: Read and write`
-
-## Commandes utiles
+## Tests
 
 ```bash
-npm run dev
+npm test -- --run
 npm run build
-npm run preview
 ```
 
 ## Points de securite
 
-- Ne jamais rendre public un repo contenant de vraies donnees adherents.
-- Ne jamais exposer `SUPABASE_SERVICE_ROLE_KEY`.
-- `/api/send-qr` verifie que l'utilisateur connecte est bien `bureau`.
-- Les adherents n'ont pas de compte et ne peuvent pas modifier leur statut.
-- Le token public du QR n'est pas l'ID interne de la fiche.
+- Les permissions principales sont dans les politiques RLS de Supabase.
+- Les liens adherents utilisent `public_token`, pas l'ID interne.
+- Les secrets restent dans `.env` local ou dans Vercel, jamais dans Git.
+- `/api/send-qr` refuse les appels sans session Supabase bureau.
+- Les anciens acces publics directs par policy ont ete supprimes du schema.

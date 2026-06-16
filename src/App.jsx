@@ -48,7 +48,7 @@ export default function App() {
             }
           />
           {/* Page publique : QR code + statut, sans login requis */}
-          <Route path="/adherent/:id" element={<AdherentPublic />} />
+          <Route path="/adherent/:token" element={<AdherentPublic />} />
 
           {/* Toute URL inconnue retombe sur l'accueil. */}
           <Route path="*" element={<Navigate to="/" replace />} />

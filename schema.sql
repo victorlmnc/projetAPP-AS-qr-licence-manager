@@ -17,8 +17,6 @@ create table if not exists adherents (
   manque_yeps boolean not null default false,
   manque_passport boolean not null default false,
 
-  qr_envoye_le timestamptz,
-
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -76,6 +74,10 @@ create policy "read_own_profile"
   on profiles for select
   using (id = auth.uid());
 
+drop policy if exists "bureau_read_profiles" on profiles;
+drop policy if exists "bureau_write_profiles" on profiles;
+drop policy if exists "bureau_update_profiles" on profiles;
+drop policy if exists "bureau_delete_profiles" on profiles;
 drop policy if exists "bureau_manage_profiles" on profiles;
 create policy "bureau_manage_profiles"
   on profiles for all
