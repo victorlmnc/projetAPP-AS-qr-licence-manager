@@ -18,24 +18,10 @@ function versBool(v) {
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
-export default function ImportCsvModal({ onClose, onImported, formatInitial = null }) {
+export default function ImportCsvModal({ onClose, onImported }) {
   const [etat, setEtat] = useState(null);
   const [enCours, setEnCours] = useState(false);
   const inputRef = useRef(null);
-
-  function ouvrirPicker(filtre) {
-    if (inputRef.current) {
-      inputRef.current.accept = filtre;
-      inputRef.current.value = '';
-      inputRef.current.click();
-    }
-  }
-
-  // Si un format est pré-sélectionné, ouvrir le sélecteur de fichier directement
-  useEffect(() => {
-    if (formatInitial === 'csv') ouvrirPicker('.csv,text/csv');
-    else if (formatInitial === 'xlsx') ouvrirPicker('.xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-  }, []);
 
   async function parseCsv(fichier) {
     const buffer = await fichier.arrayBuffer();
@@ -145,22 +131,22 @@ export default function ImportCsvModal({ onClose, onImported, formatInitial = nu
           <code>manque_yeps</code>, <code>manque_passport</code> facultatives (valeurs Oui/Non).
         </p>
 
-        {/* Input caché — accept changé dynamiquement selon le format choisi */}
         <input
           ref={inputRef}
           type="file"
-          accept={accept}
+          accept=".csv,.xlsx,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
           style={{ display: 'none' }}
           onChange={gererFichier}
           disabled={enCours}
         />
 
         <div className="import-btns">
-          <button className="btn-ghost" onClick={() => ouvrirPicker('.csv,text/csv')} disabled={enCours}>
-            Choisir un CSV
-          </button>
-          <button className="btn-ghost" onClick={() => ouvrirPicker('.xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')} disabled={enCours}>
-            Choisir un Excel (.xlsx)
+          <button
+            className="btn-ghost"
+            onClick={() => { inputRef.current.value = ''; inputRef.current.click(); }}
+            disabled={enCours}
+          >
+            Choisir un fichier (CSV ou Excel)
           </button>
         </div>
 
