@@ -1235,3 +1235,28 @@ button:disabled {
     grid-template-columns: 1fr;
   }
 }
+
+/* ---------- Bouton Flottant Tutoriel ---------- */
+.btn-tuto-float {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--as-purple-700);
+  color: white;
+  font-size: 26px;
+  font-weight: 800;
+  box-shadow: var(--shadow-md);
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  padding: 0;
+}
+
+.btn-tuto-float:hover {
+  background: var(--as-purple-800);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}

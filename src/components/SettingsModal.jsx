@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import ChangePasswordModal from './ChangePasswordModal';
 import ResetAdherentsModal from './ResetAdherentsModal';
-import TutorialModal from './TutorialModal';
 
 export default function SettingsModal({ onClose }) {
   const { role } = useAuth();
@@ -29,9 +28,6 @@ export default function SettingsModal({ onClose }) {
     );
   }
 
-  if (action === 'tutorial') {
-    return <TutorialModal onClose={() => setAction(null)} />;
-  }
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -60,10 +56,7 @@ export default function SettingsModal({ onClose }) {
             </button>
           )}
 
-          <button type="button" className="btn-ghost settings-action" onClick={() => setAction('tutorial')}>
-            <span className="settings-action__title">Tutoriel / Aide</span>
-            <span className="settings-action__text">Découvrir comment utiliser l'application.</span>
-          </button>
+
         </div>
 
         <div className="modal-actions">
