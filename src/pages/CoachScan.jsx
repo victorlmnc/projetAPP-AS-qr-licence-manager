@@ -199,7 +199,7 @@ export default function CoachScan() {
         <div className="scan-heading">
           <h2>Scanner une licence</h2>
           <p className="muted">
-            Visez le QR code de l'adherent. La camera se coupe automatiquement apres lecture.
+            Scanner les QR code un par un. Si le scanneur ne s'affiche pas, rechargez la page.
           </p>
         </div>
 
