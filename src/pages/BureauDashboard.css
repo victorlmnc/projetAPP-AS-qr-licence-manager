@@ -38,10 +38,28 @@
 }
 
 .export-dropdown__trigger {
+  /* Même apparence que les boutons btn-ghost */
+  display: inline-flex;
+  align-items: center;
+  border-radius: var(--radius, 12px);
+  padding: 12px 18px;
+  font-weight: 800;
   cursor: pointer;
   list-style: none;
+  color: var(--as-purple-800);
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(80, 35, 124, 0.22);
+  box-shadow: none;
+  font-size: inherit;
+  font-family: inherit;
 }
 .export-dropdown__trigger::-webkit-details-marker { display: none; }
+.export-dropdown__trigger:hover {
+  color: var(--as-purple-900);
+  background: #fff;
+  border-color: rgba(80, 35, 124, 0.38);
+  box-shadow: var(--shadow-sm);
+}
 
 .export-dropdown__trigger--disabled {
   opacity: 0.45;
