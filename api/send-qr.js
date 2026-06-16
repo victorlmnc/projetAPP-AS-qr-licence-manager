@@ -133,7 +133,7 @@ export default async function handler(req, res) {
 
   let query = supabase
     .from('adherents')
-    .select('id, public_token, nom, prenom, email, fiche_renseignement, paiement_global, manque_paiement, manque_yeps, manque_passport');
+    .select('id, nom, prenom, email, fiche_renseignement, paiement_global, manque_paiement, manque_yeps, manque_passport');
 
   if (Array.isArray(adherentIds) && adherentIds.length > 0) {
     query = query.in('id', adherentIds);
@@ -159,12 +159,7 @@ export default async function handler(req, res) {
 
   for (const a of batch) {
     if (!a.email) continue;
-    if (!a.public_token) {
-      results.errors.push({ nom: `${a.prenom} ${a.nom}`, raison: 'Token public manquant.' });
-      continue;
-    }
-
-    const lien = `${baseUrl}/adherent/${a.public_token}`;
+    const lien = `${baseUrl}/adherent/${a.id}`;
     const subject = relance
       ? `Licence a regulariser - ${a.prenom} ${a.nom}`
       : `Votre QR Code de licence - ${a.prenom} ${a.nom}`;
