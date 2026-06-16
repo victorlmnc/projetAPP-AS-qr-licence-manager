@@ -6,19 +6,19 @@ const SECTIONS_BUREAU = [
     titre: `Fonctionnement du système`,
     images: [],
     contenu: [
-      `⚠️ Important : l'application ne gère pas les inscriptions ni les paiements en ligne (cela reste sur Forms ou HelloAsso).`,
-      `Le site sert uniquement à centraliser vos données, générer les QR Codes personnels, et vérifier l'état des dossiers avant les entraînements.`,
-      `Il utilise deux comptes partagés : "bureau" (gestion de la base et envoi d'e-mails) et "respos-sports" (pour flasher les QR Codes sur le terrain).`
+      `Attention, l'application ne s'occupe pas des inscriptions ou des paiements. Vous continuez à utiliser Forms ou HelloAsso pour ça.`,
+      `Ce site sert juste à regrouper toutes vos données au même endroit. Il génère les QR Codes pour chaque adhérent et permet de vérifier facilement qui est en règle avant un entraînement.`,
+      `Il n'y a que deux comptes à retenir. Le compte "bureau" pour gérer tout le monde et envoyer les e-mails, et le compte "respos-sports" pour scanner les QR Codes sur le terrain.`
     ],
   },
   {
     titre: `Gestion des Adhérents`,
     images: [],
     contenu: [
-      `Cliquez sur une ligne du tableau pour ouvrir la fiche détaillée d'un adhérent et modifier son statut (fiche de renseignement, paiement, etc.).`,
-      `Les modifications sont enregistrées en temps réel.`,
-      `Vous pouvez aussi rechercher un adhérent spécifique via la barre de recherche ou utiliser les filtres (À jour, Manques...).`,
-      `L'importation de groupe se fait via un fichier Excel exporté en format CSV (colonnes obligatoires : "nom", "prenom", "email").`
+      `Pour modifier le dossier de quelqu'un, il suffit de cliquer sur son nom dans le tableau.`,
+      `Tout est sauvegardé automatiquement à la seconde où vous cochez une case.`,
+      `La barre de recherche et les filtres sont là pour vous faire gagner du temps si vous cherchez une personne en particulier.`,
+      `Et si vous avez beaucoup de monde à ajouter, utilisez l'import CSV avec votre fichier Excel.`
     ],
   },
   {
@@ -29,26 +29,26 @@ const SECTIONS_BUREAU = [
       '/tuto/envoi-emails-3.png',
     ],
     contenu: [
-      `Voici les trois e-mails que le système peut envoyer :`,
-      `1. Le QR Code avec un statut valide (tout est en règle).`,
-      `2. Le QR Code avec un statut invalide (liste détaillée de ce qu'il manque).`,
-      `3. Une simple relance (sans le QR Code) ciblée uniquement sur les dossiers incomplets.`
+      `L'application peut envoyer ces trois e-mails automatiquement :`,
+      `1. Le premier envoie le QR Code quand tout est en règle.`,
+      `2. Le deuxième envoie le QR Code mais prévient que le dossier est incomplet.`,
+      `3. Le dernier est une simple piqûre de rappel pour ceux qui n'ont pas encore tout donné.`
     ],
   },
   {
-    titre: `Sécurité & Outils`,
+    titre: `Sécurité et Outils`,
     images: [],
     contenu: [
-      `Dans les Paramètres, vous pouvez modifier les mots de passe partagés (Bureau et respos-sports).`,
-      `En fin d'année, utilisez la fonction "Réinitialiser les adhérents" pour vider la base de données et préparer la nouvelle saison.`,
-      `Astuce : Utilisez le bouton "Installer l'application" dans le menu pour avoir l'icône directement sur votre bureau d'ordinateur ou votre téléphone.`
+      `Vous pouvez changer les mots de passe des deux comptes depuis les paramètres.`,
+      `A la fin de la saison, n'oubliez pas d'utiliser le bouton pour vider la base et repartir à zéro.`,
+      `Un petit conseil : utilisez le bouton Installer dans le menu pour avoir l'application directement sur votre écran, comme une vraie appli mobile.`
     ],
   },
   {
-    titre: `Aide & Contact`,
+    titre: `Aide et Contact`,
     images: [],
     contenu: [
-      `En cas de problème, de bug, ou si vous avez des idées d'amélioration pour l'application, n'hésitez pas à contacter les développeurs :`,
+      `Si quelque chose ne marche pas, s'il y a un bug, ou si vous avez une super idée pour améliorer le site, envoyez-nous un petit mail :`,
       `mathis.hiron@insa-cvl.fr`,
       `victor.lemanceau@insa-cvl.fr`,
       `gabin.pasquier--menard@insa-cvl.fr`
@@ -61,24 +61,24 @@ const SECTIONS_COACH = [
     titre: `Scan Terrain`,
     images: ['/tuto/scan-coach.png'],
     contenu: [
-      `⚠️ L'application est uniquement un outil de vérification d'accès. Elle ne gère pas l'appel ni les présences.`,
-      `Pointez la caméra vers le QR code de l'adhérent.`,
-      `Le résultat s'affiche tout de suite : Vert (Tout est en ordre) ou Rouge (Alerte, avec le détail des manques affiché).`,
+      `Attention, cette application sert juste à vérifier si la personne a le droit de s'entraîner. Elle ne sert pas à faire l'appel.`,
+      `Il suffit de pointer la caméra de votre téléphone vers le QR Code de l'adhérent.`,
+      `L'écran devient vert si tout est bon, ou rouge si son dossier n'est pas terminé (et ça vous dira ce qu'il manque).`,
     ],
   },
   {
     titre: `Conseils Pratiques`,
     images: ['/tuto/conseils-coach.png'],
     contenu: [
-      `Le système est comme un billet de train : l'adhérent affiche son QR code sur son écran, et vous le validez.`,
-      `Sur téléphone, utilisez le bouton "Installer" dans le menu pour ajouter l'application comme une vraie application sur votre écran d'accueil.`,
+      `C'est exactement comme un contrôleur dans le train : l'adhérent montre son téléphone, et vous scannez.`,
+      `Pensez à utiliser le bouton Installer dans le menu. L'application se mettra sur votre écran d'accueil, ça ira beaucoup plus vite pour le prochain entraînement.`,
     ],
   },
   {
-    titre: `Aide & Contact`,
+    titre: `Aide et Contact`,
     images: [],
     contenu: [
-      `En cas de problème, de bug, ou si vous avez une idée d'amélioration, veuillez contacter un membre du bureau de l'AS.`,
+      `En cas de souci technique ou si vous avez une idée, le mieux est d'en parler directement à un membre du bureau.`,
     ],
   },
 ];
@@ -163,7 +163,7 @@ export default function TutorialModal({ onClose }) {
                 }}
               />
               <div style={{ width: '100%', height: '100%', display: 'none', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#e0d8eb', color: '#5e3a8c', fontWeight: 'bold' }}>
-                📸 Screen : {section.titre} {section.images.length > 1 ? `(${imgIndex + 1})` : ''}
+                Ecran : {section.titre} {section.images.length > 1 ? `(${imgIndex + 1})` : ''}
                 <span style={{ fontSize: '11px', marginTop: '4px', fontWeight: 'normal' }}>(Image introuvable : {section.images[imgIndex]})</span>
               </div>
             </div>
