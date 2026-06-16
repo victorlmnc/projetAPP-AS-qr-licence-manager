@@ -13,6 +13,16 @@ const SECTIONS_BUREAU = [
     ],
   },
   {
+    titre: `Gestion des Adhérents`,
+    images: [],
+    contenu: [
+      `Cliquez sur une ligne du tableau pour ouvrir la fiche détaillée d'un adhérent et modifier son statut (fiche de renseignement, paiement, etc.).`,
+      `Les modifications sont enregistrées en temps réel.`,
+      `Vous pouvez aussi rechercher un adhérent spécifique via la barre de recherche ou utiliser les filtres (À jour, Manques...).`,
+      `L'importation de groupe se fait via un fichier Excel exporté en format CSV (colonnes obligatoires : "nom", "prenom", "email").`
+    ],
+  },
+  {
     titre: `Exemples d'e-mails`,
     images: [
       '/tuto/envoi-emails-1.png',
@@ -27,12 +37,12 @@ const SECTIONS_BUREAU = [
     ],
   },
   {
-    titre: `Aide : Import CSV`,
-    images: ['/tuto/import-csv.png'],
+    titre: `Sécurité & Outils`,
+    images: [],
     contenu: [
-      `L'importation de groupe se fait via un fichier Excel exporté en format CSV.`,
-      `Votre fichier doit impérativement contenir des colonnes nommées : "nom", "prenom", et "email".`,
-      `Les autres colonnes seront ignorées, et l'importation mettra à jour la base instantanément.`
+      `Dans les Paramètres, vous pouvez modifier les mots de passe partagés (Bureau et respos-sports).`,
+      `En fin d'année, utilisez la fonction "Réinitialiser les adhérents" pour vider la base de données et préparer la nouvelle saison.`,
+      `Astuce : Utilisez le bouton "Installer l'application" dans le menu pour avoir l'icône directement sur votre bureau d'ordinateur ou votre téléphone.`
     ],
   },
 ];
