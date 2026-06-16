@@ -36,13 +36,11 @@ function qrEmailHtml(prenom, nom, lien, valide, anomalies) {
   const l = esc(lien);
 
   const statusHtml = valide 
-    ? `<p style="margin:0 0 20px 0;color:#2e7d32;font-size:14px;font-weight:600;background:#e8f5e9;padding:12px;border-radius:8px;">Dossier complet et à jour.</p>`
-    : `<div style="margin:0 0 20px 0;background:#fdecea;padding:12px;border-radius:8px;border-left:4px solid #d32f2f;">
-         <p style="margin:0 0 10px 0;color:#b71c1c;font-size:14px;font-weight:600;">Attention, dossier incomplet. Il manque :</p>
-         <ul style="margin:0;padding-left:20px;">
-           ${anomalies.map((anomalie) => `<li style="margin:4px 0;color:#c62828;font-size:14px;">${esc(anomalie)}</li>`).join('')}
-         </ul>
-       </div>`;
+    ? `<p style="margin:0 0 20px 0;color:#1e1b29;font-size:14px;font-weight:600;">Dossier complet et à jour.</p>`
+    : `<p style="margin:0 0 10px 0;color:#1e1b29;font-size:14px;font-weight:600;">Attention, dossier incomplet. Il manque :</p>
+       <ul style="margin:0 0 20px 0;padding-left:20px;color:#746d88;font-size:14px;">
+         ${anomalies.map((anomalie) => `<li style="margin:4px 0;">${esc(anomalie)}</li>`).join('')}
+       </ul>`;
 
   return `<!DOCTYPE html>
 <html lang="fr">
@@ -148,7 +146,7 @@ function reminderEmailHtml(prenom, nom, anomalies) {
           <tr>
             <td style="padding:16px 32px;border-top:1px solid #eae4f5;">
               <p style="margin:0 0 6px 0;color:#b5460f;font-size:11px;text-align:center;font-weight:600;">
-                &#9888; Ceci est un e-mail automatique, merci de ne pas y repondre.
+                Ceci est un e-mail automatique, merci de ne pas y repondre.
               </p>
               <p style="margin:0;color:#746d88;font-size:11px;text-align:center;line-height:1.5;">
                 Cette adresse n'est pas surveillee et aucune reponse ne pourra etre traitee.<br/>
