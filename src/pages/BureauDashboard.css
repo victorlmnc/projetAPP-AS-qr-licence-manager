@@ -32,6 +32,50 @@
   text-align: right;
 }
 
+/* --- Dropdown export --- */
+.export-dropdown {
+  position: relative;
+}
+
+.export-dropdown__trigger {
+  cursor: pointer;
+  list-style: none;
+}
+.export-dropdown__trigger::-webkit-details-marker { display: none; }
+
+.export-dropdown__trigger--disabled {
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+.export-dropdown__menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 4px);
+  z-index: 100;
+  background: #fff;
+  border: 1px solid #e0d8f0;
+  border-radius: 10px;
+  box-shadow: 0 6px 20px rgba(94,58,140,0.12);
+  min-width: 160px;
+  overflow: hidden;
+}
+
+.export-dropdown__item {
+  display: block;
+  width: 100%;
+  padding: 10px 16px;
+  text-align: left;
+  background: none;
+  border: none;
+  font-size: 14px;
+  color: #1e1b29;
+  cursor: pointer;
+}
+.export-dropdown__item:hover {
+  background: #f5f3f7;
+}
+
 .stats {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));

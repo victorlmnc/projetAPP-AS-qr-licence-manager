@@ -1,4 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
+import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import { supabase } from '../lib/supabase';
 import { calculerStatutLicence } from '../lib/licence';
 import Header from '../components/Header';
@@ -232,47 +235,86 @@ export default function BureauDashboard() {
     }
   }
 
-  // Exporte la liste actuellement affichée (filtre + recherche) au format CSV.
-  function exporterCsv() {
-    const entetes = [
-      'Prénom',
-      'Nom',
-      'Email',
-      'Statut',
-      'Détail',
-      'Fiche renseignement',
-      'Paiement global',
-      'Manque paiement',
-      'Manque YEPS',
-      "Manque PASS'SPORT",
-      'ID',
-    ];
+  const ENTETES_EXPORT = [
+    'Prénom', 'Nom', 'Email', 'Statut', 'Détail',
+    'Fiche renseignement', 'Paiement global',
+    'Manque paiement', 'Manque YEPS', "Manque PASS’SPORT", 'ID',
+  ];
 
-    const lignes = liste.map((adherent) => {
-      const statut = calculerStatutLicence(adherent);
+  function lignesExport() {
+    return liste.map((a) => {
+      const statut = calculerStatutLicence(a);
       return [
-        reparerTexte(adherent.prenom),
-        reparerTexte(adherent.nom),
-        adherent.email ?? '',
+        reparerTexte(a.prenom),
+        reparerTexte(a.nom),
+        a.email ?? '',
         statut.valide ? 'À jour' : 'Non à jour',
-        statut.anomalies.join(' | '),
-        adherent.fiche_renseignement ? 'Oui' : 'Non',
-        adherent.paiement_global ? 'Oui' : 'Non',
-        adherent.manque_paiement ? 'Oui' : 'Non',
-        adherent.manque_yeps ? 'Oui' : 'Non',
-        adherent.manque_passport ? 'Oui' : 'Non',
-        adherent.id,
-      ].map(champCsv).join(';');
+        statut.anomalies.join(' | ') || '',
+        a.fiche_renseignement ? 'Oui' : 'Non',
+        a.paiement_global ? 'Oui' : 'Non',
+        a.manque_paiement ? 'Oui' : 'Non',
+        a.manque_yeps ? 'Oui' : 'Non',
+        a.manque_passport ? 'Oui' : 'Non',
+        a.id,
+      ];
     });
+  }
 
-    const contenu = [entetes.map(champCsv).join(';'), ...lignes].join('\r\n');
-    const blob = new Blob(['\uFEFF' + contenu], { type: 'text/csv;charset=utf-8;' });
+  function exporterCsv() {
+    const lignes = lignesExport().map((r) => r.map(champCsv).join(';'));
+    const contenu = [ENTETES_EXPORT.map(champCsv).join(';'), ...lignes].join('\r\n');
+    const blob = new Blob(['﻿' + contenu], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const lien = document.createElement('a');
     lien.href = url;
     lien.download = `adherents-${new Date().toISOString().slice(0, 10)}.csv`;
     lien.click();
     URL.revokeObjectURL(url);
+  }
+
+  function exporterXlsx() {
+    const ws = XLSX.utils.aoa_to_sheet([ENTETES_EXPORT, ...lignesExport()]);
+    ws['!cols'] = [12, 14, 28, 10, 30, 18, 14, 15, 13, 15, 38].map((w) => ({ wch: w }));
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Adhérants');
+    XLSX.writeFile(wb, `adherents-${new Date().toISOString().slice(0, 10)}.xlsx`);
+  }
+
+  function exporterPdf() {
+    const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+    const date = new Date().toLocaleDateString('fr-FR');
+    doc.setFontSize(13);
+    doc.setTextColor(94, 58, 140);
+    doc.text('AS INSA — Liste des adhérants', 14, 14);
+    doc.setFontSize(9);
+    doc.setTextColor(120, 120, 120);
+    doc.text(`Exporté le ${date} · ${liste.length} adhérent(s)`, 14, 20);
+
+    const colonnes = ['Prénom', 'Nom', 'Email', 'Statut', 'Détail', 'Fiche', 'Paiement'];
+    const lignes = liste.map((a) => {
+      const statut = calculerStatutLicence(a);
+      return [
+        reparerTexte(a.prenom),
+        reparerTexte(a.nom),
+        a.email ?? '',
+        statut.valide ? 'À jour' : 'Non à jour',
+        statut.anomalies.join(', ') || '—',
+        a.fiche_renseignement ? 'Oui' : 'Non',
+        a.paiement_global ? 'Oui' : 'Non',
+      ];
+    });
+
+    autoTable(doc, {
+      head: [colonnes],
+      body: lignes,
+      startY: 24,
+      styles: { fontSize: 8, cellPadding: 2 },
+      headStyles: { fillColor: [94, 58, 140], textColor: 255, fontStyle: 'bold' },
+      alternateRowStyles: { fillColor: [245, 243, 247] },
+      columnStyles: { 2: { cellWidth: 48 }, 4: { cellWidth: 50 } },
+    });
+
+    doc.save(`adherents-${new Date().toISOString().slice(0, 10)}.pdf`);
   }
 
   return (
@@ -286,9 +328,18 @@ export default function BureauDashboard() {
             <button className="btn-ghost" onClick={() => setImportOuvert(true)}>
               Importer CSV
             </button>
-            <button className="btn-ghost" onClick={exporterCsv} disabled={liste.length === 0}>
-              Exporter en CSV
-            </button>
+            <details className="export-dropdown" onClick={(e) => e.stopPropagation()}>
+              <summary className={`btn-ghost export-dropdown__trigger${liste.length === 0 ? ' export-dropdown__trigger--disabled' : ''}`}>
+                Exporter ▾
+              </summary>
+              {liste.length > 0 && (
+                <div className="export-dropdown__menu">
+                  <button className="export-dropdown__item" onClick={exporterCsv}>CSV (.csv)</button>
+                  <button className="export-dropdown__item" onClick={exporterXlsx}>Excel (.xlsx)</button>
+                  <button className="export-dropdown__item" onClick={exporterPdf}>PDF (.pdf)</button>
+                </div>
+              )}
+            </details>
             <button
               className="btn-ghost"
               onClick={() => ouvrirEnvoiModal('all')}
