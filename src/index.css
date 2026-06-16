@@ -564,7 +564,7 @@ button:disabled {
   border-radius: 12px;
 }
 
-.editor-tab {
+.editor-tabs .editor-tab {
   flex: 1;
   padding: 9px 14px;
   border: none;
@@ -574,20 +574,24 @@ button:disabled {
   font-weight: 700;
   font-size: 14px;
   cursor: pointer;
-  transition: all 0.18s var(--ease);
+  transition: color 0.18s var(--ease), background 0.18s var(--ease), box-shadow 0.18s var(--ease);
   box-shadow: none;
+  transform: none;
 }
 
-.editor-tab:hover:not(.editor-tab--active) {
-  color: var(--as-purple-700);
+.editor-tabs .editor-tab:hover {
   background: rgba(255, 255, 255, 0.55);
+  color: var(--as-purple-700);
   box-shadow: none;
+  transform: none;
 }
 
-.editor-tab--active {
+.editor-tabs .editor-tab--active,
+.editor-tabs .editor-tab--active:hover {
   background: #fff;
   color: var(--as-purple-900);
   box-shadow: 0 1px 4px rgba(94, 58, 140, 0.14);
+  transform: none;
 }
 
 @keyframes modal-in {
