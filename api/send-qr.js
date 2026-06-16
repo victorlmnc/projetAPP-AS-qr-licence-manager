@@ -12,6 +12,9 @@ const transporter = nodemailer.createTransport({
   host: 'smtp.gmail.com',
   port: 587,
   secure: false,
+  pool: true,        // réutilise la connexion SMTP entre les envois
+  maxConnections: 1, // Gmail n'accepte qu'une connexion simultanée par compte
+  maxMessages: 100,
   auth: {
     user: process.env.GMAIL_USER,
     pass: process.env.GMAIL_APP_PASSWORD,
