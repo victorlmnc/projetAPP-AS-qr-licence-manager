@@ -53,7 +53,7 @@ const SECTIONS_BUREAU = [
       `Chaque adhérent possède un QR code unique lié à sa fiche.`,
       `Cliquez sur "QR Code" à côté d'un adhérent pour le visualiser.`,
       `Vous pouvez télécharger le QR code en image ou copier le lien.`,
-      `Ce QR code est celui que le respos sports scannera pour vérifier la licence.`,
+      `Ce QR code est celui que le Responsable Sport scannera pour vérifier la licence.`,
     ],
   },
   {
@@ -80,7 +80,7 @@ const SECTIONS_BUREAU = [
     image: '/tuto/parametres.png',
     contenu: [
       `"Modifier mon mot de passe" : changez le mot de passe du compte bureau. Le mot de passe doit respecter une politique de sécurité stricte.`,
-      `"Modifier le mot de passe des respos sports" : réinitialisez le mot de passe du compte respos sports partagé si nécessaire.`,
+      `"Modifier le mot de passe du Responsable Sport" : réinitialisez le mot de passe du compte Responsable Sport partagé si nécessaire.`,
       `"Réinitialiser les adhérents" : supprime toutes les fiches adhérents. Action irréversible nécessitant votre mot de passe.`,
     ],
   },
@@ -119,7 +119,7 @@ export default function TutorialModal({ onClose }) {
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal modal--wide tuto-modal" onClick={(e) => e.stopPropagation()}>
-        <h3>Tutoriel — {role === 'coach' ? 'Espace Respos Sports' : 'Espace Bureau'}</h3>
+        <h3>Tutoriel — {role === 'coach' ? 'Espace Responsable Sport' : 'Espace Bureau'}</h3>
 
         <div className="tuto-nav">
           {sections.map((s, i) => (

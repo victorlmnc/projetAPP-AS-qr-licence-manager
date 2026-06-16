@@ -7,7 +7,7 @@ import { verifierRegles, validerMotDePasse } from '../lib/passwordPolicy';
  *
  * Props :
  *  - onClose()  : fermer la modal
- *  - target     : 'self' (bureau modifie son propre mdp) | 'coach' (bureau modifie le mdp du coach)
+ *  - target     : 'self' (bureau modifie son propre mdp) | 'coach' (bureau modifie le mdp du Responsable Sport)
  */
 export default function ChangePasswordModal({ onClose, target = 'self' }) {
   const [mdp, setMdp] = useState('');
@@ -16,12 +16,12 @@ export default function ChangePasswordModal({ onClose, target = 'self' }) {
   const [ok, setOk] = useState(false);
   const [enCours, setEnCours] = useState(false);
 
-  // Mode coach : identifiant du compte coach unique
+  // Mode coach : identifiant du compte Responsable Sport unique
   const [coachId, setCoachId] = useState(null);
   const [coachNom, setCoachNom] = useState('');
   const [chargementCoach, setChargementCoach] = useState(target === 'coach');
 
-  // Charger le compte coach unique
+  // Charger le compte Responsable Sport unique
   useEffect(() => {
     if (target !== 'coach') return;
 
@@ -35,9 +35,9 @@ export default function ChangePasswordModal({ onClose, target = 'self' }) {
 
       if (!error && data) {
         setCoachId(data.id);
-        setCoachNom(`${data.prenom ?? ''} ${data.nom ?? ''}`.trim() || 'Respos Sports');
+        setCoachNom(`${data.prenom ?? ''} ${data.nom ?? ''}`.trim() || 'Responsable Sport');
       } else {
-        setErreur('Aucun compte respos sports trouvé.');
+        setErreur('Aucun compte Responsable Sport trouvé.');
       }
       setChargementCoach(false);
     }
@@ -52,7 +52,6 @@ export default function ChangePasswordModal({ onClose, target = 'self' }) {
     e.preventDefault();
     setErreur(null);
 
-    // Vérification côté client
     const errMdp = validerMotDePasse(mdp);
     if (errMdp) {
       setErreur(errMdp);
@@ -66,7 +65,6 @@ export default function ChangePasswordModal({ onClose, target = 'self' }) {
     setEnCours(true);
 
     if (target === 'self') {
-      // Bureau modifie son propre mot de passe
       const { error } = await supabase.auth.updateUser({ password: mdp });
       setEnCours(false);
 
@@ -75,9 +73,8 @@ export default function ChangePasswordModal({ onClose, target = 'self' }) {
         return;
       }
     } else {
-      // Bureau modifie le mdp du coach via l'API serverless
       if (!coachId) {
-        setErreur('Compte respos sports introuvable.');
+        setErreur('Compte Responsable Sport introuvable.');
         setEnCours(false);
         return;
       }
@@ -114,7 +111,7 @@ export default function ChangePasswordModal({ onClose, target = 'self' }) {
   }
 
   const titre = target === 'coach'
-    ? 'Modifier le mot de passe des respos sports'
+    ? 'Modifier le mot de passe du Responsable Sport'
     : 'Changer mon mot de passe';
 
   return (
@@ -139,7 +136,7 @@ export default function ChangePasswordModal({ onClose, target = 'self' }) {
                 </p>
               ) : target === 'coach' ? (
                 chargementCoach ? (
-                  <p className="muted">Chargement du compte respos sports…</p>
+                  <p className="muted">Chargement du compte Responsable Sport…</p>
                 ) : coachId ? (
                   <p className="coach-target-label">
                     Compte ciblé : <strong>{coachNom}</strong>
@@ -158,7 +155,6 @@ export default function ChangePasswordModal({ onClose, target = 'self' }) {
               />
             </label>
 
-            {/* Checklist de validation en temps réel */}
             {mdp.length > 0 && (
               <ul className="pwd-rules">
                 {regles.map((r) => (

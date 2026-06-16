@@ -114,7 +114,7 @@ export default function AdherentPublic() {
 
         <p className="muted pub-hint">
           {valide
-            ? 'Nom et statut à vérifier par le coach avant participation.'
+            ? 'Nom et statut à vérifier par le Responsable Sport avant participation.'
             : 'Votre licence est incomplète. Contactez le bureau pour régulariser votre situation.'}
         </p>
 
