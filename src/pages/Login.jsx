@@ -57,7 +57,6 @@ export default function Login() {
             type="text"
             value={identifiant}
             onChange={(e) => setIdentifiant(e.target.value)}
-            placeholder="ex. coach"
             autoComplete="username"
             required
           />
