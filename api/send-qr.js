@@ -36,11 +36,11 @@ function qrEmailHtml(prenom, nom, lien, valide, anomalies) {
   const l = esc(lien);
 
   const statusHtml = valide 
-    ? `<p style="margin:0 0 24px 0;color:#2e7d32;font-size:14px;font-weight:600;background:#e8f5e9;padding:12px;border-radius:8px;">✅ Votre licence est complete et a jour !</p>`
-    : `<div style="margin:0 0 24px 0;background:#fdecea;padding:12px;border-radius:8px;border-left:4px solid #d32f2f;">
-         <p style="margin:0 0 12px 0;color:#b71c1c;font-size:14px;font-weight:600;">&#9888; Votre licence est incomplete. Il manque :</p>
+    ? `<p style="margin:0 0 20px 0;color:#2e7d32;font-size:14px;font-weight:600;background:#e8f5e9;padding:12px;border-radius:8px;">Dossier complet et à jour.</p>`
+    : `<div style="margin:0 0 20px 0;background:#fdecea;padding:12px;border-radius:8px;border-left:4px solid #d32f2f;">
+         <p style="margin:0 0 10px 0;color:#b71c1c;font-size:14px;font-weight:600;">Attention, dossier incomplet. Il manque :</p>
          <ul style="margin:0;padding-left:20px;">
-           ${anomalies.map((anomalie) => `<li style="margin:4px 0;color:#c62828;font-size:14px;line-height:1.45;">${esc(anomalie)}</li>`).join('')}
+           ${anomalies.map((anomalie) => `<li style="margin:4px 0;color:#c62828;font-size:14px;">${esc(anomalie)}</li>`).join('')}
          </ul>
        </div>`;
 
@@ -67,21 +67,20 @@ function qrEmailHtml(prenom, nom, lien, valide, anomalies) {
               <p style="margin:0 0 8px 0;color:#1e1b29;font-size:16px;">
                 Bonjour <strong>${p} ${n}</strong>,
               </p>
-              <p style="margin:0 0 20px 0;color:#746d88;font-size:14px;line-height:1.6;">
-                Votre QR Code de licence est disponible. Presentez-le a votre responsable sportif lors des entrainements et des matchs.
+              <p style="margin:0 0 20px 0;color:#746d88;font-size:14px;line-height:1.5;">
+                Voici votre QR Code pour la saison sportive. Il vous sera demandé à l'entrée des entraînements.
               </p>
               ${statusHtml}
               <table width="100%" cellpadding="0" cellspacing="0">
                 <tr>
                   <td align="center">
                     <a href="${l}" style="display:inline-block;background:#5e3a8c;color:#ffffff;text-decoration:none;padding:14px 32px;border-radius:10px;font-size:15px;font-weight:600;">
-                      Voir mon QR Code
+                      Afficher mon QR Code
                     </a>
                   </td>
                 </tr>
               </table>
               <p style="margin:24px 0 0 0;color:#746d88;font-size:12px;text-align:center;line-height:1.5;">
-                Vous pouvez aussi enregistrer cette page en favori sur votre telephone.<br/>
                 <a href="${l}" style="color:#5e3a8c;word-break:break-all;">${l}</a>
               </p>
             </td>
@@ -135,14 +134,14 @@ function reminderEmailHtml(prenom, nom, anomalies) {
               <p style="margin:0 0 8px 0;color:#1e1b29;font-size:16px;">
                 Bonjour <strong>${p} ${n}</strong>,
               </p>
-              <p style="margin:0 0 18px 0;color:#746d88;font-size:14px;line-height:1.6;">
-                Votre licence n'est pas complete. Voici ce qu'il manque :
+              <p style="margin:0 0 16px 0;color:#746d88;font-size:14px;line-height:1.5;">
+                Votre dossier d'inscription n'est pas terminé. Il manque :
               </p>
-              <ul style="margin:0 0 22px 0;padding-left:20px;">
+              <ul style="margin:0 0 20px 0;padding-left:20px;">
                 ${items}
               </ul>
-              <p style="margin:0;color:#746d88;font-size:14px;line-height:1.6;">
-                Merci de contacter un membre du bureau de l'AS de l'INSA CVL pour regulariser votre dossier.
+              <p style="margin:0;color:#746d88;font-size:14px;line-height:1.5;">
+                Pensez à régulariser votre situation rapidement auprès de l'AS.
               </p>
             </td>
           </tr>
@@ -244,12 +243,12 @@ export default async function handler(req, res) {
       : `Votre QR Code de licence - ${a.prenom} ${a.nom}`;
     
     const qrTextStatus = statut.valide 
-      ? `✅ Votre licence est complete et a jour !`
-      : `⚠️ Votre licence n'est pas complete. Ce qu'il manque :\n- ${anomalies.join('\n- ')}`;
+      ? `Dossier complet et a jour.`
+      : `Attention, dossier incomplet. Il manque :\n- ${anomalies.join('\n- ')}`;
 
     const text = relance
-      ? `Bonjour ${a.prenom} ${a.nom},\n\nVotre licence n'est pas complete.\n\nCe qu'il manque :\n- ${anomalies.join('\n- ')}\n\nMerci de contacter un membre du bureau de l'AS de l'INSA CVL pour regulariser votre dossier.\n\n- Le bureau de l'AS de l'INSA CVL\n\n---\nCeci est un e-mail automatique. Merci de ne pas y repondre, cette adresse n'est pas surveillee.`
-      : `Bonjour ${a.prenom} ${a.nom},\n\nVotre QR Code de licence est disponible. Presentez-le a votre responsable sportif lors des entrainements et des matchs.\n\n${qrTextStatus}\n\nAcceder a votre QR Code : ${lien}\n\nVous pouvez enregistrer cette page en favori sur votre telephone.\n\n- Le bureau de l'AS de l'INSA CVL\n\n---\nCeci est un e-mail automatique. Merci de ne pas y repondre, cette adresse n'est pas surveillee.`;
+      ? `Bonjour ${a.prenom} ${a.nom},\n\nVotre dossier d'inscription n'est pas termine. Il manque :\n- ${anomalies.join('\n- ')}\n\nPensez a regulariser votre situation aupres de l'AS.\n\n- Le bureau de l'AS INSA CVL`
+      : `Bonjour ${a.prenom} ${a.nom},\n\nVoici votre QR Code pour la saison sportive. Il vous sera demande a l'entree des entrainements.\n\n${qrTextStatus}\n\nLien du QR Code : ${lien}\n\n- Le bureau de l'AS INSA CVL`;
 
     try {
       await transporter.sendMail({
