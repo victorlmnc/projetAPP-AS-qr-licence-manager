@@ -39,18 +39,27 @@ create table profiles (
   created_at timestamptz not null default now()
 );
 
+-- Index sur la clé étrangère (performance)
+create index if not exists profiles_adherent_id_idx on profiles(adherent_id);
+
 -- ============================================
 -- Fonction utilitaire : rôle de l'utilisateur connecté
--- (security definer => peut lire profiles sans être bloquée par RLS)
+-- - SECURITY DEFINER : peut lire profiles sans être bloquée par RLS
+-- - SET search_path = public : empêche le hijacking du search_path
+-- - (SELECT auth.uid()) : évalué une seule fois par requête (performance RLS)
 -- ============================================
 create or replace function get_my_role()
-returns text
-language sql
-security definer
-stable
+  returns text language sql security definer stable
+  set search_path = public
 as $$
-  select role from profiles where id = auth.uid();
+  select role from profiles where id = (select auth.uid());
 $$;
+
+-- Restreindre l'exécution directe : les anonymes ne peuvent pas appeler
+-- get_my_role() via l'API REST. Les policies RLS l'appellent en interne.
+revoke execute on function get_my_role() from public;
+grant execute on function get_my_role() to authenticated;
+grant execute on function get_my_role() to service_role;
 
 -- ============================================
 -- Row Level Security : sécurité par rôle
@@ -58,33 +67,36 @@ $$;
 alter table adherents enable row level security;
 alter table profiles enable row level security;
 
--- Bureau : accès total (lecture + écriture) sur les adhérents
-create policy "bureau_full_access_adherents"
-  on adherents for all
-  using (get_my_role() = 'bureau');
-
--- Coach : lecture seule sur tous les adhérents (pour le scan terrain)
-create policy "coach_read_adherents"
-  on adherents for select
-  using (get_my_role() = 'coach');
-
--- Adhérent : lecture de sa propre fiche uniquement
-create policy "adherent_read_own"
+-- Adherents : une seule politique SELECT (bureau + coach + adhérent + public anon)
+-- Les anonymes peuvent lire par UUID (page QR publique — UUID non devinable).
+create policy "read_adherents"
   on adherents for select
   using (
-    get_my_role() = 'adherent'
-    and id = (select adherent_id from profiles where id = auth.uid())
+    (select auth.role()) = 'anon'
+    or get_my_role() in ('bureau', 'coach')
+    or (
+      get_my_role() = 'adherent'
+      and id = (select adherent_id from profiles where id = (select auth.uid()))
+    )
   );
 
--- Profiles : chacun peut lire son propre profil (son rôle)
-create policy "read_own_profile"
-  on profiles for select
-  using (id = auth.uid());
+-- Bureau : écriture complète sur les adhérents (insert / update / delete)
+create policy "bureau_insert_adherents"
+  on adherents for insert
+  with check (get_my_role() = 'bureau');
 
--- Profiles : le Bureau peut lire tous les profils
-create policy "bureau_read_profiles"
-  on profiles for select
+create policy "bureau_update_adherents"
+  on adherents for update
   using (get_my_role() = 'bureau');
+
+create policy "bureau_delete_adherents"
+  on adherents for delete
+  using (get_my_role() = 'bureau');
+
+-- Profiles : lecture consolidée (son propre profil OU bureau voit tout)
+create policy "read_profiles"
+  on profiles for select
+  using (id = (select auth.uid()) or get_my_role() = 'bureau');
 
 -- Profiles : le Bureau peut créer/modifier/supprimer uniquement les profils coach et adhérent
 -- (pas les autres comptes bureau, pour éviter l'escalade de privilèges)
@@ -102,23 +114,18 @@ create policy "bureau_delete_profiles"
   on profiles for delete
   using (get_my_role() = 'bureau' and role != 'bureau');
 
--- Lecture publique d'une fiche adhérent par son UUID (utilisé par la page /adherent/:id).
--- L'UUID sert de token d'accès : 128 bits aléatoires, non devinable.
-create policy "public_read_by_id"
-  on adherents for select
-  to anon
-  using (true);
-
 -- ============================================
 -- Trigger : mise à jour automatique de updated_at
 -- ============================================
 create or replace function set_updated_at()
-returns trigger as $$
+  returns trigger language plpgsql
+  set search_path = public
+as $$
 begin
   new.updated_at = now();
   return new;
 end;
-$$ language plpgsql;
+$$;
 
 create trigger trg_adherents_updated_at
   before update on adherents
