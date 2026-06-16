@@ -23,7 +23,7 @@ export function AuthProvider({ children }) {
     return () => listener.subscription.unsubscribe();
   }, []);
 
-  // 2) Quand la session change, charge le profil (rôle) de l'utilisateur.
+  // 2) Quand l'utilisateur change, charge son profil (rôle).
   useEffect(() => {
     async function loadProfile() {
       if (session === undefined) return;
@@ -49,9 +49,14 @@ export function AuthProvider({ children }) {
       setLoading(false);
     }
 
-    setLoading(true);
+    // On ne met 'loading' à true que si on n'a pas encore le profil
+    // pour éviter de démonter l'app (et perdre l'état) au changement d'onglet
+    if (!profile) {
+      setLoading(true);
+    }
     loadProfile();
-  }, [session]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session?.user?.id]);
 
   const value = {
     user: session?.user ?? null,
