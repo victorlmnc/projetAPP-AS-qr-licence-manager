@@ -276,6 +276,13 @@
   margin-top: 4px;
 }
 
+.import-btns {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 16px 0 4px;
+}
+
 .import-etat {
   background: var(--as-purple-50);
   border: 1px solid var(--line);
