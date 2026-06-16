@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -33,6 +33,17 @@ export default function BureauDashboard() {
   const [adherents, setAdherents] = useState([]);
   const [chargement, setChargement] = useState(true);
   const [erreur, setErreur] = useState(null);
+
+  const exportRef = useRef(null);
+  useEffect(() => {
+    function fermerSiExterieur(e) {
+      if (exportRef.current && !exportRef.current.contains(e.target)) {
+        exportRef.current.open = false;
+      }
+    }
+    document.addEventListener('mousedown', fermerSiExterieur);
+    return () => document.removeEventListener('mousedown', fermerSiExterieur);
+  }, []);
 
   const [recherche, setRecherche] = useState('');
   const [filtresActifs, setFiltresActifs] = useState([]);
@@ -328,15 +339,15 @@ export default function BureauDashboard() {
             <button className="btn-ghost" onClick={() => setImportOuvert(true)}>
               Importer CSV
             </button>
-            <details className="export-dropdown" onClick={(e) => e.stopPropagation()}>
+            <details className="export-dropdown" ref={exportRef}>
               <summary className={`btn-ghost export-dropdown__trigger${liste.length === 0 ? ' export-dropdown__trigger--disabled' : ''}`}>
                 Exporter ▾
               </summary>
               {liste.length > 0 && (
                 <div className="export-dropdown__menu">
-                  <button className="export-dropdown__item" onClick={exporterCsv}>CSV (.csv)</button>
-                  <button className="export-dropdown__item" onClick={exporterXlsx}>Excel (.xlsx)</button>
-                  <button className="export-dropdown__item" onClick={exporterPdf}>PDF (.pdf)</button>
+                  <button className="export-dropdown__item" onClick={() => { exporterCsv(); exportRef.current.open = false; }}>CSV (.csv)</button>
+                  <button className="export-dropdown__item" onClick={() => { exporterXlsx(); exportRef.current.open = false; }}>Excel (.xlsx)</button>
+                  <button className="export-dropdown__item" onClick={() => { exporterPdf(); exportRef.current.open = false; }}>PDF (.pdf)</button>
                 </div>
               )}
             </details>
