@@ -7,7 +7,7 @@ import { verifierRegles, validerMotDePasse } from '../lib/passwordPolicy';
  *
  * Props :
  *  - onClose()  : fermer la modal
- *  - target     : 'self' (bureau modifie son propre mdp) | 'coach' (bureau modifie le mdp du Responsable Sport)
+ *  - target     : 'self' (bureau modifie son propre mdp) | 'coach' (bureau modifie le mdp de respos-sports)
  */
 export default function ChangePasswordModal({ onClose, target = 'self' }) {
   const [mdp, setMdp] = useState('');
@@ -16,12 +16,12 @@ export default function ChangePasswordModal({ onClose, target = 'self' }) {
   const [ok, setOk] = useState(false);
   const [enCours, setEnCours] = useState(false);
 
-  // Mode coach : identifiant du compte Responsable Sport unique
+  // Mode coach : identifiant du compte respos-sports unique
   const [coachId, setCoachId] = useState(null);
   const [coachNom, setCoachNom] = useState('');
   const [chargementCoach, setChargementCoach] = useState(target === 'coach');
 
-  // Charger le compte Responsable Sport unique
+  // Charger le compte respos-sports unique
   useEffect(() => {
     if (target !== 'coach') return;
 
@@ -35,9 +35,9 @@ export default function ChangePasswordModal({ onClose, target = 'self' }) {
 
       if (!error && data) {
         setCoachId(data.id);
-        setCoachNom(`${data.prenom ?? ''} ${data.nom ?? ''}`.trim() || 'Responsable Sport');
+        setCoachNom(`${data.prenom ?? ''} ${data.nom ?? ''}`.trim() || 'respos-sports');
       } else {
-        setErreur('Aucun compte Responsable Sport trouvé.');
+        setErreur('Aucun compte respos-sports trouvé.');
       }
       setChargementCoach(false);
     }
@@ -74,7 +74,7 @@ export default function ChangePasswordModal({ onClose, target = 'self' }) {
       }
     } else {
       if (!coachId) {
-        setErreur('Compte Responsable Sport introuvable.');
+        setErreur('Compte respos-sports introuvable.');
         setEnCours(false);
         return;
       }
@@ -111,7 +111,7 @@ export default function ChangePasswordModal({ onClose, target = 'self' }) {
   }
 
   const titre = target === 'coach'
-    ? 'Modifier le mot de passe du Responsable Sport'
+    ? 'Modifier le mot de passe de respos-sports'
     : 'Changer mon mot de passe';
 
   return (
@@ -136,7 +136,7 @@ export default function ChangePasswordModal({ onClose, target = 'self' }) {
                 </p>
               ) : target === 'coach' ? (
                 chargementCoach ? (
-                  <p className="muted">Chargement du compte Responsable Sport…</p>
+                  <p className="muted">Chargement du compte respos-sports…</p>
                 ) : coachId ? (
                   <p className="coach-target-label">
                     Compte ciblé : <strong>{coachNom}</strong>
