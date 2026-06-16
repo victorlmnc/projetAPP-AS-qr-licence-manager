@@ -86,7 +86,7 @@ function qrEmailHtml(prenom, nom, lien, valide, anomalies) {
           <tr>
             <td style="padding:16px 32px;border-top:1px solid #eae4f5;">
               <p style="margin:0 0 6px 0;color:#b5460f;font-size:11px;text-align:center;font-weight:600;">
-                &#9888; Ceci est un e-mail automatique, merci de ne pas y repondre.
+                Ceci est un e-mail automatique, merci de ne pas y repondre.
               </p>
               <p style="margin:0;color:#746d88;font-size:11px;text-align:center;line-height:1.5;">
                 Cette adresse n'est pas surveillee et aucune reponse ne pourra etre traitee.<br/>
