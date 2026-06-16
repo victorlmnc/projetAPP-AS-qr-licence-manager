@@ -34,14 +34,16 @@ export default function Header({ titre }) {
 
         <div className="topbar__actions">
           <InstallButton />
-          <button
-            className="btn-ghost"
-            onClick={() => setParametresOuverts(true)}
-            aria-label="Paramètres"
-            title="Paramètres"
-          >
-            {'\u2699'} Paramètres
-          </button>
+          {role === 'bureau' && (
+            <button
+              className="btn-ghost"
+              onClick={() => setParametresOuverts(true)}
+              aria-label="Paramètres"
+              title="Paramètres"
+            >
+              {'\u2699'} Paramètres
+            </button>
+          )}
           <button className="btn-ghost" onClick={signOut}>Se déconnecter</button>
         </div>
       </header>
