@@ -149,17 +149,22 @@ export default function TutorialModal({ onClose }) {
             
             <div className="tuto-placeholder" style={{ position: 'relative', height: '350px', width: '100%', borderRadius: '8px', overflow: 'hidden', border: '1px solid #e1d8f5' }}>
               <img 
+                key={`${sectionOuverte}-${imgIndex}`}
                 src={section.images[imgIndex] || ''} 
                 alt={`Illustration pour ${section.titre}`}
                 style={{ width: '100%', height: '100%', objectFit: 'contain', position: 'absolute', top: 0, left: 0 }}
+                onLoad={(e) => {
+                  e.target.style.display = 'block';
+                  if (e.target.nextSibling) e.target.nextSibling.style.display = 'none';
+                }}
                 onError={(e) => {
                   e.target.style.display = 'none';
-                  e.target.nextSibling.style.display = 'flex';
+                  if (e.target.nextSibling) e.target.nextSibling.style.display = 'flex';
                 }}
               />
-              <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#e0d8eb', color: '#5e3a8c', fontWeight: 'bold' }}>
+              <div style={{ width: '100%', height: '100%', display: 'none', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#e0d8eb', color: '#5e3a8c', fontWeight: 'bold' }}>
                 📸 Screen : {section.titre} {section.images.length > 1 ? `(${imgIndex + 1})` : ''}
-                <span style={{ fontSize: '11px', marginTop: '4px', fontWeight: 'normal' }}>(L'image sera affichée ici)</span>
+                <span style={{ fontSize: '11px', marginTop: '4px', fontWeight: 'normal' }}>(Image introuvable : {section.images[imgIndex]})</span>
               </div>
             </div>
           </div>
