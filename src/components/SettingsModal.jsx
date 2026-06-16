@@ -37,22 +37,20 @@ export default function SettingsModal({ onClose }) {
         <div className="settings-actions">
           {role === 'bureau' && (
             <button type="button" className="btn-ghost settings-action" onClick={() => setAction('password-self')}>
-              <span className="settings-action__title">Modifier mon mot de passe</span>
-              <span className="settings-action__text">Changer le mot de passe du compte bureau.</span>
+              <span className="settings-action__title">Modifier le mot de passe du compte bureau</span>
             </button>
           )}
 
           {role === 'bureau' && (
             <button type="button" className="btn-ghost settings-action" onClick={() => setAction('password-coach')}>
               <span className="settings-action__title">Modifier le mot de passe de respos-sports</span>
-              <span className="settings-action__text">Réinitialiser le mot de passe du compte respos-sports partagé.</span>
             </button>
           )}
 
           {role === 'bureau' && (
             <button type="button" className="btn-ghost settings-action settings-action--danger" onClick={() => setAction('reset')}>
-              <span className="settings-action__title">Réinitialiser les adhérents</span>
-              <span className="settings-action__text">Supprimer toutes les fiches adhérents après confirmation.</span>
+              <span className="settings-action__title">Réinitialiser la base de données.</span>
+              <span className="settings-action__text">Supprimer toutes les fiches des adhérents.</span>
             </button>
           )}
 
