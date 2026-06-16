@@ -49,12 +49,15 @@ export default function AdherentEditor({ adherent, onClose, onSaved, onDeleted }
   }
 
   function toggleLicence(type) {
-    setForm((f) => ({
-      ...f,
-      types_licence: f.types_licence.includes(type)
+    setForm((f) => {
+      const inclus = f.types_licence.includes(type);
+      const nouveauxTypes = inclus
         ? f.types_licence.filter((t) => t !== type)
-        : [...f.types_licence, type],
-    }));
+        : [...f.types_licence, type];
+      const updates = { types_licence: nouveauxTypes };
+      if (type === 'Encadrant') updates.est_responsable_as = !inclus;
+      return { ...f, ...updates };
+    });
   }
 
   const apercu = calculerStatutLicence(form);
@@ -226,9 +229,8 @@ export default function AdherentEditor({ adherent, onClose, onSaved, onDeleted }
                 <label>Ville<input type="text" value={form.ville} onChange={(e) => set('ville', e.target.value)} /></label>
               </div>
 
-              {/* ── Licence & rôle ── */}
-              <p className="editor-section-title">Licence &amp; rôle</p>
-              <p className="editor-field-label">Types de licence</p>
+              {/* ── Types de licence ── */}
+              <p className="editor-section-title">Types de licence</p>
               <div className="editor-checks-row">
                 {TYPES_LICENCE.map((type) => (
                   <label key={type} className="check check--inline">
@@ -241,9 +243,25 @@ export default function AdherentEditor({ adherent, onClose, onSaved, onDeleted }
                   </label>
                 ))}
               </div>
-              <div className="editor-checks-row" style={{ marginTop: 10 }}>
+
+              {/* ── Rôle ── */}
+              <p className="editor-section-title">Rôle</p>
+              <div className="editor-checks-row">
                 <label className="check check--inline">
-                  <input type="checkbox" checked={form.est_responsable_as} onChange={(e) => set('est_responsable_as', e.target.checked)} />
+                  <input
+                    type="checkbox"
+                    checked={form.est_responsable_as}
+                    onChange={(e) => {
+                      const checked = e.target.checked;
+                      setForm((f) => ({
+                        ...f,
+                        est_responsable_as: checked,
+                        types_licence: checked
+                          ? f.types_licence.includes('Encadrant') ? f.types_licence : [...f.types_licence, 'Encadrant']
+                          : f.types_licence.filter((t) => t !== 'Encadrant'),
+                      }));
+                    }}
+                  />
                   Respo AS
                 </label>
                 <label className="check check--inline">
@@ -256,8 +274,8 @@ export default function AdherentEditor({ adherent, onClose, onSaved, onDeleted }
                 </label>
               </div>
 
-              {/* ── Médical & autres ── */}
-              <p className="editor-section-title">Médical &amp; autres</p>
+              {/* ── Médical et autres ── */}
+              <p className="editor-section-title">Médical et autres</p>
               <div className="editor-checks-row">
                 <label className="check check--inline">
                   <input type="checkbox" checked={form.questionnaire_sante_ok} onChange={(e) => set('questionnaire_sante_ok', e.target.checked)} />
