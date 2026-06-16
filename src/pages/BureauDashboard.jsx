@@ -35,14 +35,10 @@ export default function BureauDashboard() {
   const [erreur, setErreur] = useState(null);
 
   const exportRef = useRef(null);
-  const importRef = useRef(null);
   useEffect(() => {
     function fermerSiExterieur(e) {
       if (exportRef.current && !exportRef.current.contains(e.target)) {
         exportRef.current.open = false;
-      }
-      if (importRef.current && !importRef.current.contains(e.target)) {
-        importRef.current.open = false;
       }
     }
     document.addEventListener('mousedown', fermerSiExterieur);
@@ -55,7 +51,7 @@ export default function BureauDashboard() {
   // editeur : null = fermé ; { adherent: objet } = édition ; { adherent: null } = création
   const [editeur, setEditeur] = useState(null);
   const [qrAdherent, setQrAdherent] = useState(null);
-  const [importFormat, setImportFormat] = useState(null); // null | 'csv' | 'xlsx'
+  const [importOuvert, setImportOuvert] = useState(false);
 
   // État de l'envoi groupé des QR codes
   const [envoiModal, setEnvoiModal] = useState(null);
@@ -340,25 +336,9 @@ export default function BureauDashboard() {
         <div className="dash-top">
           <h2>Adhérents <span className="muted"></span></h2>
           <div className="dash-top-actions">
-            <details className="export-dropdown" ref={importRef}>
-              <summary className="btn-ghost export-dropdown__trigger">
-                Importer ▾
-              </summary>
-              <div className="export-dropdown__menu">
-                <button
-                  className="export-dropdown__item"
-                  onClick={() => { setImportFormat('csv'); importRef.current.open = false; }}
-                >
-                  CSV (.csv)
-                </button>
-                <button
-                  className="export-dropdown__item"
-                  onClick={() => { setImportFormat('xlsx'); importRef.current.open = false; }}
-                >
-                  Excel (.xlsx)
-                </button>
-              </div>
-            </details>
+            <button className="btn-ghost" onClick={() => setImportOuvert(true)}>
+              Importer
+            </button>
             <details className="export-dropdown" ref={exportRef}>
               <summary className={`btn-ghost export-dropdown__trigger${liste.length === 0 ? ' export-dropdown__trigger--disabled' : ''}`}>
                 Exporter ▾
@@ -510,11 +490,10 @@ export default function BureauDashboard() {
         <QrCodeModal adherent={qrAdherent} onClose={() => setQrAdherent(null)} />
       )}
 
-      {importFormat !== null && (
+      {importOuvert && (
         <ImportCsvModal
-          onClose={() => setImportFormat(null)}
+          onClose={() => setImportOuvert(false)}
           onImported={onImported}
-          formatInitial={importFormat}
         />
       )}
 
