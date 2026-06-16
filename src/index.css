@@ -528,7 +528,7 @@ button:disabled {
 }
 
 .modal {
-  width: min(380px, 96%);
+  width: min(450px, 96%);
   margin: auto;
   padding: 28px;
   border-radius: 22px;

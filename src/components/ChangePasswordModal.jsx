@@ -35,7 +35,7 @@ export default function ChangePasswordModal({ onClose, target = 'self' }) {
 
       if (!error && data) {
         setCoachId(data.id);
-        setCoachNom(`${data.prenom ?? ''} ${data.nom ?? ''}`.trim() || 'respos-sports');
+        setCoachNom('respos-sports');
       } else {
         setErreur('Aucun compte respos-sports trouvé.');
       }
