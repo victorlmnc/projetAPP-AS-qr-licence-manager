@@ -48,8 +48,8 @@ export default function SettingsModal({ onClose }) {
 
           {role === 'bureau' && (
             <button type="button" className="btn-ghost settings-action" onClick={() => setAction('password-coach')}>
-              <span className="settings-action__title">Modifier le mot de passe du coach</span>
-              <span className="settings-action__text">Réinitialiser le mot de passe du compte coach partagé.</span>
+              <span className="settings-action__title">Modifier le mot de passe des respos sports</span>
+              <span className="settings-action__text">Réinitialiser le mot de passe du compte respos sports partagé.</span>
             </button>
           )}
 

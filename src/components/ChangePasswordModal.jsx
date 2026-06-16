@@ -35,9 +35,9 @@ export default function ChangePasswordModal({ onClose, target = 'self' }) {
 
       if (!error && data) {
         setCoachId(data.id);
-        setCoachNom(`${data.prenom ?? ''} ${data.nom ?? ''}`.trim() || 'Coach');
+        setCoachNom(`${data.prenom ?? ''} ${data.nom ?? ''}`.trim() || 'Respos Sports');
       } else {
-        setErreur('Aucun compte coach trouvé.');
+        setErreur('Aucun compte respos sports trouvé.');
       }
       setChargementCoach(false);
     }
@@ -77,7 +77,7 @@ export default function ChangePasswordModal({ onClose, target = 'self' }) {
     } else {
       // Bureau modifie le mdp du coach via l'API serverless
       if (!coachId) {
-        setErreur('Compte coach introuvable.');
+        setErreur('Compte respos sports introuvable.');
         setEnCours(false);
         return;
       }
@@ -114,7 +114,7 @@ export default function ChangePasswordModal({ onClose, target = 'self' }) {
   }
 
   const titre = target === 'coach'
-    ? 'Modifier le mot de passe du coach'
+    ? 'Modifier le mot de passe des respos sports'
     : 'Changer mon mot de passe';
 
   return (
@@ -131,18 +131,22 @@ export default function ChangePasswordModal({ onClose, target = 'self' }) {
           </>
         ) : (
           <form onSubmit={valider}>
-            {/* Affichage du compte coach ciblé */}
-            {target === 'coach' && (
-              <div className="coach-target-info">
-                {chargementCoach ? (
-                  <p className="muted">Chargement du compte coach…</p>
+            {/* Affichage du compte ciblé */}
+            <div className="coach-target-info">
+              {target === 'self' ? (
+                <p className="coach-target-label">
+                  Compte ciblé : <strong>Bureau</strong>
+                </p>
+              ) : target === 'coach' ? (
+                chargementCoach ? (
+                  <p className="muted">Chargement du compte respos sports…</p>
                 ) : coachId ? (
                   <p className="coach-target-label">
                     Compte ciblé : <strong>{coachNom}</strong>
                   </p>
-                ) : null}
-              </div>
-            )}
+                ) : null
+              ) : null}
+            </div>
 
             <label className="champ">
               Nouveau mot de passe
