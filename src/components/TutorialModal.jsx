@@ -3,40 +3,36 @@ import { useAuth } from '../context/AuthContext';
 
 const SECTIONS_BUREAU = [
   {
-    titre: `Tableau de bord`,
-    images: ['/tuto/dashboard.png'],
+    titre: `Fonctionnement du système`,
+    images: [],
     contenu: [
-      `Filtrez par statut ("À jour", "Manques") pour repérer rapidement les dossiers incomplets.`,
-      `Utilisez la barre de recherche dynamique pour trouver un adhérent instantanément.`,
+      `L'application utilise seulement deux comptes partagés : "bureau" (gestion) et "respos-sports" (scan sur le terrain).`,
+      `Le bureau gère la base de données et envoie par e-mail un QR Code personnel à chaque adhérent.`,
+      `L'adhérent ouvre le lien reçu sur son téléphone et présente son QR Code au responsable sportif avant l'entraînement.`,
+      `Le responsable sportif (coach) scanne le QR Code pour vérifier instantanément si la licence est valide ou s'il manque des documents.`
     ],
   },
   {
-    titre: `Gestion Adhérents`,
-    images: ['/tuto/ajout-adherent.png'],
-    contenu: [
-      `Ajoutez un membre manuellement via le bouton "+ Nouvel adhérent".`,
-      `Importez une liste via CSV (nom, prénom, email) pour les groupes. Les modifications sont immédiates.`,
-      `Modifiez un statut d'un simple clic en ouvrant la fiche de l'adhérent.`,
-    ],
-  },
-  {
-    titre: `Communication`,
+    titre: `Exemples d'e-mails`,
     images: [
       '/tuto/envoi-emails-1.png',
       '/tuto/envoi-emails-2.png',
       '/tuto/envoi-emails-3.png',
     ],
     contenu: [
-      `"Envoyer les QR par email" : distribue un lien personnel vers le QR code à tous les inscrits.`,
-      `"Relancer non à jour" : envoie un email ciblé uniquement aux personnes dont le dossier est incomplet.`,
+      `Voici les trois e-mails que le système peut envoyer :`,
+      `1. Le QR Code avec un statut valide (tout est en règle).`,
+      `2. Le QR Code avec un statut invalide (liste détaillée de ce qu'il manque).`,
+      `3. Une simple relance (sans le QR Code) ciblée uniquement sur les dossiers incomplets.`
     ],
   },
   {
-    titre: `Sécurité & Accès`,
-    images: ['/tuto/parametres.png'],
+    titre: `Aide : Import CSV`,
+    images: ['/tuto/import-csv.png'],
     contenu: [
-      `Modifiez les mots de passe partagés (Bureau et respos-sports) depuis les Paramètres.`,
-      `En fin d'année, utilisez "Réinitialiser les adhérents" pour vider la base (action protégée par mot de passe).`,
+      `L'importation de groupe se fait via un fichier Excel exporté en format CSV.`,
+      `Votre fichier doit impérativement contenir des colonnes nommées : "nom", "prenom", et "email".`,
+      `Les autres colonnes seront ignorées, et l'importation mettra à jour la base instantanément.`
     ],
   },
 ];
@@ -47,15 +43,15 @@ const SECTIONS_COACH = [
     images: ['/tuto/scan-coach.png'],
     contenu: [
       `Pointez la caméra vers le QR code de l'adhérent.`,
-      `Le résultat s'affiche de suite : Vert (Tout est en ordre) ou Rouge (Alerte, détails des manques affichés).`,
+      `Le résultat s'affiche tout de suite : Vert (Tout est en ordre) ou Rouge (Alerte, avec le détail des manques affiché).`,
     ],
   },
   {
-    titre: `Conseils`,
+    titre: `Conseils Pratiques`,
     images: ['/tuto/conseils-coach.png'],
     contenu: [
-      `Acceptez l'accès à la caméra demandé par votre navigateur.`,
-      `Sur téléphone, utilisez le bouton "Installer" pour ajouter l'application à votre écran d'accueil.`,
+      `Le système est comme un billet de train : l'adhérent affiche son QR code sur son écran, et vous le validez.`,
+      `Sur téléphone, utilisez le bouton "Installer" dans le menu pour ajouter l'application comme une vraie application sur votre écran d'accueil.`,
     ],
   },
 ];
@@ -97,7 +93,7 @@ export default function TutorialModal({ onClose }) {
         {/* CONTENT AREA */}
         <div className="tuto-body">
           
-          <div className="tuto-media-container" style={{ position: 'relative', marginBottom: '16px' }}>
+          <div className="tuto-media-container" style={{ position: 'relative', marginBottom: '16px', display: section.images.length > 0 ? 'block' : 'none' }}>
             {section.images.length > 1 && (
               <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', alignItems: 'center', marginBottom: '8px' }}>
                 <button 
@@ -126,7 +122,7 @@ export default function TutorialModal({ onClose }) {
             
             <div className="tuto-placeholder" style={{ position: 'relative' }}>
               <img 
-                src={section.images[imgIndex]} 
+                src={section.images[imgIndex] || ''} 
                 alt={`Illustration pour ${section.titre}`}
                 style={{ width: '100%', height: '100%', objectFit: 'contain', position: 'absolute', top: 0, left: 0 }}
                 onError={(e) => {
