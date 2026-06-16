@@ -17,7 +17,7 @@ export default function AdherentPublic() {
     async function charger() {
       const { data, error } = await supabase
         .from('adherents')
-        .select('*')
+        .select('id, nom, prenom, fiche_renseignement, paiement_global, manque_paiement, manque_yeps, manque_passport')
         .eq('id', id)
         .single();
 

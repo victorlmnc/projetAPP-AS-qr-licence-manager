@@ -52,6 +52,8 @@ export default function ImportCsvModal({ onClose, onImported }) {
     });
   }
 
+  const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
   async function importer(lignes) {
     const valides = [];
     let ignorees = 0;
@@ -59,10 +61,13 @@ export default function ImportCsvModal({ onClose, onImported }) {
     for (const l of lignes) {
       const nom = reparerTexte(l.nom).trim();
       const prenom = reparerTexte(l.prenom).trim();
-      const email = (l.email || '').trim();
+      const email = (l.email || '').trim() || null;
 
-      // L'e-mail est obligatoire (cohérent avec le formulaire).
-      if (!nom || !prenom || !email) {
+      if (!nom || !prenom) {
+        ignorees++;
+        continue;
+      }
+      if (email && !EMAIL_RE.test(email)) {
         ignorees++;
         continue;
       }
@@ -82,7 +87,7 @@ export default function ImportCsvModal({ onClose, onImported }) {
 
     if (valides.length === 0) {
       setEtat(
-        `Aucune ligne valide. ${ignorees} ligne(s) ignorée(s) — nom, prénom et e-mail sont obligatoires.`
+        `Aucune ligne valide. ${ignorees} ligne(s) ignorée(s) — nom et prénom obligatoires, e-mail optionnel mais doit être valide si renseigné.`
       );
       return;
     }

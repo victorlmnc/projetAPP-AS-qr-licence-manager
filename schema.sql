@@ -81,10 +81,26 @@ create policy "read_own_profile"
   on profiles for select
   using (id = auth.uid());
 
--- Profiles : le Bureau gère la création des comptes Coach/Adhérent
-create policy "bureau_manage_profiles"
-  on profiles for all
+-- Profiles : le Bureau peut lire tous les profils
+create policy "bureau_read_profiles"
+  on profiles for select
   using (get_my_role() = 'bureau');
+
+-- Profiles : le Bureau peut créer/modifier/supprimer uniquement les profils coach et adhérent
+-- (pas les autres comptes bureau, pour éviter l'escalade de privilèges)
+create policy "bureau_write_profiles"
+  on profiles for insert
+  to authenticated
+  with check (get_my_role() = 'bureau' and role in ('coach', 'adherent'));
+
+create policy "bureau_update_profiles"
+  on profiles for update
+  using (get_my_role() = 'bureau' and role != 'bureau')
+  with check (role in ('coach', 'adherent'));
+
+create policy "bureau_delete_profiles"
+  on profiles for delete
+  using (get_my_role() = 'bureau' and role != 'bureau');
 
 -- Lecture publique d'une fiche adhérent par son UUID (utilisé par la page /adherent/:id).
 -- L'UUID sert de token d'accès : 128 bits aléatoires, non devinable.

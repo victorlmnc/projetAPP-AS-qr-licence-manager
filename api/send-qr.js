@@ -16,7 +16,18 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
+function esc(str) {
+  return String(str ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;');
+}
+
 function emailHtml(prenom, nom, lien) {
+  const p = esc(prenom);
+  const n = esc(nom);
   return `<!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -40,7 +51,7 @@ function emailHtml(prenom, nom, lien) {
           <tr>
             <td style="padding:32px;">
               <p style="margin:0 0 8px 0;color:#1e1b29;font-size:16px;">
-                Bonjour <strong>${prenom} ${nom}</strong>,
+                Bonjour <strong>${p} ${n}</strong>,
               </p>
               <p style="margin:0 0 24px 0;color:#746d88;font-size:14px;line-height:1.6;">
                 Votre QR Code de licence est disponible. Présentez-le à votre responsable sportif
@@ -125,7 +136,7 @@ export default async function handler(req, res) {
 
   const batch = adherents ?? [];
 
-  const baseUrl = `https://${req.headers.host}`;
+  const baseUrl = process.env.APP_BASE_URL ?? `https://${req.headers.host}`;
   const results = {
     sent: 0,
     errors: [],
