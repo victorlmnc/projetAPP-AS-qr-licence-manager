@@ -36,7 +36,7 @@ export default function SettingsModal({ onClose }) {
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal settings-modal" onClick={(e) => e.stopPropagation()}>
-        <h3>Param\u00e8tres</h3>
+        <h3>Paramètres</h3>
 
         <div className="settings-actions">
           {role === 'bureau' && (
@@ -49,20 +49,20 @@ export default function SettingsModal({ onClose }) {
           {role === 'bureau' && (
             <button type="button" className="btn-ghost settings-action" onClick={() => setAction('password-coach')}>
               <span className="settings-action__title">Modifier le mot de passe du coach</span>
-              <span className="settings-action__text">{`R\u00e9initialiser le mot de passe du compte coach partag\u00e9.`}</span>
+              <span className="settings-action__text">Réinitialiser le mot de passe du compte coach partagé.</span>
             </button>
           )}
 
           {role === 'bureau' && (
             <button type="button" className="btn-ghost settings-action settings-action--danger" onClick={() => setAction('reset')}>
-              <span className="settings-action__title">{`R\u00e9initialiser les adh\u00e9rents`}</span>
-              <span className="settings-action__text">{`Supprimer toutes les fiches adh\u00e9rents apr\u00e8s confirmation.`}</span>
+              <span className="settings-action__title">Réinitialiser les adhérents</span>
+              <span className="settings-action__text">Supprimer toutes les fiches adhérents après confirmation.</span>
             </button>
           )}
 
           <button type="button" className="btn-ghost settings-action" onClick={() => setAction('tutorial')}>
             <span className="settings-action__title">Tutoriel / Aide</span>
-            <span className="settings-action__text">{`D\u00e9couvrir comment utiliser l\u2019application.`}</span>
+            <span className="settings-action__text">Découvrir comment utiliser l'application.</span>
           </button>
         </div>
 

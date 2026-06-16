@@ -37,7 +37,7 @@ export default function ChangePasswordModal({ onClose, target = 'self' }) {
         setCoachId(data.id);
         setCoachNom(`${data.prenom ?? ''} ${data.nom ?? ''}`.trim() || 'Coach');
       } else {
-        setErreur('Aucun compte coach trouv\u00e9.');
+        setErreur('Aucun compte coach trouvé.');
       }
       setChargementCoach(false);
     }
@@ -52,7 +52,7 @@ export default function ChangePasswordModal({ onClose, target = 'self' }) {
     e.preventDefault();
     setErreur(null);
 
-    // V\u00e9rification c\u00f4t\u00e9 client
+    // Vérification côté client
     const errMdp = validerMotDePasse(mdp);
     if (errMdp) {
       setErreur(errMdp);
@@ -103,7 +103,7 @@ export default function ChangePasswordModal({ onClose, target = 'self' }) {
         }
       } catch (err) {
         setEnCours(false);
-        setErreur('Erreur r\u00e9seau : ' + err.message);
+        setErreur('Erreur réseau : ' + err.message);
         return;
       }
     }
@@ -124,21 +124,21 @@ export default function ChangePasswordModal({ onClose, target = 'self' }) {
 
         {ok ? (
           <>
-            <p className="apercu apercu--ok">Mot de passe modifi\u00e9 avec succ\u00e8s.</p>
+            <p className="apercu apercu--ok">Mot de passe modifié avec succès.</p>
             <div className="modal-actions">
               <button onClick={onClose}>Fermer</button>
             </div>
           </>
         ) : (
           <form onSubmit={valider}>
-            {/* Affichage du compte coach cibl\u00e9 */}
+            {/* Affichage du compte coach ciblé */}
             {target === 'coach' && (
               <div className="coach-target-info">
                 {chargementCoach ? (
-                  <p className="muted">Chargement du compte coach\u2026</p>
+                  <p className="muted">Chargement du compte coach…</p>
                 ) : coachId ? (
                   <p className="coach-target-label">
-                    Compte cibl\u00e9 : <strong>{coachNom}</strong>
+                    Compte ciblé : <strong>{coachNom}</strong>
                   </p>
                 ) : null}
               </div>
@@ -154,12 +154,12 @@ export default function ChangePasswordModal({ onClose, target = 'self' }) {
               />
             </label>
 
-            {/* Checklist de validation en temps r\u00e9el */}
+            {/* Checklist de validation en temps réel */}
             {mdp.length > 0 && (
               <ul className="pwd-rules">
                 {regles.map((r) => (
                   <li key={r.cle} className={`pwd-rule ${r.ok ? 'pwd-rule--ok' : 'pwd-rule--ko'}`}>
-                    <span className="pwd-rule__icon">{r.ok ? '\u2713' : '\u2717'}</span>
+                    <span className="pwd-rule__icon">{r.ok ? '✓' : '✗'}</span>
                     {r.libelle}
                   </li>
                 ))}
@@ -178,7 +178,7 @@ export default function ChangePasswordModal({ onClose, target = 'self' }) {
 
             {confirme.length > 0 && mdp !== confirme && (
               <p className="pwd-rule pwd-rule--ko" style={{ marginTop: 6 }}>
-                <span className="pwd-rule__icon">{'\u2717'}</span>
+                <span className="pwd-rule__icon">✗</span>
                 Les mots de passe ne correspondent pas
               </p>
             )}
@@ -191,7 +191,7 @@ export default function ChangePasswordModal({ onClose, target = 'self' }) {
                 type="submit"
                 disabled={enCours || !toutOk || mdp !== confirme || (target === 'coach' && !coachId)}
               >
-                {enCours ? 'Modification\u2026' : 'Valider'}
+                {enCours ? 'Modification…' : 'Valider'}
               </button>
             </div>
           </form>
