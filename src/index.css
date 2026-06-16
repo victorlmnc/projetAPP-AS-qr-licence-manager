@@ -1113,6 +1113,34 @@ button:disabled {
   font-weight: 800;
 }
 
+.tuto-image-wrap {
+  margin: 0 0 16px;
+  text-align: center;
+}
+
+.tuto-image {
+  max-width: 100%;
+  max-height: 320px;
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-sm);
+  object-fit: contain;
+}
+
+.coach-target-info {
+  margin: 4px 0 8px;
+}
+
+.coach-target-label {
+  margin: 0;
+  padding: 10px 14px;
+  background: var(--as-purple-50, #faf7fd);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  font-size: 14px;
+  color: var(--ink);
+}
+
 .tuto-footer {
   display: flex;
   align-items: center;

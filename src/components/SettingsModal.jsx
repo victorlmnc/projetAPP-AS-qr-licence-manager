@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import ChangePasswordModal from './ChangePasswordModal';
-import ChangeCoachPasswordModal from './ChangeCoachPasswordModal';
 import ResetAdherentsModal from './ResetAdherentsModal';
 import TutorialModal from './TutorialModal';
 
@@ -13,17 +12,12 @@ export default function SettingsModal({ onClose }) {
     window.dispatchEvent(new CustomEvent('adherents:reset'));
   }
 
-  // Sous-modals
   if (action === 'password-self') {
     return <ChangePasswordModal target="self" onClose={() => setAction(null)} />;
   }
 
   if (action === 'password-coach') {
     return <ChangePasswordModal target="coach" onClose={() => setAction(null)} />;
-  }
-
-  if (action === 'coach-password') {
-    return <ChangeCoachPasswordModal onClose={() => setAction(null)} />;
   }
 
   if (action === 'reset') {
@@ -42,44 +36,33 @@ export default function SettingsModal({ onClose }) {
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal settings-modal" onClick={(e) => e.stopPropagation()}>
-        <h3>Paramètres</h3>
+        <h3>Param\u00e8tres</h3>
 
         <div className="settings-actions">
-          {/* Bureau uniquement : modifier son propre mot de passe */}
           {role === 'bureau' && (
             <button type="button" className="btn-ghost settings-action" onClick={() => setAction('password-self')}>
-              <span className="settings-action__title">🔑 Modifier mon mot de passe</span>
+              <span className="settings-action__title">Modifier mon mot de passe</span>
               <span className="settings-action__text">Changer le mot de passe du compte bureau.</span>
             </button>
           )}
 
-          {/* Bureau uniquement : modifier le mdp d'un coach */}
           {role === 'bureau' && (
             <button type="button" className="btn-ghost settings-action" onClick={() => setAction('password-coach')}>
-              <span className="settings-action__title">👤 Modifier le mot de passe d'un coach</span>
-              <span className="settings-action__text">Réinitialiser le mot de passe d'un compte coach.</span>
+              <span className="settings-action__title">Modifier le mot de passe du coach</span>
+              <span className="settings-action__text">{`R\u00e9initialiser le mot de passe du compte coach partag\u00e9.`}</span>
             </button>
           )}
 
-          {/* Bureau uniquement : réinitialiser les adhérents */}
           {role === 'bureau' && (
-            <>
-              <button type="button" className="btn-ghost settings-action" onClick={() => setAction('coach-password')}>
-                <span className="settings-action__title">Modifier le mot de passe coach</span>
-                <span className="settings-action__text">Choisir un compte coach et définir son nouveau mot de passe.</span>
-              </button>
-
-              <button type="button" className="btn-ghost settings-action settings-action--danger" onClick={() => setAction('reset')}>
-                <span className="settings-action__title">Réinitialiser les adhérents</span>
-                <span className="settings-action__text">Supprimer toutes les fiches adhérents après confirmation.</span>
-              </button>
-            </>
+            <button type="button" className="btn-ghost settings-action settings-action--danger" onClick={() => setAction('reset')}>
+              <span className="settings-action__title">{`R\u00e9initialiser les adh\u00e9rents`}</span>
+              <span className="settings-action__text">{`Supprimer toutes les fiches adh\u00e9rents apr\u00e8s confirmation.`}</span>
+            </button>
           )}
 
-          {/* Accessible à tous : tutoriel */}
           <button type="button" className="btn-ghost settings-action" onClick={() => setAction('tutorial')}>
-            <span className="settings-action__title">📖 Tutoriel / Aide</span>
-            <span className="settings-action__text">Découvrir comment utiliser l'application.</span>
+            <span className="settings-action__title">Tutoriel / Aide</span>
+            <span className="settings-action__text">{`D\u00e9couvrir comment utiliser l\u2019application.`}</span>
           </button>
         </div>
 

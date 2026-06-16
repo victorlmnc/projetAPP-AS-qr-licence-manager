@@ -7,7 +7,7 @@ import { verifierRegles, validerMotDePasse } from '../lib/passwordPolicy';
  *
  * Props :
  *  - onClose()  : fermer la modal
- *  - target     : 'self' (bureau modifie son propre mdp) | 'coach' (bureau modifie le mdp d'un coach)
+ *  - target     : 'self' (bureau modifie son propre mdp) | 'coach' (bureau modifie le mdp du coach)
  */
 export default function ChangePasswordModal({ onClose, target = 'self' }) {
   const [mdp, setMdp] = useState('');
@@ -16,30 +16,33 @@ export default function ChangePasswordModal({ onClose, target = 'self' }) {
   const [ok, setOk] = useState(false);
   const [enCours, setEnCours] = useState(false);
 
-  // Mode coach : liste des coachs et sélection
-  const [coachs, setCoachs] = useState([]);
-  const [coachId, setCoachId] = useState('');
-  const [chargementCoachs, setChargementCoachs] = useState(target === 'coach');
+  // Mode coach : identifiant du compte coach unique
+  const [coachId, setCoachId] = useState(null);
+  const [coachNom, setCoachNom] = useState('');
+  const [chargementCoach, setChargementCoach] = useState(target === 'coach');
 
-  // Charger la liste des coachs si mode coach
+  // Charger le compte coach unique
   useEffect(() => {
     if (target !== 'coach') return;
 
-    async function chargerCoachs() {
+    async function chargerCoach() {
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, nom, prenom, role')
+        .select('id, nom, prenom')
         .eq('role', 'coach')
-        .order('nom');
+        .limit(1)
+        .single();
 
       if (!error && data) {
-        setCoachs(data);
-        if (data.length === 1) setCoachId(data[0].id);
+        setCoachId(data.id);
+        setCoachNom(`${data.prenom ?? ''} ${data.nom ?? ''}`.trim() || 'Coach');
+      } else {
+        setErreur('Aucun compte coach trouv\u00e9.');
       }
-      setChargementCoachs(false);
+      setChargementCoach(false);
     }
 
-    chargerCoachs();
+    chargerCoach();
   }, [target]);
 
   const regles = verifierRegles(mdp);
@@ -49,7 +52,7 @@ export default function ChangePasswordModal({ onClose, target = 'self' }) {
     e.preventDefault();
     setErreur(null);
 
-    // Vérification côté client
+    // V\u00e9rification c\u00f4t\u00e9 client
     const errMdp = validerMotDePasse(mdp);
     if (errMdp) {
       setErreur(errMdp);
@@ -57,10 +60,6 @@ export default function ChangePasswordModal({ onClose, target = 'self' }) {
     }
     if (mdp !== confirme) {
       setErreur('Les deux mots de passe ne correspondent pas.');
-      return;
-    }
-    if (target === 'coach' && !coachId) {
-      setErreur('Veuillez sélectionner un coach.');
       return;
     }
 
@@ -76,7 +75,13 @@ export default function ChangePasswordModal({ onClose, target = 'self' }) {
         return;
       }
     } else {
-      // Bureau modifie le mdp d'un coach via l'API serverless
+      // Bureau modifie le mdp du coach via l'API serverless
+      if (!coachId) {
+        setErreur('Compte coach introuvable.');
+        setEnCours(false);
+        return;
+      }
+
       const { data: { session } } = await supabase.auth.getSession();
 
       try {
@@ -98,7 +103,7 @@ export default function ChangePasswordModal({ onClose, target = 'self' }) {
         }
       } catch (err) {
         setEnCours(false);
-        setErreur('Erreur réseau : ' + err.message);
+        setErreur('Erreur r\u00e9seau : ' + err.message);
         return;
       }
     }
@@ -109,7 +114,7 @@ export default function ChangePasswordModal({ onClose, target = 'self' }) {
   }
 
   const titre = target === 'coach'
-    ? 'Modifier le mot de passe d\u2019un coach'
+    ? 'Modifier le mot de passe du coach'
     : 'Changer mon mot de passe';
 
   return (
@@ -119,37 +124,24 @@ export default function ChangePasswordModal({ onClose, target = 'self' }) {
 
         {ok ? (
           <>
-            <p className="apercu apercu--ok">Mot de passe modifié avec succès.</p>
+            <p className="apercu apercu--ok">Mot de passe modifi\u00e9 avec succ\u00e8s.</p>
             <div className="modal-actions">
               <button onClick={onClose}>Fermer</button>
             </div>
           </>
         ) : (
           <form onSubmit={valider}>
-            {/* Sélecteur de coach (mode coach uniquement) */}
+            {/* Affichage du compte coach cibl\u00e9 */}
             {target === 'coach' && (
-              <label className="champ">
-                Compte coach
-                {chargementCoachs ? (
-                  <p className="muted" style={{ margin: '4px 0' }}>Chargement…</p>
-                ) : coachs.length === 0 ? (
-                  <p className="error" style={{ margin: '4px 0' }}>Aucun compte coach trouvé.</p>
-                ) : (
-                  <select
-                    className="coach-select"
-                    value={coachId}
-                    onChange={(e) => setCoachId(e.target.value)}
-                    required
-                  >
-                    <option value="">— Sélectionner un coach —</option>
-                    {coachs.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.prenom ?? ''} {c.nom ?? ''} (coach)
-                      </option>
-                    ))}
-                  </select>
-                )}
-              </label>
+              <div className="coach-target-info">
+                {chargementCoach ? (
+                  <p className="muted">Chargement du compte coach\u2026</p>
+                ) : coachId ? (
+                  <p className="coach-target-label">
+                    Compte cibl\u00e9 : <strong>{coachNom}</strong>
+                  </p>
+                ) : null}
+              </div>
             )}
 
             <label className="champ">
@@ -162,12 +154,12 @@ export default function ChangePasswordModal({ onClose, target = 'self' }) {
               />
             </label>
 
-            {/* Checklist de validation en temps réel */}
+            {/* Checklist de validation en temps r\u00e9el */}
             {mdp.length > 0 && (
               <ul className="pwd-rules">
                 {regles.map((r) => (
                   <li key={r.cle} className={`pwd-rule ${r.ok ? 'pwd-rule--ok' : 'pwd-rule--ko'}`}>
-                    <span className="pwd-rule__icon">{r.ok ? '✓' : '✗'}</span>
+                    <span className="pwd-rule__icon">{r.ok ? '\u2713' : '\u2717'}</span>
                     {r.libelle}
                   </li>
                 ))}
@@ -186,7 +178,7 @@ export default function ChangePasswordModal({ onClose, target = 'self' }) {
 
             {confirme.length > 0 && mdp !== confirme && (
               <p className="pwd-rule pwd-rule--ko" style={{ marginTop: 6 }}>
-                <span className="pwd-rule__icon">✗</span>
+                <span className="pwd-rule__icon">{'\u2717'}</span>
                 Les mots de passe ne correspondent pas
               </p>
             )}
@@ -195,8 +187,11 @@ export default function ChangePasswordModal({ onClose, target = 'self' }) {
 
             <div className="modal-actions">
               <button type="button" className="btn-ghost" onClick={onClose}>Annuler</button>
-              <button type="submit" disabled={enCours || !toutOk || mdp !== confirme || (target === 'coach' && !coachId)}>
-                {enCours ? 'Modification…' : 'Valider'}
+              <button
+                type="submit"
+                disabled={enCours || !toutOk || mdp !== confirme || (target === 'coach' && !coachId)}
+              >
+                {enCours ? 'Modification\u2026' : 'Valider'}
               </button>
             </div>
           </form>
