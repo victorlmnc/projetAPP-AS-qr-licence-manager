@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import ChangePasswordModal from './ChangePasswordModal';
+import ChangeCoachPasswordModal from './ChangeCoachPasswordModal';
 import ResetAdherentsModal from './ResetAdherentsModal';
 
 export default function SettingsModal({ onClose }) {
@@ -13,6 +14,10 @@ export default function SettingsModal({ onClose }) {
 
   if (action === 'password') {
     return <ChangePasswordModal onClose={() => setAction(null)} />;
+  }
+
+  if (action === 'coach-password') {
+    return <ChangeCoachPasswordModal onClose={() => setAction(null)} />;
   }
 
   if (action === 'reset') {
@@ -36,10 +41,17 @@ export default function SettingsModal({ onClose }) {
           </button>
 
           {role === 'bureau' && (
-            <button type="button" className="btn-ghost settings-action settings-action--danger" onClick={() => setAction('reset')}>
-              <span className="settings-action__title">Réinitialiser les adhérents</span>
-              <span className="settings-action__text">Supprimer toutes les fiches adhérents après confirmation.</span>
-            </button>
+            <>
+              <button type="button" className="btn-ghost settings-action" onClick={() => setAction('coach-password')}>
+                <span className="settings-action__title">Modifier le mot de passe coach</span>
+                <span className="settings-action__text">Choisir un compte coach et définir son nouveau mot de passe.</span>
+              </button>
+
+              <button type="button" className="btn-ghost settings-action settings-action--danger" onClick={() => setAction('reset')}>
+                <span className="settings-action__title">Réinitialiser les adhérents</span>
+                <span className="settings-action__text">Supprimer toutes les fiches adhérents après confirmation.</span>
+              </button>
+            </>
           )}
         </div>
 

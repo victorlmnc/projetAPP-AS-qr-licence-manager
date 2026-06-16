@@ -388,7 +388,8 @@ button:disabled {
 .card input,
 .editor input:not([type='checkbox']),
 .editor select,
-.champ input {
+.champ input,
+.champ select {
   width: 100%;
   border: 1px solid var(--line);
   border-radius: var(--radius);
@@ -401,7 +402,8 @@ button:disabled {
 .card input:focus,
 .editor input:focus,
 .editor select:focus,
-.champ input:focus {
+.champ input:focus,
+.champ select:focus {
   outline: none;
   border-color: var(--as-purple-600);
   background: #fff;
