@@ -8,7 +8,8 @@ import Header from '../components/Header';
 import StatusBadge from '../components/StatusBadge';
 import AdherentEditor from '../components/AdherentEditor';
 import QrCodeModal from '../components/QrCodeModal';
-import ImportCsvModal from '../components/ImportCsvModal';
+import ImportFormsModal from '../components/ImportFormsModal';
+import ImportComplementaireModal from '../components/ImportComplementaireModal';
 import EnvoiQrModal from '../components/EnvoiQrModal';
 import { nomComplet, reparerTexte } from '../lib/texte';
 import './BureauDashboard.css';
@@ -35,11 +36,11 @@ export default function BureauDashboard() {
   const [erreur, setErreur] = useState(null);
 
   const exportRef = useRef(null);
+  const importRef = useRef(null);
   useEffect(() => {
     function fermerSiExterieur(e) {
-      if (exportRef.current && !exportRef.current.contains(e.target)) {
-        exportRef.current.open = false;
-      }
+      if (exportRef.current && !exportRef.current.contains(e.target)) exportRef.current.open = false;
+      if (importRef.current && !importRef.current.contains(e.target)) importRef.current.open = false;
     }
     document.addEventListener('mousedown', fermerSiExterieur);
     return () => document.removeEventListener('mousedown', fermerSiExterieur);
@@ -51,7 +52,7 @@ export default function BureauDashboard() {
   // editeur : null = fermé ; { adherent: objet } = édition ; { adherent: null } = création
   const [editeur, setEditeur] = useState(null);
   const [qrAdherent, setQrAdherent] = useState(null);
-  const [importOuvert, setImportOuvert] = useState(false);
+  const [importMode, setImportMode] = useState(null); // null | 'forms' | 'complementaire'
 
   // État de l'envoi groupé des QR codes
   const [envoiModal, setEnvoiModal] = useState(null);
@@ -177,11 +178,18 @@ export default function BureauDashboard() {
     setEditeur(null);
   }
 
-  // Après un import CSV : on ajoute les nouvelles fiches à la liste, triées par nom.
-  function onImported(nouveaux) {
-    setAdherents((prev) =>
-      [...prev, ...nouveaux].sort((a, b) => a.nom.localeCompare(b.nom))
-    );
+  // Après import forms (touches = array créés+mis à jour) ou complémentaire (touches absent → rechargement).
+  async function onImported(touches) {
+    if (touches && touches.length > 0) {
+      setAdherents((prev) => {
+        const map = new Map(prev.map((a) => [a.id, a]));
+        for (const a of touches) map.set(a.id, a);
+        return [...map.values()].sort((a, b) => a.nom.localeCompare(b.nom));
+      });
+    } else {
+      const { data } = await supabase.from('adherents').select('*').order('nom', { ascending: true });
+      if (data) setAdherents(data);
+    }
   }
 
   function basculerFiltre(cle) {
@@ -336,9 +344,19 @@ export default function BureauDashboard() {
         <div className="dash-top">
           <h2>Adhérents <span className="muted"></span></h2>
           <div className="dash-top-actions">
-            <button className="btn-ghost" onClick={() => setImportOuvert(true)}>
-              Importer
-            </button>
+            <details className="export-dropdown" ref={importRef}>
+              <summary className="btn-ghost export-dropdown__trigger">
+                Importer ▾
+              </summary>
+              <div className="export-dropdown__menu">
+                <button className="export-dropdown__item" onClick={() => { setImportMode('forms'); importRef.current.open = false; }}>
+                  Données du forms
+                </button>
+                <button className="export-dropdown__item" onClick={() => { setImportMode('complementaire'); importRef.current.open = false; }}>
+                  Infos complémentaires
+                </button>
+              </div>
+            </details>
             <details className="export-dropdown" ref={exportRef}>
               <summary className={`btn-ghost export-dropdown__trigger${liste.length === 0 ? ' export-dropdown__trigger--disabled' : ''}`}>
                 Exporter ▾
@@ -490,9 +508,15 @@ export default function BureauDashboard() {
         <QrCodeModal adherent={qrAdherent} onClose={() => setQrAdherent(null)} />
       )}
 
-      {importOuvert && (
-        <ImportCsvModal
-          onClose={() => setImportOuvert(false)}
+      {importMode === 'forms' && (
+        <ImportFormsModal
+          onClose={() => setImportMode(null)}
+          onImported={onImported}
+        />
+      )}
+      {importMode === 'complementaire' && (
+        <ImportComplementaireModal
+          onClose={() => setImportMode(null)}
           onImported={onImported}
         />
       )}

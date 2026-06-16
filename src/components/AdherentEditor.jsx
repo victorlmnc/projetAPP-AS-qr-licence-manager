@@ -4,24 +4,45 @@ import { calculerStatutLicence } from '../lib/licence';
 import { nomComplet, reparerTexte } from '../lib/texte';
 import ConfirmDialog from './ConfirmDialog';
 
-// Panneau latéral de saisie.
-//   adherent = null  -> mode création
-//   adherent = objet -> mode mise à jour rapide
-// onSaved(adherentEnregistré) est appelé après succès (insert ou update).
-// onDeleted(id) est appelé après une suppression réussie.
+const TYPES_LICENCE = ['Sportive', 'Arbitre', 'Encadrant'];
+
 export default function AdherentEditor({ adherent, onClose, onSaved, onDeleted }) {
   const creation = !adherent;
 
   const [form, setForm] = useState({
-    nom: reparerTexte(adherent?.nom),
-    prenom: reparerTexte(adherent?.prenom),
+    // Identité
+    nom: reparerTexte(adherent?.nom) ?? '',
+    prenom: reparerTexte(adherent?.prenom) ?? '',
     email: adherent?.email ?? '',
+    telephone: adherent?.telephone ?? '',
+    sexe: adherent?.sexe ?? '',
+    annee_etude: adherent?.annee_etude ?? '',
+    date_naissance: adherent?.date_naissance ?? '',
+    pays_naissance: reparerTexte(adherent?.pays_naissance) ?? '',
+    dept_naissance: adherent?.dept_naissance ?? '',
+    ville_naissance: reparerTexte(adherent?.ville_naissance) ?? '',
+    // Adresse
+    adresse: reparerTexte(adherent?.adresse) ?? '',
+    code_postal: adherent?.code_postal ?? '',
+    ville: reparerTexte(adherent?.ville) ?? '',
+    // Licence & rôle
+    types_licence: adherent?.types_licence ?? [],
+    est_responsable_as: adherent?.est_responsable_as ?? false,
+    adherent_bde: adherent?.adherent_bde ?? false,
+    licence_ffsu_a_jour: adherent?.licence_ffsu_a_jour ?? false,
+    // Médical & autres
+    questionnaire_sante_ok: adherent?.questionnaire_sante_ok ?? true,
+    activite_contraintes: adherent?.activite_contraintes ?? false,
+    situation_handicap: adherent?.situation_handicap ?? false,
+    droit_image: adherent?.droit_image ?? true,
+    // Documents & paiement
     fiche_renseignement: adherent?.fiche_renseignement ?? false,
     paiement_global: adherent?.paiement_global ?? false,
     manque_paiement: adherent?.manque_paiement ?? false,
     manque_yeps: adherent?.manque_yeps ?? false,
     manque_passport: adherent?.manque_passport ?? false,
   });
+
   const [erreur, setErreur] = useState(null);
   const [enCours, setEnCours] = useState(false);
   const [suppression, setSuppression] = useState(false);
@@ -31,7 +52,15 @@ export default function AdherentEditor({ adherent, onClose, onSaved, onDeleted }
     setForm((f) => ({ ...f, [champ]: valeur }));
   }
 
-  // Aperçu en direct : on rejoue la logique partagée sur l'état du formulaire.
+  function toggleLicence(type) {
+    setForm((f) => ({
+      ...f,
+      types_licence: f.types_licence.includes(type)
+        ? f.types_licence.filter((t) => t !== type)
+        : [...f.types_licence, type],
+    }));
+  }
+
   const apercu = calculerStatutLicence(form);
 
   async function enregistrer(e) {
@@ -39,19 +68,36 @@ export default function AdherentEditor({ adherent, onClose, onSaved, onDeleted }
     setErreur(null);
 
     if (!form.nom.trim() || !form.prenom.trim()) {
-      setErreur("Le nom et le prénom sont obligatoires.");
+      setErreur('Le nom et le prénom sont obligatoires.');
       return;
     }
     if (form.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(form.email.trim())) {
-      setErreur("L’adresse e-mail n’est pas valide.");
+      setErreur("L'adresse e-mail n'est pas valide.");
       return;
     }
 
-    // Si le paiement est à jour, les "manque…" n'ont plus de sens : on les remet à false.
     const donnees = {
       nom: reparerTexte(form.nom).trim(),
       prenom: reparerTexte(form.prenom).trim(),
       email: form.email.trim() || null,
+      telephone: form.telephone.trim() || null,
+      sexe: form.sexe || null,
+      annee_etude: form.annee_etude.trim() || null,
+      date_naissance: form.date_naissance.trim() || null,
+      pays_naissance: form.pays_naissance.trim() || null,
+      dept_naissance: form.dept_naissance.trim() || null,
+      ville_naissance: form.ville_naissance.trim() || null,
+      adresse: form.adresse.trim() || null,
+      code_postal: form.code_postal.trim() || null,
+      ville: form.ville.trim() || null,
+      types_licence: form.types_licence.length > 0 ? form.types_licence : null,
+      est_responsable_as: form.est_responsable_as,
+      adherent_bde: form.adherent_bde,
+      licence_ffsu_a_jour: form.licence_ffsu_a_jour,
+      questionnaire_sante_ok: form.questionnaire_sante_ok,
+      activite_contraintes: form.activite_contraintes,
+      situation_handicap: form.situation_handicap,
+      droit_image: form.droit_image,
       fiche_renseignement: form.fiche_renseignement,
       paiement_global: form.paiement_global,
       manque_paiement: form.paiement_global ? false : form.manque_paiement,
@@ -74,7 +120,6 @@ export default function AdherentEditor({ adherent, onClose, onSaved, onDeleted }
     onSaved(data);
   }
 
-  // Supprime définitivement la fiche, après confirmation.
   async function supprimer() {
     setErreur(null);
     setSuppression(true);
@@ -91,31 +136,96 @@ export default function AdherentEditor({ adherent, onClose, onSaved, onDeleted }
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <aside className="editor" onClick={(e) => e.stopPropagation()}>
+      <aside className="editor editor--large" onClick={(e) => e.stopPropagation()}>
         <form onSubmit={enregistrer}>
           <h3>{creation ? 'Nouvel adhérent' : `Modifier — ${nomComplet(adherent)}`}</h3>
 
-          <div className="editor-grid">
-            <label>
-              Prénom
-              <input type="text" value={form.prenom}
-                     onChange={(e) => set('prenom', e.target.value)} />
+          {/* ── Identité ── */}
+          <p className="editor-section-title">Identité</p>
+          <div className="editor-grid editor-grid--3">
+            <label>Prénom<input type="text" value={form.prenom} onChange={(e) => set('prenom', e.target.value)} /></label>
+            <label>Nom<input type="text" value={form.nom} onChange={(e) => set('nom', e.target.value)} /></label>
+            <label>Sexe
+              <select value={form.sexe} onChange={(e) => set('sexe', e.target.value)}>
+                <option value="">—</option>
+                <option value="H">H</option>
+                <option value="F">F</option>
+              </select>
             </label>
-            <label>
-              Nom
-              <input type="text" value={form.nom}
-                     onChange={(e) => set('nom', e.target.value)} />
+            <label>E-mail<input type="email" value={form.email} onChange={(e) => set('email', e.target.value)} /></label>
+            <label>Téléphone<input type="text" value={form.telephone} onChange={(e) => set('telephone', e.target.value)} /></label>
+            <label>Année d'étude<input type="text" placeholder="ex. 3A étudiant" value={form.annee_etude} onChange={(e) => set('annee_etude', e.target.value)} /></label>
+            <label>Date de naissance<input type="text" placeholder="ex. 16/07/2005" value={form.date_naissance} onChange={(e) => set('date_naissance', e.target.value)} /></label>
+            <label>Pays de naissance<input type="text" value={form.pays_naissance} onChange={(e) => set('pays_naissance', e.target.value)} /></label>
+            <label>Dept. de naissance<input type="text" placeholder="ex. 45" value={form.dept_naissance} onChange={(e) => set('dept_naissance', e.target.value)} /></label>
+            <label className="editor-grid__span2">Ville de naissance<input type="text" value={form.ville_naissance} onChange={(e) => set('ville_naissance', e.target.value)} /></label>
+          </div>
+
+          {/* ── Adresse ── */}
+          <p className="editor-section-title">Adresse</p>
+          <label>Adresse<input type="text" value={form.adresse} onChange={(e) => set('adresse', e.target.value)} /></label>
+          <div className="editor-grid">
+            <label>Code postal<input type="text" value={form.code_postal} onChange={(e) => set('code_postal', e.target.value)} /></label>
+            <label>Ville<input type="text" value={form.ville} onChange={(e) => set('ville', e.target.value)} /></label>
+          </div>
+
+          {/* ── Licence & rôle ── */}
+          <p className="editor-section-title">Licence &amp; rôle</p>
+          <p className="editor-field-label">Types de licence</p>
+          <div className="editor-checks-row">
+            {TYPES_LICENCE.map((type) => (
+              <label key={type} className="check check--inline">
+                <input
+                  type="checkbox"
+                  checked={form.types_licence.includes(type)}
+                  onChange={() => toggleLicence(type)}
+                />
+                {type}
+              </label>
+            ))}
+          </div>
+          <div className="editor-checks-row" style={{ marginTop: 10 }}>
+            <label className="check check--inline">
+              <input type="checkbox" checked={form.est_responsable_as} onChange={(e) => set('est_responsable_as', e.target.checked)} />
+              Respo AS
+            </label>
+            <label className="check check--inline">
+              <input type="checkbox" checked={form.adherent_bde} onChange={(e) => set('adherent_bde', e.target.checked)} />
+              Adhérent BDE
+            </label>
+            <label className="check check--inline">
+              <input type="checkbox" checked={form.licence_ffsu_a_jour} onChange={(e) => set('licence_ffsu_a_jour', e.target.checked)} />
+              Licence FFSU
             </label>
           </div>
 
-          <label>
-            E-mail
-            <input type="email" value={form.email}
-                   onChange={(e) => set('email', e.target.value)} />
-          </label>
+          {/* ── Médical & autres ── */}
+          <p className="editor-section-title">Médical &amp; autres</p>
+          <div className="editor-checks-row">
+            <label className="check check--inline">
+              <input type="checkbox" checked={form.questionnaire_sante_ok} onChange={(e) => set('questionnaire_sante_ok', e.target.checked)} />
+              Questionnaire santé OK
+            </label>
+            <label className="check check--inline">
+              <input type="checkbox" checked={form.activite_contraintes} onChange={(e) => set('activite_contraintes', e.target.checked)} />
+              Activité à contraintes
+            </label>
+          </div>
+          <div className="editor-checks-row" style={{ marginTop: 8 }}>
+            <label className="check check--inline">
+              <input type="checkbox" checked={form.situation_handicap} onChange={(e) => set('situation_handicap', e.target.checked)} />
+              Situation de handicap
+            </label>
+            <label className="check check--inline">
+              <input type="checkbox" checked={form.droit_image} onChange={(e) => set('droit_image', e.target.checked)} />
+              Droit à l'image autorisé
+            </label>
+          </div>
 
           <hr />
 
+          {/* ── Documents & paiement ── */}
+          <p className="editor-section-title">Documents &amp; paiement</p>
           <label className="check">
             <input type="checkbox" checked={form.fiche_renseignement}
                    onChange={(e) => set('fiche_renseignement', e.target.checked)} />
@@ -128,7 +238,6 @@ export default function AdherentEditor({ adherent, onClose, onSaved, onDeleted }
             Paiement global à jour
           </label>
 
-          {/* Détail des manques : visible uniquement si le paiement n'est PAS à jour */}
           {!form.paiement_global && (
             <fieldset className="manques">
               <legend>Ce qu'il manque :</legend>
@@ -150,7 +259,6 @@ export default function AdherentEditor({ adherent, onClose, onSaved, onDeleted }
             </fieldset>
           )}
 
-          {/* Aperçu du statut qui sera enregistré */}
           <div className={`apercu ${apercu.valide ? 'apercu--ok' : 'apercu--ko'}`}>
             Statut résultant : <strong>{apercu.valide ? 'À jour' : 'Non à jour'}</strong>
           </div>
@@ -165,7 +273,6 @@ export default function AdherentEditor({ adherent, onClose, onSaved, onDeleted }
           </div>
         </form>
 
-        {/* Suppression : disponible uniquement en mode édition */}
         {!creation && (
           <div className="editor-danger">
             <button
