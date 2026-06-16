@@ -30,10 +30,19 @@ function esc(str) {
     .replace(/'/g, '&#x27;');
 }
 
-function qrEmailHtml(prenom, nom, lien) {
+function qrEmailHtml(prenom, nom, lien, valide, anomalies) {
   const p = esc(prenom);
   const n = esc(nom);
   const l = esc(lien);
+
+  const statusHtml = valide 
+    ? `<p style="margin:0 0 24px 0;color:#2e7d32;font-size:14px;font-weight:600;background:#e8f5e9;padding:12px;border-radius:8px;">✅ Votre licence est complete et a jour !</p>`
+    : `<div style="margin:0 0 24px 0;background:#fdecea;padding:12px;border-radius:8px;border-left:4px solid #d32f2f;">
+         <p style="margin:0 0 12px 0;color:#b71c1c;font-size:14px;font-weight:600;">&#9888; Votre licence est incomplete. Il manque :</p>
+         <ul style="margin:0;padding-left:20px;">
+           ${anomalies.map((anomalie) => `<li style="margin:4px 0;color:#c62828;font-size:14px;line-height:1.45;">${esc(anomalie)}</li>`).join('')}
+         </ul>
+       </div>`;
 
   return `<!DOCTYPE html>
 <html lang="fr">
@@ -58,9 +67,10 @@ function qrEmailHtml(prenom, nom, lien) {
               <p style="margin:0 0 8px 0;color:#1e1b29;font-size:16px;">
                 Bonjour <strong>${p} ${n}</strong>,
               </p>
-              <p style="margin:0 0 24px 0;color:#746d88;font-size:14px;line-height:1.6;">
+              <p style="margin:0 0 20px 0;color:#746d88;font-size:14px;line-height:1.6;">
                 Votre QR Code de licence est disponible. Presentez-le a votre responsable sportif lors des entrainements et des matchs.
               </p>
+              ${statusHtml}
               <table width="100%" cellpadding="0" cellspacing="0">
                 <tr>
                   <td align="center">
@@ -232,9 +242,14 @@ export default async function handler(req, res) {
     const subject = relance
       ? `Licence incomplete - ${a.prenom} ${a.nom}`
       : `Votre QR Code de licence - ${a.prenom} ${a.nom}`;
+    
+    const qrTextStatus = statut.valide 
+      ? `✅ Votre licence est complete et a jour !`
+      : `⚠️ Votre licence n'est pas complete. Ce qu'il manque :\n- ${anomalies.join('\n- ')}`;
+
     const text = relance
       ? `Bonjour ${a.prenom} ${a.nom},\n\nVotre licence n'est pas complete.\n\nCe qu'il manque :\n- ${anomalies.join('\n- ')}\n\nMerci de contacter un membre du bureau de l'AS de l'INSA CVL pour regulariser votre dossier.\n\n- Le bureau de l'AS de l'INSA CVL\n\n---\nCeci est un e-mail automatique. Merci de ne pas y repondre, cette adresse n'est pas surveillee.`
-      : `Bonjour ${a.prenom} ${a.nom},\n\nVotre QR Code de licence est disponible. Presentez-le a votre responsable sportif lors des entrainements et des matchs.\n\nAcceder a votre QR Code : ${lien}\n\nVous pouvez enregistrer cette page en favori sur votre telephone.\n\n- Le bureau de l'AS de l'INSA CVL\n\n---\nCeci est un e-mail automatique. Merci de ne pas y repondre, cette adresse n'est pas surveillee.`;
+      : `Bonjour ${a.prenom} ${a.nom},\n\nVotre QR Code de licence est disponible. Presentez-le a votre responsable sportif lors des entrainements et des matchs.\n\n${qrTextStatus}\n\nAcceder a votre QR Code : ${lien}\n\nVous pouvez enregistrer cette page en favori sur votre telephone.\n\n- Le bureau de l'AS de l'INSA CVL\n\n---\nCeci est un e-mail automatique. Merci de ne pas y repondre, cette adresse n'est pas surveillee.`;
 
     try {
       await transporter.sendMail({
@@ -244,7 +259,7 @@ export default async function handler(req, res) {
         text,
         html: relance
           ? reminderEmailHtml(a.prenom, a.nom, anomalies)
-          : qrEmailHtml(a.prenom, a.nom, lien),
+          : qrEmailHtml(a.prenom, a.nom, lien, statut.valide, anomalies),
       });
       results.sent++;
     } catch (err) {

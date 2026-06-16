@@ -5,7 +5,6 @@ import { supabase } from '../lib/supabase';
 import { calculerStatutLicence } from '../lib/licence';
 import { publicAdherentUrl } from '../lib/publicAccess';
 import { nomComplet, reparerTexte } from '../lib/texte';
-import StatusBanner from '../components/StatusBanner';
 
 async function chargerAdherentPublic(token) {
   const res = await fetch(`/api/public-adherent?token=${encodeURIComponent(token)}`);
@@ -90,7 +89,6 @@ export default function AdherentPublic() {
     );
   }
 
-  const { valide } = calculerStatutLicence(adherent);
   const lienPublic = publicAdherentUrl(adherent);
 
   return (
@@ -106,16 +104,12 @@ export default function AdherentPublic() {
           <h1 className="pub-name">{nomComplet(adherent)}</h1>
         </div>
 
-        <StatusBanner adherent={adherent} />
-
         <div className="pub-qr" ref={qrRef}>
           <QRCodeCanvas value={lienPublic} size={210} />
         </div>
 
         <p className="muted pub-hint">
-          {valide
-            ? 'Nom et statut à vérifier par les respos sports avant participation.'
-            : 'Votre licence est incomplète. Contactez le bureau pour régulariser votre situation.'}
+          Présentez ce QR Code à votre Responsable Sport lors des entraînements.
         </p>
 
         <button className="btn-ghost pub-dl" onClick={telechargerQr}>
