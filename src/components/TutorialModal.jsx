@@ -59,7 +59,7 @@ const SECTIONS_BUREAU = [
 const SECTIONS_COACH = [
   {
     titre: `Scan Terrain`,
-    images: ['/tuto/scan-coach.png'],
+    images: [],
     contenu: [
       `Attention, cette application sert juste à vérifier si la personne a le droit de s'entraîner. Elle ne sert pas à faire l'appel.`,
       `Il suffit de pointer la caméra de votre téléphone vers le QR Code de l'adhérent.`,
@@ -68,7 +68,7 @@ const SECTIONS_COACH = [
   },
   {
     titre: `Conseils Pratiques`,
-    images: ['/tuto/conseils-coach.png'],
+    images: [],
     contenu: [
       `C'est exactement comme un contrôleur dans le train : l'adhérent montre son téléphone, et vous scannez.`,
       `Pensez à utiliser le bouton Installer dans le menu. L'application se mettra sur votre écran d'accueil, ça ira beaucoup plus vite pour le prochain entraînement.`,
