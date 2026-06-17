@@ -26,7 +26,7 @@ export default function Header({ titre }) {
             }}
           />
           <div className="topbar__title">
-            <span>AS INSA</span>
+            <span>AS INSA CVL - Bourges</span>
             <strong>{titre}</strong>
           </div>
           {role && <span className="badge">{role === 'coach' ? 'Responsable Sport' : role}</span>}

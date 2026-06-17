@@ -40,7 +40,7 @@ export default function Login() {
         <div className="auth-brand">
           <img src="/logo.png" alt="Logo AS" />
           <div>
-            <span>AS INSA</span>
+            <span>AS INSA CVL - Bourges</span>
             <h1>Contrôle des licences</h1>
           </div>
         </div>
