@@ -1,4 +1,4 @@
-const CACHE_NAME = 'licences-qr-v2';
+const CACHE_NAME = 'licences-qr-v3';
 const APP_ASSETS = ['/', '/manifest.json', '/icon-192.png', '/icon-512.png', '/logo.png'];
 
 self.addEventListener('install', (event) => {
