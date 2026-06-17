@@ -75,7 +75,7 @@
   border: 1px solid #e0d8f0;
   border-radius: 10px;
   box-shadow: 0 6px 20px rgba(94,58,140,0.12);
-  min-width: 160px;
+  min-width: 200px;
   overflow: hidden;
 }
 
@@ -89,6 +89,7 @@
   border-radius: 0;
   box-shadow: none;
   font-size: 14px;
+  white-space: nowrap;
   font-weight: 600;
   color: #1e1b29;
   cursor: pointer;
