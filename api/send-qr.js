@@ -38,7 +38,8 @@ function qrEmailHtml(prenom, nom, lien, valide, anomalies) {
 
   const statusHtml = valide 
     ? `<p style="margin:0 0 20px 0;color:#1e1b29;font-size:14px;font-weight:600;">Dossier complet et à jour.</p>`
-    : `<p style="margin:0 0 10px 0;color:#1e1b29;font-size:14px;font-weight:600;">Attention, dossier incomplet (à la date du ${dateDuJour}). Il manque :</p>
+    : `<p style="margin:0 0 4px 0;color:#1e1b29;font-size:14px;font-weight:600;">Attention, dossier incomplet (à la date du ${dateDuJour}).</p>
+       <p style="margin:0 0 10px 0;color:#1e1b29;font-size:14px;font-weight:600;">Il manque :</p>
        <ul style="margin:0 0 20px 0;padding-left:20px;color:#746d88;font-size:14px;">
          ${anomalies.map((anomalie) => `<li style="margin:4px 0;">${esc(anomalie)}</li>`).join('')}
        </ul>`;

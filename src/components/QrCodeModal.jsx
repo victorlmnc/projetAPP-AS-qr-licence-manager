@@ -92,7 +92,7 @@ export default function QrCodeModal({ adherent, onClose }) {
               disabled={!adherent.email || !token || envoiEnCours || envoi === 'ok'}
               title={!token ? 'Token public manquant' : !adherent.email ? 'Aucun e-mail enregistre pour cet adherent' : undefined}
             >
-              {envoiEnCours ? 'Envoi...' : envoi === 'ok' ? 'Envoye' : 'Envoyer par e-mail'}
+              {envoiEnCours ? 'Envoi...' : envoi === 'ok' ? 'Envoyé' : 'Envoyer par e-mail'}
             </button>
           </div>
 
