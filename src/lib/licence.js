@@ -1,12 +1,12 @@
 export function calculerStatutLicence(adherent) {
-  const ficheOk = adherent?.fiche_renseignement === true;
+  const ficheOk = adherent?.questionnaire_sante_ok === true;
   const paiementOk = adherent?.paiement_global === true;
   const valide = ficheOk && paiementOk;
 
   const anomalies = [];
 
   if (!ficheOk) {
-    anomalies.push('Fiche de renseignement manquante');
+    anomalies.push('Questionnaire santé manquant');
   }
 
   if (!paiementOk) {

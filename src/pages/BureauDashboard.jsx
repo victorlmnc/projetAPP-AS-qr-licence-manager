@@ -20,7 +20,7 @@ const FILTRES = [
   { cle: 'tous', libelle: 'Tous', test: () => true },
   { cle: 'a_jour', libelle: 'À jour', test: (a) => calculerStatutLicence(a).valide },
   { cle: 'non_a_jour', libelle: 'Non à jour', test: (a) => !calculerStatutLicence(a).valide },
-  { cle: 'fiche', libelle: 'Fiche manquante', test: (a) => !a.fiche_renseignement },
+  { cle: 'fiche', libelle: 'Questionnaire manquant', test: (a) => !a.questionnaire_sante_ok },
   { cle: 'yeps', libelle: 'Manque YEPS', test: (a) => a.manque_yeps },
   { cle: 'passport', libelle: "Manque PASS'SPORT", test: (a) => a.manque_passport },
   { cle: 'paiement', libelle: 'Manque paiement', test: (a) => a.manque_paiement },
@@ -256,7 +256,7 @@ export default function BureauDashboard() {
 
   const ENTETES_EXPORT = [
     'Prénom', 'Nom', 'Email', 'Statut', 'Détail',
-    'Fiche renseignement', 'Paiement global',
+    'Questionnaire santé', 'Paiement global',
     'Manque paiement', 'Manque YEPS', "Manque PASS’SPORT", 'ID',
   ];
 
@@ -269,7 +269,7 @@ export default function BureauDashboard() {
         a.email ?? '',
         statut.valide ? 'À jour' : 'Non à jour',
         statut.anomalies.join(' | ') || '',
-        a.fiche_renseignement ? 'Oui' : 'Non',
+        a.questionnaire_sante_ok ? 'Oui' : 'Non',
         a.paiement_global ? 'Oui' : 'Non',
         a.manque_paiement ? 'Oui' : 'Non',
         a.manque_yeps ? 'Oui' : 'Non',
@@ -318,7 +318,7 @@ export default function BureauDashboard() {
         a.email ?? '',
         statut.valide ? 'À jour' : 'Non à jour',
         statut.anomalies.join(', ') || '—',
-        a.fiche_renseignement ? 'Oui' : 'Non',
+        a.questionnaire_sante_ok ? 'Oui' : 'Non',
         a.paiement_global ? 'Oui' : 'Non',
       ];
     });

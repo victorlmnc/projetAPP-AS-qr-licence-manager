@@ -204,7 +204,7 @@ export default async function handler(req, res) {
 
   let query = supabase
     .from('adherents')
-    .select('id, nom, prenom, email, public_token, fiche_renseignement, paiement_global, manque_paiement, manque_yeps, manque_passport');
+    .select('id, nom, prenom, email, public_token, questionnaire_sante_ok, paiement_global, manque_paiement, manque_yeps, manque_passport');
 
   if (Array.isArray(adherentIds) && adherentIds.length > 0) {
     query = query.in('id', adherentIds);

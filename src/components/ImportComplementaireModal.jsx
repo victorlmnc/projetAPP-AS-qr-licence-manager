@@ -16,7 +16,7 @@ function versBool(v) {
 const CHAMPS_COMPL = [
   { db: 'adherent_bde',        bool: true,  patterns: ['adherent bde', 'bde'] },
   { db: 'licence_ffsu_a_jour', bool: true,  patterns: ['licence ffsu', 'ffsu', 'licence a jour'] },
-  { db: 'fiche_renseignement', bool: true,  patterns: ['fiche renseignement', 'fiche'] },
+  { db: 'questionnaire_sante_ok', bool: true,  patterns: ['questionnaire sante', 'fiche renseignement', 'fiche'] },
   { db: 'paiement_global',     bool: true,  patterns: ['paiement global'] },
   { db: 'manque_paiement',     bool: true,  patterns: ['manque paiement'] },
   { db: 'manque_yeps',         bool: true,  patterns: ['yeps'] },

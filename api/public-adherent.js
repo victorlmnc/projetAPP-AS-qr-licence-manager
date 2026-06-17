@@ -27,7 +27,7 @@ export default async function handler(req, res) {
     const supabase = getServerSupabase();
     const { data, error } = await supabase
       .from('adherents')
-      .select('public_token, nom, prenom, fiche_renseignement, paiement_global, manque_paiement, manque_yeps, manque_passport')
+      .select('public_token, nom, prenom, questionnaire_sante_ok, paiement_global, manque_paiement, manque_yeps, manque_passport')
       .eq('public_token', token)
       .maybeSingle();
 
