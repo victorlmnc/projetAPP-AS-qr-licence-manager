@@ -34,7 +34,7 @@ export default function AdherentEditor({ adherent, onClose, onSaved, onDeleted }
     droit_image: adherent?.droit_image ?? true,
     fiche_renseignement: adherent?.fiche_renseignement ?? false,
     paiement_global: adherent?.paiement_global ?? false,
-    manque_paiement: adherent?.manque_paiement ?? false,
+    manque_paiement: adherent?.manque_paiement ?? true,
     manque_yeps: adherent?.manque_yeps ?? false,
     manque_passport: adherent?.manque_passport ?? false,
   });

@@ -85,6 +85,7 @@ function mapperLigne(row) {
     questionnaire_sante_ok,
     activite_contraintes,
     manque_passport: est_boursier,
+    manque_paiement: true,
   };
 }
 
@@ -187,7 +188,7 @@ export default function ImportFormsModal({ onClose, onImported }) {
       else crees = data ?? [];
     }
 
-    for (const { id, ...donnees } of aModifier) {
+    for (const { id, manque_paiement: _mp, ...donnees } of aModifier) {
       const { data, error } = await supabase
         .from('adherents')
         .update(donnees)
