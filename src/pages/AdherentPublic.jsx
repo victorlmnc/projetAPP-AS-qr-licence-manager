@@ -96,7 +96,8 @@ export default function AdherentPublic() {
       <div className="pub-card">
         <div className="pub-header pub-header--center">
           <img src="/logo.png" alt="Logo AS" className="pub-logo" />
-          <p className="muted pub-sub">Association Sportive</p>
+          <p className="muted pub-sub">Association Sportive INSA CVL</p>
+          <p className="muted pub-sub">Campus de Bourges</p>
         </div>
 
         <div className="pub-identity">
