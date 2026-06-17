@@ -159,9 +159,9 @@ export default function AdherentEditor({ adherent, onClose, onSaved, onDeleted }
           {onglet === 'licence' && (
             <div>
               <label className="check">
-                <input type="checkbox" checked={form.fiche_renseignement}
-                       onChange={(e) => set('fiche_renseignement', e.target.checked)} />
-                Fiche de renseignement à jour
+                <input type="checkbox" checked={form.questionnaire_sante_ok}
+                       onChange={(e) => set('questionnaire_sante_ok', e.target.checked)} />
+                Questionnaire santé OK
               </label>
 
               <label className="check">
@@ -277,10 +277,6 @@ export default function AdherentEditor({ adherent, onClose, onSaved, onDeleted }
               {/* ── Médical et autres ── */}
               <p className="editor-section-title">Médical et autres</p>
               <div className="editor-checks-row">
-                <label className="check check--inline">
-                  <input type="checkbox" checked={form.questionnaire_sante_ok} onChange={(e) => set('questionnaire_sante_ok', e.target.checked)} />
-                  Questionnaire santé OK
-                </label>
                 <label className="check check--inline">
                   <input type="checkbox" checked={form.activite_contraintes} onChange={(e) => set('activite_contraintes', e.target.checked)} />
                   Activité à contraintes
