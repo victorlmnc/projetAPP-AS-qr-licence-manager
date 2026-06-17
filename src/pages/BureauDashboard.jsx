@@ -7,6 +7,7 @@ import { calculerStatutLicence } from '../lib/licence';
 import Header from '../components/Header';
 import StatusBadge from '../components/StatusBadge';
 import AdherentEditor from '../components/AdherentEditor';
+import BulkAdherentEditor from '../components/BulkAdherentEditor';
 import QrCodeModal from '../components/QrCodeModal';
 import ImportFormsModal from '../components/ImportFormsModal';
 import ImportComplementaireModal from '../components/ImportComplementaireModal';
@@ -34,9 +35,12 @@ export default function BureauDashboard() {
   const [adherents, setAdherents] = useState([]);
   const [chargement, setChargement] = useState(true);
   const [erreur, setErreur] = useState(null);
+  const [selection, setSelection] = useState([]);
+  const [editionMultiple, setEditionMultiple] = useState(false);
 
   const exportRef = useRef(null);
   const importRef = useRef(null);
+  const selectAllRef = useRef(null);
   useEffect(() => {
     function fermerSiExterieur(e) {
       if (exportRef.current && !exportRef.current.contains(e.target)) exportRef.current.open = false;
@@ -152,12 +156,33 @@ export default function BureauDashboard() {
   }, [adherents, filtresActifs, recherche]);
 
   // Statistiques globales (sur tous les adhérents, pas seulement la liste filtrée).
+  const idsVisibles = useMemo(() => liste.map((adherent) => adherent.id), [liste]);
+  const selectionVisible = useMemo(
+    () => idsVisibles.filter((id) => selection.includes(id)),
+    [idsVisibles, selection]
+  );
+  const toutVisibleSelectionne = idsVisibles.length > 0 && selectionVisible.length === idsVisibles.length;
+  const selectionPartielle = selectionVisible.length > 0 && !toutVisibleSelectionne;
+  const adherentsSelectionnes = useMemo(
+    () => adherents.filter((adherent) => selection.includes(adherent.id)),
+    [adherents, selection]
+  );
+
   const stats = useMemo(() => {
     let aJour = 0;
     for (const a of adherents) {
       if (calculerStatutLicence(a).valide) aJour++;
     }
     return { total: adherents.length, aJour, nonAJour: adherents.length - aJour };
+  }, [adherents]);
+
+  useEffect(() => {
+    if (!selectAllRef.current) return;
+    selectAllRef.current.indeterminate = selectionPartielle;
+  }, [selectionPartielle]);
+
+  useEffect(() => {
+    setSelection((prev) => prev.filter((id) => adherents.some((adherent) => adherent.id === id)));
   }, [adherents]);
 
   // Après création/mise à jour : on rafraîchit la liste localement (sans recharger).
@@ -172,10 +197,39 @@ export default function BureauDashboard() {
     setEditeur(null);
   }
 
+  function onBulkSaved(adherentsMaj) {
+    setAdherents((prev) => {
+      const map = new Map(prev.map((adherent) => [adherent.id, adherent]));
+      for (const adherent of adherentsMaj) {
+        map.set(adherent.id, adherent);
+      }
+      return [...map.values()].sort((a, b) => a.nom.localeCompare(b.nom));
+    });
+    setSelection([]);
+    setEditionMultiple(false);
+  }
+
   // Après suppression : on retire la fiche de la liste et on ferme le panneau.
   function onDeleted(id) {
     setAdherents((prev) => prev.filter((a) => a.id !== id));
     setEditeur(null);
+  }
+
+  function basculerSelection(id) {
+    setSelection((prev) =>
+      prev.includes(id)
+        ? prev.filter((x) => x !== id)
+        : [...prev, id]
+    );
+  }
+
+  function basculerSelectionVisible() {
+    if (toutVisibleSelectionne) {
+      setSelection((prev) => prev.filter((id) => !idsVisibles.includes(id)));
+      return;
+    }
+
+    setSelection((prev) => [...new Set([...prev, ...idsVisibles])]);
   }
 
   // Après import forms (touches = array créés+mis à jour) ou complémentaire (touches absent → rechargement).
@@ -450,6 +504,17 @@ export default function BureauDashboard() {
         </div>
 
         {chargement && <p>Chargement…</p>}
+        {selection.length > 0 && (
+          <div className="dash-bulk-actions">
+            <button
+              className="btn-ghost"
+              onClick={() => setEditionMultiple(true)}
+            >
+              Modifier la selection ({selection.length})
+            </button>
+          </div>
+        )}
+
         {erreur && <p className="error">{erreur}</p>}
 
         {!chargement && !erreur && (
@@ -460,6 +525,16 @@ export default function BureauDashboard() {
               <table className="dash-table">
                 <thead>
                   <tr>
+                    <th className="dash-select-col">
+                      <input
+                        ref={selectAllRef}
+                        type="checkbox"
+                        className="dash-select"
+                        checked={toutVisibleSelectionne}
+                        onChange={basculerSelectionVisible}
+                        aria-label="Selectionner tous les adherents visibles"
+                      />
+                    </th>
                     <th>Nom</th>
                     <th>Statut</th>
                     <th>Détail</th>
@@ -471,6 +546,15 @@ export default function BureauDashboard() {
                     const { valide, anomalies } = calculerStatutLicence(a);
                     return (
                       <tr key={a.id}>
+                        <td className="dash-select-col">
+                          <input
+                            type="checkbox"
+                            className="dash-select"
+                            checked={selection.includes(a.id)}
+                            onChange={() => basculerSelection(a.id)}
+                            aria-label={`Selectionner ${nomComplet(a)}`}
+                          />
+                        </td>
                         <td>
                           <strong>{nomComplet(a)}</strong>
                           {a.email && <div className="muted small">{a.email}</div>}
@@ -501,6 +585,14 @@ export default function BureauDashboard() {
           onClose={() => setEditeur(null)}
           onSaved={onSaved}
           onDeleted={onDeleted}
+        />
+      )}
+
+      {editionMultiple && adherentsSelectionnes.length > 0 && (
+        <BulkAdherentEditor
+          adherents={adherentsSelectionnes}
+          onClose={() => setEditionMultiple(false)}
+          onSaved={onBulkSaved}
         />
       )}
 
