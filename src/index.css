@@ -995,6 +995,15 @@ button:disabled {
   margin: 0;
 }
 
+.pub-hint--warning {
+  margin-top: 10px;
+  padding: 10px 14px;
+  background: #fff3cd;
+  color: #7a5700;
+  border-radius: 10px;
+  font-weight: 600;
+}
+
 .pub-dl {
   width: 100%;
   text-align: center;

@@ -113,6 +113,12 @@ export default function AdherentPublic() {
           Présentez ce QR Code à votre Responsable Sport lors des entraînements.
         </p>
 
+        {!calculerStatutLicence(adherent).valide && (
+          <p className="pub-hint pub-hint--warning">
+            Votre dossier est incomplet. Rapprochez-vous du bureau de l'AS pour le régulariser.
+          </p>
+        )}
+
         <button className="btn-ghost pub-dl" onClick={telechargerQr}>
           Télécharger le QR Code
         </button>

@@ -146,9 +146,11 @@ export default function BureauDashboard() {
         if (!q) return true;
         const nom = norm(a.nom);
         const prenom = norm(a.prenom);
+        const email = norm(a.email ?? '');
         return (
           nom.includes(q) ||
           prenom.includes(q) ||
+          email.includes(q) ||
           `${prenom} ${nom}`.includes(q) ||
           `${nom} ${prenom}`.includes(q)
         );
@@ -358,12 +360,12 @@ export default function BureauDashboard() {
     const date = new Date().toLocaleDateString('fr-FR');
     doc.setFontSize(13);
     doc.setTextColor(94, 58, 140);
-    doc.text('AS INSA — Liste des adhérants', 14, 14);
+    doc.text('AS INSA CVL - Bourges — Liste des adhérents', 14, 14);
     doc.setFontSize(9);
     doc.setTextColor(120, 120, 120);
     doc.text(`Exporté le ${date} · ${liste.length} adhérent(s)`, 14, 20);
 
-    const colonnes = ['Prénom', 'Nom', 'Email', 'Statut', 'Détail', 'Fiche', 'Paiement'];
+    const colonnes = ['Prénom', 'Nom', 'Email', 'Statut', 'Détail', 'Questionnaire santé', 'Paiement'];
     const lignes = liste.map((a) => {
       const statut = calculerStatutLicence(a);
       return [

@@ -2,19 +2,19 @@ import { describe, it, expect } from 'vitest';
 import { calculerStatutLicence, messageAdherent } from './licence.js';
 
 const VALIDE = {
-  fiche_renseignement: true,
+  questionnaire_sante_ok: true,
   paiement_global: true,
   manque_paiement: false,
   manque_yeps: false,
   manque_passport: false,
 };
 
-const FICHE_MANQUANTE = { ...VALIDE, fiche_renseignement: false };
+const QUESTIONNAIRE_MANQUANT = { ...VALIDE, questionnaire_sante_ok: false };
 const PAIEMENT_MANQUANT = { ...VALIDE, paiement_global: false };
-const TOUT_MANQUANT = { fiche_renseignement: false, paiement_global: false };
+const TOUT_MANQUANT = { questionnaire_sante_ok: false, paiement_global: false };
 
 describe('calculerStatutLicence', () => {
-  it('retourne valide quand fiche et paiement sont à jour', () => {
+  it('retourne valide quand questionnaire et paiement sont à jour', () => {
     const r = calculerStatutLicence(VALIDE);
     expect(r.valide).toBe(true);
     expect(r.statut).toBe('valide');
@@ -22,11 +22,11 @@ describe('calculerStatutLicence', () => {
     expect(r.anomalies).toHaveLength(0);
   });
 
-  it('invalide si fiche manquante', () => {
-    const r = calculerStatutLicence(FICHE_MANQUANTE);
+  it('invalide si questionnaire manquant', () => {
+    const r = calculerStatutLicence(QUESTIONNAIRE_MANQUANT);
     expect(r.valide).toBe(false);
     expect(r.couleur).toBe('rouge');
-    expect(r.anomalies).toContain('Fiche de renseignement manquante');
+    expect(r.anomalies).toContain('Questionnaire santé manquant');
   });
 
   it('invalide si paiement non réglé', () => {
@@ -76,8 +76,8 @@ describe('messageAdherent', () => {
   });
 
   it('message avec anomalies si non valide', () => {
-    const m = messageAdherent(FICHE_MANQUANTE);
+    const m = messageAdherent(QUESTIONNAIRE_MANQUANT);
     expect(m).toContain('en cours de validation');
-    expect(m).toContain('Fiche de renseignement manquante');
+    expect(m).toContain('Questionnaire santé manquant');
   });
 });

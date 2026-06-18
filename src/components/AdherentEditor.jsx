@@ -28,7 +28,7 @@ export default function AdherentEditor({ adherent, onClose, onSaved, onDeleted }
     est_responsable_as: adherent?.est_responsable_as ?? false,
     adherent_bde: adherent?.adherent_bde ?? false,
     licence_ffsu_a_jour: adherent?.licence_ffsu_a_jour ?? false,
-    questionnaire_sante_ok: adherent?.questionnaire_sante_ok ?? true,
+    questionnaire_sante_ok: adherent?.questionnaire_sante_ok ?? false,
     activite_contraintes: adherent?.activite_contraintes ?? false,
     situation_handicap: adherent?.situation_handicap ?? false,
     droit_image: adherent?.droit_image ?? true,
