@@ -320,7 +320,7 @@ button:disabled {
 }
 
 .card {
-  width: min(100%, 430px);
+  width: min(100%, 480px);
   padding: 36px;
   border: 1px solid rgba(232, 222, 239, 0.88);
   border-radius: 24px;
