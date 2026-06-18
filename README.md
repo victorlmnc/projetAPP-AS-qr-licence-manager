@@ -217,3 +217,5 @@ Projet réalisé dans le cadre du cours *Développement et Mathématiques pour l
 - Mathis Hiron — mathis.hiron@insa-cvl.fr  
 - Victor Lemanceau — victor.lemanceau@insa-cvl.fr  
 - Gabin Pasquier-Ménard — gabin.pasquier--menard@insa-cvl.fr
+- Paul Bardoux — paul.bardoux@insa-cvl.fr
+- Enrique Zamarreno — enrique.zamarreno@insa-cvl.fr
