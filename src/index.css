@@ -1669,3 +1669,49 @@ button:disabled {
   gap: 12px;
   flex-shrink: 0;
 }
+
+/* ---------- 🥨 Easter egg 67 ---------- */
+.easter-egg-67 {
+  animation: ee67 10s ease-in-out forwards !important;
+  position: relative;
+  z-index: 9999;
+  transform-origin: center center;
+  pointer-events: auto;
+}
+
+@keyframes ee67 {
+  0%   { transform: scale(1)  translate(0, 0)       rotate(0deg);    color: inherit;  font-size: inherit;    }
+  3%   { transform: scale(3)  translate(40px, -20px) rotate(12deg);   color: #ff0040;  font-size: 42px;       }
+  6%   { transform: scale(6)  translate(-50px, 30px) rotate(-18deg);  color: #00ff88;  font-size: 84px;       }
+  9%   { transform: scale(10) translate(20px, -40px) rotate(22deg);   color: #ff00ff;  font-size: 140px;      }
+  12%  { transform: scale(10) translate(-60px, 10px) rotate(-25deg);  color: #00ccff;  font-size: 140px;      }
+  15%  { transform: scale(10) translate(50px, 50px)  rotate(30deg);   color: #ffff00;  font-size: 140px;      }
+  18%  { transform: scale(10) translate(-40px, -50px) rotate(-20deg); color: #ff6600;  font-size: 140px;      }
+  21%  { transform: scale(10) translate(70px, -20px) rotate(15deg);   color: #ff0040;  font-size: 140px;      }
+  24%  { transform: scale(10) translate(-30px, 60px) rotate(-35deg);  color: #00ff40;  font-size: 140px;      }
+  27%  { transform: scale(10) translate(55px, -45px) rotate(28deg);   color: #aa00ff;  font-size: 140px;      }
+  30%  { transform: scale(10) translate(-65px, 25px) rotate(-22deg);  color: #00ffff;  font-size: 140px;      }
+  33%  { transform: scale(10) translate(35px, 55px)  rotate(32deg);   color: #ff0080;  font-size: 140px;      }
+  36%  { transform: scale(10) translate(-50px, -35px) rotate(-28deg); color: #80ff00;  font-size: 140px;      }
+  39%  { transform: scale(10) translate(60px, 15px)  rotate(18deg);   color: #ff4400;  font-size: 140px;      }
+  42%  { transform: scale(10) translate(-45px, 50px) rotate(-33deg);  color: #0088ff;  font-size: 140px;      }
+  45%  { transform: scale(10) translate(40px, -55px) rotate(25deg);   color: #ff00cc;  font-size: 140px;      }
+  48%  { transform: scale(10) translate(-55px, -15px) rotate(-15deg); color: #44ff00;  font-size: 140px;      }
+  51%  { transform: scale(10) translate(50px, 40px)  rotate(20deg);   color: #ff2200;  font-size: 140px;      }
+  54%  { transform: scale(10) translate(-35px, -60px) rotate(-30deg); color: #00ffaa;  font-size: 140px;      }
+  57%  { transform: scale(10) translate(65px, -10px) rotate(35deg);   color: #dd00ff;  font-size: 140px;      }
+  60%  { transform: scale(10) translate(-60px, 45px) rotate(-18deg);  color: #ffcc00;  font-size: 140px;      }
+  63%  { transform: scale(10) translate(30px, -50px) rotate(28deg);   color: #00ff55;  font-size: 140px;      }
+  66%  { transform: scale(10) translate(-40px, 30px) rotate(-25deg);  color: #ff0066;  font-size: 140px;      }
+  69%  { transform: scale(10) translate(55px, 60px)  rotate(15deg);   color: #0066ff;  font-size: 140px;      }
+  72%  { transform: scale(10) translate(-50px, -40px) rotate(-32deg); color: #ff8800;  font-size: 140px;      }
+  75%  { transform: scale(10) translate(45px, 20px)  rotate(22deg);   color: #cc00ff;  font-size: 140px;      }
+  78%  { transform: scale(10) translate(-25px, 55px) rotate(-12deg);  color: #00ffcc;  font-size: 140px;      }
+  81%  { transform: scale(10) translate(60px, -30px) rotate(30deg);   color: #ff0044;  font-size: 140px;      }
+  84%  { transform: scale(10) translate(-55px, -20px) rotate(-28deg); color: #66ff00;  font-size: 140px;      }
+  87%  { transform: scale(8)  translate(30px, 35px)  rotate(18deg);   color: #ff00aa;  font-size: 112px;      }
+  90%  { transform: scale(5)  translate(-15px, -20px) rotate(-10deg); color: #00aaff;  font-size: 70px;       }
+  93%  { transform: scale(3)  translate(10px, 10px)  rotate(5deg);    color: #ffaa00;  font-size: 42px;       }
+  96%  { transform: scale(1.5) translate(-5px, -5px) rotate(-2deg);   color: #8833cc;  font-size: 16px;       }
+  100% { transform: scale(1)  translate(0, 0)       rotate(0deg);    color: inherit;  font-size: inherit;    }
+}

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { calculerStatutLicence } from '../lib/licence';
 import { nomComplet, reparerTexte } from '../lib/texte';
@@ -43,6 +43,26 @@ export default function AdherentEditor({ adherent, onClose, onSaved, onDeleted }
   const [enCours, setEnCours] = useState(false);
   const [suppression, setSuppression] = useState(false);
   const [confirmationSuppression, setConfirmationSuppression] = useState(false);
+
+  // 🥨 Easter egg 67
+  const deptRef = useRef(null);
+  const [easterEgg67, setEasterEgg67] = useState(false);
+  const easterEgg67Triggered = useRef(false);
+
+  useEffect(() => {
+    if (form.dept_naissance.trim() === '67' && !easterEgg67Triggered.current) {
+      easterEgg67Triggered.current = true;
+      setEasterEgg67(true);
+      const timer = setTimeout(() => {
+        setEasterEgg67(false);
+        easterEgg67Triggered.current = false;
+      }, 10000);
+      return () => clearTimeout(timer);
+    }
+    if (form.dept_naissance.trim() !== '67') {
+      easterEgg67Triggered.current = false;
+    }
+  }, [form.dept_naissance]);
 
   function set(champ, valeur) {
     setForm((f) => ({ ...f, [champ]: valeur }));
@@ -217,7 +237,7 @@ export default function AdherentEditor({ adherent, onClose, onSaved, onDeleted }
                 <label>Année d'étude<input type="text" placeholder="ex. 3A étudiant" value={form.annee_etude} onChange={(e) => set('annee_etude', e.target.value)} /></label>
                 <label>Date de naissance<input type="text" placeholder="ex. 16/07/2005" value={form.date_naissance} onChange={(e) => set('date_naissance', e.target.value)} /></label>
                 <label>Pays de naissance<input type="text" value={form.pays_naissance} onChange={(e) => set('pays_naissance', e.target.value)} /></label>
-                <label>Dept. naissance<input type="text" placeholder="ex. 45" value={form.dept_naissance} onChange={(e) => set('dept_naissance', e.target.value)} /></label>
+                <label>Dept. naissance<input ref={deptRef} type="text" placeholder="ex. 45" value={form.dept_naissance} onChange={(e) => set('dept_naissance', e.target.value)} className={easterEgg67 ? 'easter-egg-67' : ''} /></label>
                 <label className="editor-grid__span2">Ville de naissance<input type="text" value={form.ville_naissance} onChange={(e) => set('ville_naissance', e.target.value)} /></label>
               </div>
 
