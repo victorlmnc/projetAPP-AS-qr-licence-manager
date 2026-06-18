@@ -483,7 +483,7 @@ export default function BureauDashboard() {
 
         <input
           className="dash-search"
-          placeholder="Rechercher un nom ou un prénom…"
+          placeholder="Rechercher un nom, un prénom ou un email…"
           value={recherche}
           onChange={(e) => setRecherche(e.target.value)}
         />

@@ -28,9 +28,11 @@ export default function EnvoiQrModal({
     return adherents.filter((a) => {
       const nom = norm(a.nom);
       const prenom = norm(a.prenom);
+      const email = norm(a.email ?? '');
       return (
         nom.includes(q) ||
         prenom.includes(q) ||
+        email.includes(q) ||
         `${prenom} ${nom}`.includes(q) ||
         `${nom} ${prenom}`.includes(q)
       );
@@ -71,7 +73,7 @@ export default function EnvoiQrModal({
 
         <input
           className="envoi-search"
-          placeholder="Rechercher un nom ou prénom…"
+          placeholder="Rechercher un nom, un prénom ou un email…"
           value={recherche}
           onChange={(e) => setRecherche(e.target.value)}
           autoFocus
