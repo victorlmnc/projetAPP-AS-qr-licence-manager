@@ -212,7 +212,7 @@ Les adhérents n'ont pas de compte — ils accèdent à leur QR Code via un lien
 
 ## Auteurs
 
-Projet réalisé dans le cadre du cours *Développement et Mathématiques pour l'ingénieur* — INSA CVL, 3ème année STI.
+Projet réalisé dans le cadre du cours *Développement et Mathématiques pour l'ingénieur - Projet d'application* — INSA CVL, 3ème année STI.
 
 - Mathis Hiron — mathis.hiron@insa-cvl.fr  
 - Victor Lemanceau — victor.lemanceau@insa-cvl.fr  
