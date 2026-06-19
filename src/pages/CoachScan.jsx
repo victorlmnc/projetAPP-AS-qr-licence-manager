@@ -233,6 +233,15 @@ export default function CoachScan() {
                 ))}
               </ul>
             )}
+
+            <div className="scan-result__badges">
+              <span className={`scan-result__badge ${adherent.licence_ffsu_a_jour ? 'scan-result__badge--ok' : 'scan-result__badge--no'}`}>
+                {adherent.licence_ffsu_a_jour ? '✓' : '✗'} Licence FFSU
+              </span>
+              <span className={`scan-result__badge ${adherent.activite_contraintes ? 'scan-result__badge--ok' : 'scan-result__badge--no'}`}>
+                {adherent.activite_contraintes ? '✓' : '✗'} Activites a contraintes
+              </span>
+            </div>
           </section>
         )}
 
