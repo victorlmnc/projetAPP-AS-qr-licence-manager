@@ -1004,6 +1004,45 @@ button:disabled {
   font-weight: 600;
 }
 
+.pub-hint--ok {
+  margin-top: 10px;
+  padding: 10px 14px;
+  background: var(--ok-bg);
+  color: #166534;
+  border-radius: 10px;
+  font-weight: 600;
+}
+
+.pub-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+}
+
+.pub-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+  border: 1px solid transparent;
+}
+
+.pub-badge--ok {
+  background: var(--ok-bg);
+  color: #166534;
+  border-color: rgba(22, 101, 52, 0.2);
+}
+
+.pub-badge--no {
+  background: #f3f4f6;
+  color: #6b7280;
+  border-color: rgba(107, 114, 128, 0.2);
+}
+
 .pub-dl {
   width: 100%;
   text-align: center;

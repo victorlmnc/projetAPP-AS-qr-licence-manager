@@ -23,7 +23,7 @@ async function chargerAdherentPublic(token) {
   // Fallback local limité aux mêmes champs publics.
   const { data, error } = await supabase
     .from('adherents')
-    .select('public_token, nom, prenom, questionnaire_sante_ok, paiement_global, manque_paiement, manque_yeps, manque_passport')
+    .select('public_token, nom, prenom, questionnaire_sante_ok, paiement_global, manque_paiement, manque_yeps, manque_passport, licence_ffsu_a_jour, activite_contraintes')
     .eq('public_token', token)
     .maybeSingle();
 
@@ -90,6 +90,7 @@ export default function AdherentPublic() {
   }
 
   const lienPublic = publicAdherentUrl(adherent);
+  const statut = calculerStatutLicence(adherent);
 
   return (
     <div className="pub-page">
@@ -113,11 +114,20 @@ export default function AdherentPublic() {
           Présentez ce QR Code à votre Responsable Sport lors des entraînements.
         </p>
 
-        {!calculerStatutLicence(adherent).valide && (
-          <p className="pub-hint pub-hint--warning">
-            Votre dossier est incomplet. Rapprochez-vous du bureau de l'AS pour le régulariser.
-          </p>
-        )}
+        <p className={`pub-hint pub-hint--${statut.valide ? 'ok' : 'warning'}`}>
+          {statut.valide
+            ? 'Votre dossier est complet et à jour.'
+            : 'Votre dossier est incomplet. Rapprochez-vous du bureau de l\'AS pour le régulariser.'}
+        </p>
+
+        <div className="pub-badges">
+          <span className={`pub-badge ${adherent.licence_ffsu_a_jour ? 'pub-badge--ok' : 'pub-badge--no'}`}>
+            {adherent.licence_ffsu_a_jour ? '✓' : '✗'} Licence FFSU
+          </span>
+          <span className={`pub-badge ${adherent.activite_contraintes ? 'pub-badge--ok' : 'pub-badge--no'}`}>
+            {adherent.activite_contraintes ? '✓' : '✗'} Activités à contraintes
+          </span>
+        </div>
 
         <button className="btn-ghost pub-dl" onClick={telechargerQr}>
           Télécharger le QR Code
