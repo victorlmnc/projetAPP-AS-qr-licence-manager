@@ -120,14 +120,16 @@ export default function AdherentPublic() {
             : 'Votre dossier est incomplet. Rapprochez-vous du bureau de l\'AS pour le régulariser.'}
         </p>
 
-        <div className="pub-badges">
-          <span className={`pub-badge ${adherent.licence_ffsu_a_jour ? 'pub-badge--ok' : 'pub-badge--no'}`}>
-            {adherent.licence_ffsu_a_jour ? '✓' : '✗'} Licence FFSU
-          </span>
-          <span className={`pub-badge ${adherent.activite_contraintes ? 'pub-badge--ok' : 'pub-badge--no'}`}>
-            {adherent.activite_contraintes ? '✓' : '✗'} Activités à contraintes
-          </span>
-        </div>
+        {(adherent.licence_ffsu_a_jour || adherent.activite_contraintes) && (
+          <div className="pub-badges">
+            {adherent.licence_ffsu_a_jour && (
+              <span className="pub-badge pub-badge--ok">✓ Licence FFSU</span>
+            )}
+            {adherent.activite_contraintes && (
+              <span className="pub-badge pub-badge--ok">✓ Activités à contraintes</span>
+            )}
+          </div>
+        )}
 
         <button className="btn-ghost pub-dl" onClick={telechargerQr}>
           Télécharger le QR Code

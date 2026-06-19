@@ -44,22 +44,22 @@ function qrEmailHtml(prenom, nom, lien, valide, anomalies, licenceFFSU, activite
          ${anomalies.map((anomalie) => `<li style="margin:4px 0;">${esc(anomalie)}</li>`).join('')}
        </ul>`;
 
-  const badgeStyle = (ok) => ok
-    ? 'display:inline-block;padding:6px 14px;border-radius:999px;font-size:13px;font-weight:700;background:#e7f6ef;color:#166534;border:1px solid rgba(22,101,52,0.2);'
-    : 'display:inline-block;padding:6px 14px;border-radius:999px;font-size:13px;font-weight:700;background:#f3f4f6;color:#6b7280;border:1px solid rgba(107,114,128,0.2);';
+  const badgeOkStyle = 'display:inline-block;padding:6px 14px;border-radius:999px;font-size:13px;font-weight:700;background:#e7f6ef;color:#166534;border:1px solid rgba(22,101,52,0.2);';
 
-  const infoHtml = `
+  const badgesItems = [
+    licenceFFSU ? `<span style="${badgeOkStyle}">✓ Licence FFSU</span>` : '',
+    activiteContraintes ? `<span style="${badgeOkStyle}">✓ Activités à contraintes</span>` : '',
+  ].filter(Boolean).join(' ');
+
+  const infoHtml = badgesItems ? `
     <table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 20px 0;">
       <tr>
         <td style="padding:14px 16px;border-radius:10px;background:#f8f7fb;">
           <p style="margin:0 0 10px 0;color:#1e1b29;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;">Informations complémentaires</p>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;">
-            <span style="${badgeStyle(licenceFFSU)}">${licenceFFSU ? '✓' : '✗'} Licence FFSU</span>
-            <span style="${badgeStyle(activiteContraintes)}">${activiteContraintes ? '✓' : '✗'} Activités à contraintes</span>
-          </div>
+          <div>${badgesItems}</div>
         </td>
       </tr>
-    </table>`;
+    </table>` : '';
 
   return `<!DOCTYPE html>
 <html lang="fr">
@@ -266,14 +266,15 @@ export default async function handler(req, res) {
       ? `Dossier complet et a jour.`
       : `Attention, dossier incomplet (a la date du ${dateDuJour}). Il manque :\n- ${anomalies.join('\n- ')}`;
 
-    const infoTexte = [
-      `Licence FFSU : ${a.licence_ffsu_a_jour ? 'Oui' : 'Non'}`,
-      `Activites a contraintes : ${a.activite_contraintes ? 'Oui' : 'Non'}`,
-    ].join('\n');
+    const infoLignes = [
+      a.licence_ffsu_a_jour ? 'Licence FFSU : Oui' : '',
+      a.activite_contraintes ? 'Activites a contraintes : Oui' : '',
+    ].filter(Boolean);
+    const infoTexte = infoLignes.length > 0 ? `\n${infoLignes.join('\n')}` : '';
 
     const text = relance
       ? `Bonjour ${a.prenom} ${a.nom},\n\nVotre dossier d'inscription n'est pas termine (a la date du ${dateDuJour}). Il manque :\n- ${anomalies.join('\n- ')}\n\nPensez a regulariser votre situation aupres de l'AS.\n\n- Le bureau de l'AS INSA CVL`
-      : `Bonjour ${a.prenom} ${a.nom},\n\nVoici votre QR Code pour la saison sportive. Il vous sera demande a l'entree des entrainements.\n\n${qrTextStatus}\n\n${infoTexte}\n\nLien du QR Code : ${lien}\n\n- Le bureau de l'AS INSA CVL`;
+      : `Bonjour ${a.prenom} ${a.nom},\n\nVoici votre QR Code pour la saison sportive. Il vous sera demande a l'entree des entrainements.\n\n${qrTextStatus}${infoTexte}\n\nLien du QR Code : ${lien}\n\n- Le bureau de l'AS INSA CVL`;
 
     try {
       await transporter.sendMail({
