@@ -112,6 +112,40 @@ function texteLicence(adherent) {
   return `Votre licence :\n${recapitulatifLicence(adherent).map(([l, v]) => `- ${l} : ${v}`).join('\n')}`;
 }
 
+// Explications selon les réponses au formulaire d'inscription. L'adresse
+// email, s'il y en a une, est à part pour en faire un lien dans le HTML.
+function informations(adherent) {
+  const infos = [];
+  if (adherent.boursier) {
+    infos.push({
+      avant: "Vous avez indiqué être boursier et éligible au Pass'Sport. Pour l'utiliser, prenez votre place au tarif normal, puis envoyez votre Pass'Sport et votre RIB par mail à ",
+      email: 'sport-bourges@insa-cvl.fr',
+      apres: '. Nous vous rembourserons les 50 €.',
+    });
+  }
+  if (adherent.competitions_universitaires && !adherent.licence_ffsu_a_jour) {
+    infos.push({
+      avant: "Vous avez indiqué vouloir participer aux compétitions universitaires : il vous faut pour cela une licence FFSU. Rapprochez-vous du bureau de l'AS ou du responsable de votre sport pour savoir comment la prendre.",
+    });
+  }
+  return infos;
+}
+
+function blocInformations(adherent) {
+  return informations(adherent)
+    .map(({ avant, email, apres = '' }) => {
+      const lien = email ? `<a href="mailto:${email}" style="color:${C.accent};">${email}</a>` : '';
+      return `<p style="margin:0 0 20px 0;">${esc(avant)}${lien}${esc(apres)}</p>`;
+    })
+    .join('');
+}
+
+function texteInformations(adherent) {
+  return informations(adherent)
+    .map(({ avant, email = '', apres = '' }) => `${avant}${email}${apres}\n\n`)
+    .join('');
+}
+
 // Le motif est vide si l'adhérent n'a aucune anomalie listée (cas improbable).
 function anomaliesOuDefaut(statut) {
   return statut.anomalies.length > 0 ? statut.anomalies : ['Dossier de licence incomplet'];
@@ -119,7 +153,8 @@ function anomaliesOuDefaut(statut) {
 
 /**
  * Email d'envoi du QR Code.
- * @param adherent  { prenom, nom, types_licence, licence_ffsu_a_jour, activite_contraintes }
+ * @param adherent  { prenom, nom, types_licence, licence_ffsu_a_jour, activite_contraintes,
+ *                    boursier, competitions_universitaires }
  * @param statut    résultat de calculerStatutLicence(adherent)
  * @param lien      URL de la page publique de l'adhérent
  * @param date      date affichée pour un dossier incomplet
@@ -132,6 +167,7 @@ export function emailQrCode(adherent, statut, lien, date = dateDuJour()) {
               ${salutation(adherent.prenom, adherent.nom)}
               <p style="margin:0 0 20px 0;">Voici votre QR Code pour la saison sportive. Il vous sera demandé à l'entrée des entraînements.</p>
               ${blocStatut(statut.valide, anomalies, date)}
+              ${blocInformations(adherent)}
               ${blocLicence(adherent)}
               <table role="presentation" cellpadding="0" cellspacing="0">
                 <tr>
@@ -155,7 +191,7 @@ Voici votre QR Code pour la saison sportive. Il vous sera demandé à l'entrée 
 
 ${statutTexte}
 
-${texteLicence(adherent)}
+${texteInformations(adherent)}${texteLicence(adherent)}
 
 Lien du QR Code : ${lien}
 

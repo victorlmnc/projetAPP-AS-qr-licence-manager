@@ -8,10 +8,10 @@ Application web de gestion des licences de l'Association Sportive de l'INSA CVL 
 
 - Liste des adhérents avec statistiques (à jour ou non), filtres et recherche par nom, prénom ou email
 - Fiche adhérent, ouverte d'un clic sur la ligne : informations personnelles, adresse, types de licence, rôle, médical, documents et paiement
-- Import de l'export du formulaire d'inscription Google Forms, en CSV ou Excel (les doubles soumissions sont fusionnées). Toutes les questions sont reprises dans la fiche, sauf celle sur la bourse et le Pass'Sport.
+- Import de l'export du formulaire d'inscription Google Forms, en CSV ou Excel (les doubles soumissions sont fusionnées). Toutes les questions sont reprises dans la fiche.
 - Import complémentaire CSV ou Excel pour mettre à jour certains champs (paiement, YEPS…)
 - Export de la liste filtrée en CSV, Excel ou PDF
-- Envoi des QR codes par email, à un adhérent ou à plusieurs
+- Envoi des QR codes par email, à un adhérent ou à plusieurs. L'email explique aux boursiers comment se faire rembourser avec le Pass'Sport, et à ceux qui veulent faire les compétitions universitaires sans licence FFSU comment la prendre.
 - Relance par email des dossiers incomplets
 - Modification de plusieurs adhérents à la fois, y compris la remise du merch
 - Suivi du merch (maillot avec flocage en option, short) : articles commandés, tailles, texte floqué, remise article par article. Le flocage est remis avec le maillot. Un filtre affiche le merch à remettre, et le récap de commande par taille se télécharge en bon de commande PDF ou en fichier Excel pour le fournisseur, sans nom d'adhérent.
@@ -147,6 +147,7 @@ Table `adherents` :
 | `paiement_global` | boolean | Paiement complet reçu |
 | `manque_paiement` | boolean | Paiement manquant |
 | `manque_yeps` | boolean | Aide YEPS manquante |
+| `boursier` | boolean | Boursier éligible au Pass'Sport : paie le tarif normal, remboursé sur demande |
 | `maillot` / `short` | boolean | Article de merch commandé |
 | `flocage` | boolean | Option du maillot, impossible sans maillot |
 | `taille_maillot` / `taille_short` | text | `XS` à `3XL`, ou la taille importée telle quelle |

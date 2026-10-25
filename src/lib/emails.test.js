@@ -67,6 +67,31 @@ describe('emailQrCode', () => {
     }
   });
 
+  it("boursier : démarche du Pass'Sport avec l'adresse en lien", () => {
+    const boursier = { ...aJour, boursier: true };
+    const { texte, html } = emailQrCode(boursier, calculerStatutLicence(boursier), LIEN, DATE);
+    expect(html).toContain('prenez votre place au tarif normal');
+    expect(html).toContain('href="mailto:sport-bourges@insa-cvl.fr"');
+    expect(texte).toContain('votre RIB par mail à sport-bourges@insa-cvl.fr. Nous vous rembourserons les 50 €.');
+  });
+
+  it('compétitions universitaires sans licence FFSU : comment la prendre', () => {
+    const competiteur = { ...incomplet, competitions_universitaires: true };
+    const { texte, html } = emailQrCode(competiteur, calculerStatutLicence(competiteur), LIEN, DATE);
+    expect(html).toContain('il vous faut pour cela une licence FFSU');
+    expect(texte).toContain("Rapprochez-vous du bureau de l'AS ou du responsable de votre sport");
+  });
+
+  it("aucune explication sans ces réponses, ni quand la licence FFSU est déjà valide", () => {
+    for (const adherent of [aJour, incomplet, { ...aJour, competitions_universitaires: true }]) {
+      const { texte, html } = emailQrCode(adherent, calculerStatutLicence(adherent), LIEN, DATE);
+      for (const contenu of [texte, html]) {
+        expect(contenu).not.toContain('sport-bourges@insa-cvl.fr');
+        expect(contenu).not.toContain('il vous faut pour cela une licence FFSU');
+      }
+    }
+  });
+
   it('échappe le nom de l\'adhérent dans le HTML', () => {
     const malveillant = { ...aJour, nom: '<script>alert(1)</script>' };
     const { html } = emailQrCode(malveillant, calculerStatutLicence(malveillant), LIEN, DATE);

@@ -59,6 +59,7 @@ export default function AdherentEditor({ adherent, onClose, onSaved, onDeleted }
     paiement_global: adherent?.paiement_global ?? false,
     manque_paiement: adherent?.manque_paiement ?? true,
     manque_yeps: adherent?.manque_yeps ?? false,
+    boursier: adherent?.boursier ?? false,
     maillot: adherent?.maillot ?? false,
     taille_maillot: adherent?.taille_maillot ?? '',
     maillot_recupere: adherent?.maillot_recupere ?? false,
@@ -177,6 +178,7 @@ export default function AdherentEditor({ adherent, onClose, onSaved, onDeleted }
       paiement_global: form.paiement_global,
       manque_paiement: form.paiement_global ? false : form.manque_paiement,
       manque_yeps: form.paiement_global ? false : form.manque_yeps,
+      boursier: form.boursier,
       // Un article décoché efface sa taille et sa remise ; le flocage est une
       // option du maillot, il disparaît avec lui.
       maillot: form.maillot,
@@ -286,6 +288,13 @@ export default function AdherentEditor({ adherent, onClose, onSaved, onDeleted }
               <div className={`apercu ${apercu.valide ? 'apercu--ok' : 'apercu--ko'}`}>
                 Statut résultant : <strong>{apercu.valide ? 'À jour' : 'Non à jour'}</strong>
               </div>
+
+              {/* N'entre pas dans le statut : l'email du QR Code explique le remboursement. */}
+              <p className="editor-section-title">Pass'Sport</p>
+              <label className="check">
+                <input type="checkbox" checked={form.boursier} onChange={(e) => set('boursier', e.target.checked)} />
+                Boursier, éligible au Pass'Sport
+              </label>
             </div>
           )}
 

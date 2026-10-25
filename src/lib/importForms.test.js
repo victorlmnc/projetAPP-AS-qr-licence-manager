@@ -89,6 +89,7 @@ describe('mapperLigne (formulaire 2026-2027)', () => {
       sports: ['Badminton', 'Volleyball / beach volley'],
       competitions_universitaires: true,
       licencie_annee_derniere: false,
+      boursier: false,
       situation_handicap: false,
       droit_image: true,
       questionnaire_sante_ok: true,
@@ -117,8 +118,9 @@ describe('mapperLigne (formulaire 2026-2027)', () => {
     expect(a.honorabilite_attestee).toBe(true);
   });
 
-  it("ancien licencié, pas de compétitions, aucun sport lu", () => {
-    const a = mapperLigne(ligne({ ancien: 'Oui', competitions: 'Non', sport: '' }));
+  it("ancien licencié boursier, pas de compétitions, aucun sport lu", () => {
+    const a = mapperLigne(ligne({ ancien: 'Oui', competitions: 'Non', sport: '', boursier: 'Oui, je suis boursier' }));
+    expect(a.boursier).toBe(true);
     expect(a.licencie_annee_derniere).toBe(true);
     expect(a.competitions_universitaires).toBe(false);
     expect(a.sports).toBeNull();

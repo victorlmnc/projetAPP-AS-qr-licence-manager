@@ -64,6 +64,8 @@ export function mapperLigne(row) {
   const sports = [...new Set(choixMultiples(lire(row, 'sport principal')))];
   const competitions_universitaires = versBool(lire(row, 'competitions universitaire'));
   const licencie_annee_derniere = versBool(lire(row, 'annee derniere'));
+  // « Oui, je suis boursier » / « Non, je ne suis pas boursier ».
+  const boursier = normaliser(lire(row, 'boursier')).startsWith('oui');
 
   const nom = reparerTexte(lire(row, 'nom')).trim();
   const prenom = reparerTexte(lire(row, 'prenom')).trim();
@@ -91,6 +93,7 @@ export function mapperLigne(row) {
     sports: sports.length > 0 ? sports : null,
     competitions_universitaires,
     licencie_annee_derniere,
+    boursier,
     situation_handicap,
     droit_image,
     questionnaire_sante_ok,
