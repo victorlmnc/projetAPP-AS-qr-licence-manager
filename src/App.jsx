@@ -1,10 +1,14 @@
+import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Login from './pages/Login';
-import BureauDashboard from './pages/BureauDashboard';
-import CoachScan from './pages/CoachScan';
-import AdherentPublic from './pages/AdherentPublic';
+
+// Chaque espace est chargé à la demande : la page publique et le scan
+// sur téléphone ne téléchargent pas le code du tableau de bord.
+const BureauDashboard = lazy(() => import('./pages/BureauDashboard'));
+const CoachScan = lazy(() => import('./pages/CoachScan'));
+const AdherentPublic = lazy(() => import('./pages/AdherentPublic'));
 
 // Page "/" : envoie chacun vers l'écran de son rôle.
 function Home() {
@@ -27,32 +31,34 @@ export default function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/" element={<Home />} />
+        <Suspense fallback={<p className="centered">Chargement…</p>}>
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route path="/" element={<Home />} />
 
-          <Route
-            path="/bureau"
-            element={
-              <ProtectedRoute allow={['bureau']}>
-                <BureauDashboard />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/scan"
-            element={
-              <ProtectedRoute allow={['coach']}>
-                <CoachScan />
-              </ProtectedRoute>
-            }
-          />
-          {/* Page publique : QR code + statut, sans login requis */}
-          <Route path="/adherent/:token" element={<AdherentPublic />} />
+            <Route
+              path="/bureau"
+              element={
+                <ProtectedRoute allow={['bureau']}>
+                  <BureauDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/scan"
+              element={
+                <ProtectedRoute allow={['coach']}>
+                  <CoachScan />
+                </ProtectedRoute>
+              }
+            />
+            {/* Page publique : QR code + statut, sans login requis */}
+            <Route path="/adherent/:token" element={<AdherentPublic />} />
 
-          {/* Toute URL inconnue retombe sur l'accueil. */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+            {/* Toute URL inconnue retombe sur l'accueil. */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </Suspense>
       </BrowserRouter>
     </AuthProvider>
   );

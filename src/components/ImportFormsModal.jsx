@@ -1,6 +1,4 @@
 import { useRef, useState } from 'react';
-import Papa from 'papaparse';
-import * as XLSX from 'xlsx';
 import { supabase } from '../lib/supabase';
 import { reparerTexte } from '../lib/texte';
 
@@ -94,7 +92,9 @@ export default function ImportFormsModal({ onClose, onImported }) {
   const [enCours, setEnCours] = useState(false);
   const inputRef = useRef(null);
 
+  // PapaParse et xlsx sont chargés seulement au moment de l'import.
   async function parseCsv(fichier) {
+    const { default: Papa } = await import('papaparse');
     const buffer = await fichier.arrayBuffer();
     let texte;
     try { texte = new TextDecoder('utf-8', { fatal: true }).decode(buffer); }
@@ -111,6 +111,7 @@ export default function ImportFormsModal({ onClose, onImported }) {
   }
 
   async function parseXlsx(fichier) {
+    const XLSX = await import('xlsx');
     const buffer = await fichier.arrayBuffer();
     const wb = XLSX.read(buffer, { type: 'array' });
     const ws = wb.Sheets[wb.SheetNames[0]];

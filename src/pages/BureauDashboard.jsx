@@ -1,7 +1,4 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import * as XLSX from 'xlsx';
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
 import { supabase } from '../lib/supabase';
 import { calculerStatutLicence } from '../lib/licence';
 import Header from '../components/Header';
@@ -159,15 +156,16 @@ export default function BureauDashboard() {
 
   // Statistiques globales (sur tous les adhérents, pas seulement la liste filtrée).
   const idsVisibles = useMemo(() => liste.map((adherent) => adherent.id), [liste]);
+  const selectionSet = useMemo(() => new Set(selection), [selection]);
   const selectionVisible = useMemo(
-    () => idsVisibles.filter((id) => selection.includes(id)),
-    [idsVisibles, selection]
+    () => idsVisibles.filter((id) => selectionSet.has(id)),
+    [idsVisibles, selectionSet]
   );
   const toutVisibleSelectionne = idsVisibles.length > 0 && selectionVisible.length === idsVisibles.length;
   const selectionPartielle = selectionVisible.length > 0 && !toutVisibleSelectionne;
   const adherentsSelectionnes = useMemo(
-    () => adherents.filter((adherent) => selection.includes(adherent.id)),
-    [adherents, selection]
+    () => adherents.filter((adherent) => selectionSet.has(adherent.id)),
+    [adherents, selectionSet]
   );
 
   const stats = useMemo(() => {
@@ -184,7 +182,8 @@ export default function BureauDashboard() {
   }, [selectionPartielle]);
 
   useEffect(() => {
-    setSelection((prev) => prev.filter((id) => adherents.some((adherent) => adherent.id === id)));
+    const idsExistants = new Set(adherents.map((adherent) => adherent.id));
+    setSelection((prev) => prev.filter((id) => idsExistants.has(id)));
   }, [adherents]);
 
   // Après création/mise à jour : on rafraîchit la liste localement (sans recharger).
@@ -227,7 +226,8 @@ export default function BureauDashboard() {
 
   function basculerSelectionVisible() {
     if (toutVisibleSelectionne) {
-      setSelection((prev) => prev.filter((id) => !idsVisibles.includes(id)));
+      const visibles = new Set(idsVisibles);
+      setSelection((prev) => prev.filter((id) => !visibles.has(id)));
       return;
     }
 
@@ -347,7 +347,9 @@ export default function BureauDashboard() {
     URL.revokeObjectURL(url);
   }
 
-  function exporterXlsx() {
+  // xlsx et jsPDF sont lourds : chargés seulement au moment de l'export.
+  async function exporterXlsx() {
+    const XLSX = await import('xlsx');
     const ws = XLSX.utils.aoa_to_sheet([ENTETES_EXPORT, ...lignesExport()]);
     ws['!cols'] = [12, 14, 28, 10, 30, 18, 14, 15, 13, 15, 38].map((w) => ({ wch: w }));
     const wb = XLSX.utils.book_new();
@@ -355,7 +357,11 @@ export default function BureauDashboard() {
     XLSX.writeFile(wb, `adherents-${new Date().toISOString().slice(0, 10)}.xlsx`);
   }
 
-  function exporterPdf() {
+  async function exporterPdf() {
+    const [{ default: jsPDF }, { default: autoTable }] = await Promise.all([
+      import('jspdf'),
+      import('jspdf-autotable'),
+    ]);
     const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
     const date = new Date().toLocaleDateString('fr-FR');
     doc.setFontSize(13);
@@ -552,7 +558,7 @@ export default function BureauDashboard() {
                           <input
                             type="checkbox"
                             className="dash-select"
-                            checked={selection.includes(a.id)}
+                            checked={selectionSet.has(a.id)}
                             onChange={() => basculerSelection(a.id)}
                             aria-label={`Selectionner ${nomComplet(a)}`}
                           />
