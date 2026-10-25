@@ -47,6 +47,14 @@ function adherent(champs) {
     manque_paiement: false,
     manque_yeps: false,
     manque_passport: false,
+    maillot: false,
+    taille_maillot: null,
+    maillot_recupere: false,
+    flocage: false,
+    texte_flocage: null,
+    short: false,
+    taille_short: null,
+    short_recupere: false,
     ...champs,
   };
 }
@@ -54,16 +62,30 @@ function adherent(champs) {
 // Données « gentilles », comme celles qu'on utilise sans y penser.
 function demo() {
   return [
-    adherent({ prenom: 'Jeanne', nom: 'Martin', email: 'jeanne.martin@example.com', licence_ffsu_a_jour: true }),
-    adherent({ prenom: 'Lucas', nom: 'Bernard', email: 'lucas.bernard@example.com' }),
+    // Maillot floqué, pas encore remis.
+    adherent({
+      prenom: 'Jeanne', nom: 'Martin', email: 'jeanne.martin@example.com', licence_ffsu_a_jour: true,
+      maillot: true, taille_maillot: 'M', flocage: true, texte_flocage: 'MARTIN',
+    }),
+    // Ensemble (maillot + short) pas encore remis.
+    adherent({
+      prenom: 'Lucas', nom: 'Bernard', email: 'lucas.bernard@example.com',
+      maillot: true, taille_maillot: 'L', short: true, taille_short: 'L',
+    }),
     adherent({
       prenom: 'Emma', nom: 'Dubois', email: 'emma.dubois@example.com',
       paiement_global: false, manque_paiement: true,
     }),
-    adherent({ prenom: 'Hugo', nom: 'Petit', email: 'hugo.petit@example.com', activite_contraintes: true }),
+    // Short seul, déjà remis.
+    adherent({
+      prenom: 'Hugo', nom: 'Petit', email: 'hugo.petit@example.com', activite_contraintes: true,
+      short: true, taille_short: 'S', short_recupere: true,
+    }),
     adherent({
       prenom: 'Léa', nom: 'Robert', email: 'lea.robert@example.com',
       questionnaire_sante_ok: false,
+      // Maillot déjà remis.
+      maillot: true, taille_maillot: 'S', maillot_recupere: true,
     }),
   ];
 }
@@ -77,15 +99,20 @@ function pire() {
       email: 'bartholomew.fitzgerald@northwind-industries-holdings.example.com',
       questionnaire_sante_ok: false, paiement_global: false,
       manque_paiement: true, manque_yeps: true, manque_passport: true,
+      // Ensemble floqué, texte à la longueur maximale (20 caractères).
+      maillot: true, taille_maillot: 'XL', short: true, taille_short: 'XL',
+      flocage: true, texte_flocage: 'WIŚNIEWSKA-KOWALCZYK',
     }),
     // Nom long à rallonge, email avec +, à jour avec les deux badges.
     adherent({
       prenom: 'Christopher Alexander', nom: 'Montgomery III',
       email: 'first.last+billing-notifications@example.com',
       licence_ffsu_a_jour: true, activite_contraintes: true,
+      // Maillot commandé sans taille renseignée.
+      maillot: true,
     }),
-    // Nom de deux lettres, email le plus court possible.
-    adherent({ prenom: 'Jo', nom: 'Wu', email: 'a@b.co' }),
+    // Nom de deux lettres, email le plus court possible, flocage le plus court.
+    adherent({ prenom: 'Jo', nom: 'Wu', email: 'a@b.co', maillot: true, taille_maillot: 'M', flocage: true, texte_flocage: 'JO' }),
     // Diacritiques empilés, pas d'email, paiement manquant sans détail.
     adherent({
       prenom: 'Ngọc Hân', nom: 'Đặng Thị', email: null,
@@ -114,12 +141,17 @@ function pire() {
     adherent({ prenom: 'Thomas', nom: 'Martin', email: 'thomas.martin2@example.com', paiement_global: false, manque_paiement: true }),
     // Tout en minuscules, espaces en trop (saisie Google Forms).
     adherent({ prenom: '  dana ', nom: ' lee  ', email: 'dana.lee@example.com' }),
-    adherent({ prenom: 'Konstantin', nom: 'Oberhauser-Wettstein', email: 'konstantin.oberhauser-wettstein@example.com' }),
+    // Taille venue d'un import, absente de la liste XS → 3XL.
+    adherent({
+      prenom: 'Konstantin', nom: 'Oberhauser-Wettstein', email: 'konstantin.oberhauser-wettstein@example.com',
+      maillot: true, taille_maillot: 'Taille unique',
+    }),
   ];
 }
 
 const PRENOMS = ['Jeanne', 'Lucas', 'Emma', 'Hugo', 'Léa', 'Aleksandra', 'Christopher Alexander', 'Jo', 'Ngọc Hân', 'Seán', 'María José', 'Thomas'];
-const NOMS = ['Martin', 'Bernard', 'Dubois', 'Wiśniewska-Kowalczyk', 'Montgomery III', 'Wu', 'Đặng Thị', "O'Brien-Ó Súilleabháin", 'de la Cruz y Fernández', 'Oberhauser-Wettstein'];
+const TAILLES_TEST = ['XS', 'S', 'M', 'M', 'L', 'L', 'XL', 'XXL'];
+const NOMS = ['Martin','Bernard', 'Dubois', 'Wiśniewska-Kowalczyk', 'Montgomery III', 'Wu', 'Đặng Thị', "O'Brien-Ó Súilleabháin", 'de la Cruz y Fernández', 'Oberhauser-Wettstein'];
 
 // Une promo entière, non paginée : 1 284 lignes.
 function gros() {
@@ -134,6 +166,13 @@ function gros() {
       paiement_global: i % 3 !== 0,
       manque_paiement: i % 3 === 0,
       manque_yeps: i % 6 === 0,
+      maillot: i % 4 === 0,
+      taille_maillot: i % 4 === 0 ? TAILLES_TEST[i % TAILLES_TEST.length] : null,
+      maillot_recupere: i % 4 === 0 && i % 3 === 0,
+      short: i % 8 === 0,
+      taille_short: i % 8 === 0 ? TAILLES_TEST[(i + 2) % TAILLES_TEST.length] : null,
+      flocage: i % 12 === 0,
+      texte_flocage: i % 12 === 0 ? nom.toUpperCase().slice(0, 20) : null,
     });
   }).sort((a, b) => a.nom.localeCompare(b.nom));
 }

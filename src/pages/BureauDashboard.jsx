@@ -9,7 +9,9 @@ import QrCodeModal from '../components/QrCodeModal';
 import ImportFormsModal from '../components/ImportFormsModal';
 import ImportComplementaireModal from '../components/ImportComplementaireModal';
 import EnvoiQrModal from '../components/EnvoiQrModal';
+import RecapMerchModal from '../components/RecapMerchModal';
 import Modal from '../components/Modal';
+import { merchARemettre, resumeArticles } from '../lib/merch';
 import { comparerParNom, nomComplet, reparerTexte } from '../lib/texte';
 import { useTitrePage } from '../lib/useTitrePage';
 import { adherentsDeTest } from '../dev/donneesTest';
@@ -26,6 +28,7 @@ const FILTRES = [
   { cle: 'yeps', libelle: 'Manque YEPS', test: (a) => a.manque_yeps },
   { cle: 'passport', libelle: "Manque PASS'SPORT", test: (a) => a.manque_passport },
   { cle: 'paiement', libelle: 'Manque paiement', test: (a) => a.manque_paiement },
+  { cle: 'merch', libelle: 'Merch à remettre', test: (a) => merchARemettre(a).length > 0 },
 ];
 
 function champCsv(valeur) {
@@ -53,6 +56,9 @@ const LigneAdherent = memo(function LigneAdherent({
     onModifier({ adherent: a });
   }
 
+  const aRemettre = merchARemettre(a);
+  const rienADetailler = statut.valide && aRemettre.length === 0;
+
   return (
     <tr className="dash-ligne" onClick={ouvrirFiche}>
       <td className="dash-select-col">
@@ -69,8 +75,12 @@ const LigneAdherent = memo(function LigneAdherent({
         {a.email && <div className="muted small dash-email">{a.email}</div>}
       </td>
       <td className="dash-statut-col"><StatusBadge valide={statut.valide} /></td>
-      <td className={`small dash-detail-col${statut.valide ? ' dash-detail-col--vide' : ''}`}>
-        {statut.valide ? '—' : statut.anomalies.join(' · ')}
+      <td className={`small dash-detail-col${rienADetailler ? ' dash-detail-col--vide' : ''}`}>
+        {!statut.valide && <div>{statut.anomalies.join(' · ')}</div>}
+        {aRemettre.length > 0 && (
+          <div className="dash-merch">Merch à remettre : {resumeArticles(aRemettre)}</div>
+        )}
+        {rienADetailler && '—'}
       </td>
       <td className="dash-actions-col">
         <div className="dash-row-actions">
@@ -130,6 +140,7 @@ export default function BureauDashboard() {
   const [editeur, setEditeur] = useState(null);
   const [qrAdherent, setQrAdherent] = useState(null);
   const [importMode, setImportMode] = useState(null); // null | 'forms' | 'complementaire'
+  const [recapMerchOuvert, setRecapMerchOuvert] = useState(false);
 
   // État de l'envoi groupé des QR codes
   const [envoiModal, setEnvoiModal] = useState(null);
@@ -153,6 +164,12 @@ export default function BureauDashboard() {
   const relancesPossibles = useMemo(
     () => adherents.filter((a) => a.email && !statuts.get(a.id).valide),
     [adherents, statuts]
+  );
+
+  // Nombre d'adhérents avec au moins un article de merch pas encore remis.
+  const nbMerchARemettre = useMemo(
+    () => adherents.filter((a) => merchARemettre(a).length > 0).length,
+    [adherents]
   );
 
   // Développement uniquement : jeu de données de test (?data=…) à la place de Supabase.
@@ -408,7 +425,9 @@ export default function BureauDashboard() {
   const ENTETES_EXPORT = [
     'Prénom', 'Nom', 'Email', 'Statut', 'Détail',
     'Questionnaire santé', 'Paiement global',
-    'Manque paiement', 'Manque YEPS', "Manque PASS’SPORT", 'ID',
+    'Manque paiement', 'Manque YEPS', "Manque PASS’SPORT",
+    'Maillot', 'Taille maillot', 'Flocage', 'Texte flocage', 'Maillot récupéré',
+    'Short', 'Taille short', 'Short récupéré', 'ID',
   ];
 
   function lignesExport() {
@@ -425,6 +444,14 @@ export default function BureauDashboard() {
         a.manque_paiement ? 'Oui' : 'Non',
         a.manque_yeps ? 'Oui' : 'Non',
         a.manque_passport ? 'Oui' : 'Non',
+        a.maillot ? 'Oui' : 'Non',
+        a.maillot ? a.taille_maillot ?? '' : '',
+        a.maillot ? (a.flocage ? 'Oui' : 'Non') : '',
+        a.maillot && a.flocage ? a.texte_flocage ?? '' : '',
+        a.maillot ? (a.maillot_recupere ? 'Oui' : 'Non') : '',
+        a.short ? 'Oui' : 'Non',
+        a.short ? a.taille_short ?? '' : '',
+        a.short ? (a.short_recupere ? 'Oui' : 'Non') : '',
         a.id,
       ];
     });
@@ -446,7 +473,7 @@ export default function BureauDashboard() {
   async function exporterXlsx() {
     const XLSX = await import('xlsx');
     const ws = XLSX.utils.aoa_to_sheet([ENTETES_EXPORT, ...lignesExport()]);
-    ws['!cols'] = [12, 14, 28, 10, 30, 18, 14, 15, 13, 15, 38].map((w) => ({ wch: w }));
+    ws['!cols'] = [12, 14, 28, 10, 30, 18, 14, 15, 13, 15, 9, 14, 9, 18, 16, 9, 12, 14, 38].map((w) => ({ wch: w }));
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Adhérants');
     XLSX.writeFile(wb, `adherents-${new Date().toISOString().slice(0, 10)}.xlsx`);
@@ -541,6 +568,9 @@ export default function BureauDashboard() {
             >
               Relancer non à jour ({formatNombre(relancesPossibles.length)})
             </button>
+            <button className="btn-ghost" onClick={() => setRecapMerchOuvert(true)}>
+              Commande merch
+            </button>
             <button onClick={() => setEditeur({ adherent: null })}>+ Nouvel adhérent</button>
           </div>
 
@@ -597,6 +627,7 @@ export default function BureauDashboard() {
               aria-pressed={f.cle === 'tous' ? filtresActifs.length === 0 : filtresActifs.includes(f.cle)}
             >
               {f.libelle}
+              {f.cle === 'merch' && ` (${formatNombre(nbMerchARemettre)})`}
             </button>
           ))}
         </div>
@@ -709,6 +740,10 @@ export default function BureauDashboard() {
           onImported={onImported}
         />
       )}
+      {recapMerchOuvert && (
+        <RecapMerchModal adherents={adherents} onClose={() => setRecapMerchOuvert(false)} />
+      )}
+
       {importMode === 'complementaire' && (
         <ImportComplementaireModal
           onClose={() => setImportMode(null)}

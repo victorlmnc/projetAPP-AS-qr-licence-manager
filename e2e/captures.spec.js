@@ -28,6 +28,21 @@ test('editeur', async ({ page }, testInfo) => {
   await page.screenshot({ path: testInfo.outputPath('editeur.png') });
 });
 
+test('fiche-merch', async ({ page }, testInfo) => {
+  await page.goto('/dev/bureau?data=pire');
+  await page.locator('.dash-table tbody tr').filter({ hasText: 'Aleksandra' }).getByRole('button', { name: 'Modifier' }).click();
+  await page.getByRole('tab', { name: 'Merch' }).click();
+  await page.waitForTimeout(500);
+  await page.screenshot({ path: testInfo.outputPath('fiche-merch.png') });
+});
+
+test('commande-merch', async ({ page }, testInfo) => {
+  await page.goto('/dev/bureau?data=demo');
+  await page.getByRole('button', { name: 'Commande merch' }).click();
+  await page.waitForTimeout(500);
+  await page.screenshot({ path: testInfo.outputPath('commande-merch.png') });
+});
+
 test('envoi', async ({ page }, testInfo) => {
   await page.goto('/dev/bureau?data=demo');
   await page.getByRole('button', { name: /Envoyer les QR par email/ }).click();

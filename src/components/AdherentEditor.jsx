@@ -2,14 +2,20 @@ import { useEffect, useId, useRef, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { calculerStatutLicence } from '../lib/licence';
 import { nomComplet, reparerTexte } from '../lib/texte';
+import { LONGUEUR_MAX_FLOCAGE, TAILLES } from '../lib/merch';
 import ConfirmDialog from './ConfirmDialog';
 import Modal from './Modal';
 
 const TYPES_LICENCE = ['Sportive', 'Arbitre', 'Encadrant'];
 
+// Tailles proposées ; une taille importée hors liste reste sélectionnable.
+function optionsTaille(tailleActuelle) {
+  return tailleActuelle && !TAILLES.includes(tailleActuelle) ? [...TAILLES, tailleActuelle] : TAILLES;
+}
+
 export default function AdherentEditor({ adherent, onClose, onSaved, onDeleted }) {
   const creation = !adherent;
-  const [onglet, setOnglet] = useState('licence'); // 'licence' | 'infos'
+  const [onglet, setOnglet] = useState('licence'); // 'licence' | 'infos' | 'merch'
 
   // Valeurs de départ, gardées pour savoir si la fiche a été modifiée.
   const [formInitial] = useState(() => ({
@@ -39,6 +45,14 @@ export default function AdherentEditor({ adherent, onClose, onSaved, onDeleted }
     manque_paiement: adherent?.manque_paiement ?? true,
     manque_yeps: adherent?.manque_yeps ?? false,
     manque_passport: adherent?.manque_passport ?? false,
+    maillot: adherent?.maillot ?? false,
+    taille_maillot: adherent?.taille_maillot ?? '',
+    maillot_recupere: adherent?.maillot_recupere ?? false,
+    flocage: adherent?.flocage ?? false,
+    texte_flocage: adherent?.texte_flocage ?? '',
+    short: adherent?.short ?? false,
+    taille_short: adherent?.taille_short ?? '',
+    short_recupere: adherent?.short_recupere ?? false,
   }));
   const [form, setForm] = useState(formInitial);
 
@@ -139,6 +153,16 @@ export default function AdherentEditor({ adherent, onClose, onSaved, onDeleted }
       manque_paiement: form.paiement_global ? false : form.manque_paiement,
       manque_yeps: form.paiement_global ? false : form.manque_yeps,
       manque_passport: form.paiement_global ? false : form.manque_passport,
+      // Un article décoché efface sa taille et sa remise ; le flocage est une
+      // option du maillot, il disparaît avec lui.
+      maillot: form.maillot,
+      taille_maillot: form.maillot ? form.taille_maillot || null : null,
+      maillot_recupere: form.maillot && form.maillot_recupere,
+      flocage: form.maillot && form.flocage,
+      texte_flocage: form.maillot && form.flocage ? form.texte_flocage.trim() || null : null,
+      short: form.short,
+      taille_short: form.short ? form.taille_short || null : null,
+      short_recupere: form.short && form.short_recupere,
     };
 
     setEnCours(true);
@@ -192,6 +216,15 @@ export default function AdherentEditor({ adherent, onClose, onSaved, onDeleted }
               onClick={() => setOnglet('infos')}
             >
               Informations personnelles
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={onglet === 'merch'}
+              className={`editor-tab${onglet === 'merch' ? ' editor-tab--active' : ''}`}
+              onClick={() => setOnglet('merch')}
+            >
+              Merch
             </button>
           </div>
 
@@ -332,6 +365,80 @@ export default function AdherentEditor({ adherent, onClose, onSaved, onDeleted }
                   Droit à l'image autorisé
                 </label>
               </div>
+            </div>
+          )}
+
+          {/* ══════ Onglet Merch ══════ */}
+          {onglet === 'merch' && (
+            <div className="merch">
+              <fieldset className="merch-article">
+                <legend>Maillot</legend>
+                <label className="check">
+                  <input type="checkbox" checked={form.maillot} onChange={(e) => set('maillot', e.target.checked)} />
+                  Maillot commandé
+                </label>
+                {form.maillot && (
+                  <div className="merch-article__details">
+                    <label>
+                      Taille du maillot
+                      <select value={form.taille_maillot} onChange={(e) => set('taille_maillot', e.target.value)}>
+                        <option value="">Non précisée</option>
+                        {optionsTaille(form.taille_maillot).map((t) => <option key={t} value={t}>{t}</option>)}
+                      </select>
+                    </label>
+                    <label className="check">
+                      <input type="checkbox" checked={form.maillot_recupere} onChange={(e) => set('maillot_recupere', e.target.checked)} />
+                      Maillot récupéré
+                    </label>
+                  </div>
+                )}
+
+                {/* Le flocage est une option du maillot : remis avec lui. */}
+                {form.maillot && (
+                  <div className="merch-article__option">
+                    <label className="check">
+                      <input type="checkbox" checked={form.flocage} onChange={(e) => set('flocage', e.target.checked)} />
+                      Flocage (nom au dos)
+                    </label>
+                    {form.flocage && (
+                      <label className="merch-article__texte">
+                        Texte floqué
+                        <input
+                          type="text"
+                          maxLength={LONGUEUR_MAX_FLOCAGE}
+                          placeholder="ex. DUPONT"
+                          value={form.texte_flocage}
+                          onChange={(e) => set('texte_flocage', e.target.value)}
+                        />
+                        <span className="merch-article__aide">{LONGUEUR_MAX_FLOCAGE} caractères maximum</span>
+                      </label>
+                    )}
+                  </div>
+                )}
+              </fieldset>
+
+              <fieldset className="merch-article">
+                <legend>Short</legend>
+                <label className="check">
+                  <input type="checkbox" checked={form.short} onChange={(e) => set('short', e.target.checked)} />
+                  Short commandé
+                </label>
+                {form.short && (
+                  <div className="merch-article__details">
+                    <label>
+                      Taille du short
+                      <select value={form.taille_short} onChange={(e) => set('taille_short', e.target.value)}>
+                        <option value="">Non précisée</option>
+                        {optionsTaille(form.taille_short).map((t) => <option key={t} value={t}>{t}</option>)}
+                      </select>
+                    </label>
+                    <label className="check">
+                      <input type="checkbox" checked={form.short_recupere} onChange={(e) => set('short_recupere', e.target.checked)} />
+                      Short récupéré
+                    </label>
+                  </div>
+                )}
+              </fieldset>
             </div>
           )}
 
