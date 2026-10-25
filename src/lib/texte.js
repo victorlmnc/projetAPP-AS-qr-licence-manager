@@ -47,5 +47,20 @@ export function reparerTexte(valeur) {
 }
 
 export function nomComplet(adherent) {
-  return `${reparerTexte(adherent?.prenom)} ${reparerTexte(adherent?.nom)}`.trim();
+  return `${reparerTexte(adherent?.prenom)} ${reparerTexte(adherent?.nom)}`.replace(/\s+/g, ' ').trim();
+}
+
+// Clé de tri : texte réparé, sans espaces superflus.
+function cleDeTri(valeur) {
+  return reparerTexte(valeur).replace(/\s+/g, ' ').trim();
+}
+
+// Tri alphabétique français par nom puis prénom, sans tenir compte
+// de la casse ni des accents (« Đặng » avec les D, « dana » avec les D).
+export function comparerParNom(a, b) {
+  const options = { sensitivity: 'base' };
+  return (
+    cleDeTri(a?.nom).localeCompare(cleDeTri(b?.nom), 'fr', options) ||
+    cleDeTri(a?.prenom).localeCompare(cleDeTri(b?.prenom), 'fr', options)
+  );
 }
