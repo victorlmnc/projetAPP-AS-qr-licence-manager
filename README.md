@@ -15,7 +15,8 @@ Déployée sur **[as-licences-insa-cvl.vercel.app](https://as-licences-insa-cvl.
 - Export de la liste filtrée en CSV, Excel (.xlsx) ou PDF
 - Génération et envoi par email des QR Codes (individuel ou groupé)
 - Relance automatique par email des dossiers incomplets
-- Édition en masse de plusieurs adhérents simultanément
+- Édition en masse de plusieurs adhérents simultanément (dont la remise du merch)
+- Merch (maillot avec flocage en option, short) : articles commandés, tailles, texte floqué et remise article par article (le flocage est remis avec le maillot) ; filtre « Merch à remettre » ; récap de commande par taille exportable en CSV pour le fournisseur
 - Mise à jour temps réel via Supabase Realtime
 - Paramètres : changement des mots de passe, remise à zéro de la base en fin de saison
 - Utilisable sur ordinateur et sur téléphone (sur petit écran, le tableau s'affiche en cartes)
@@ -75,6 +76,7 @@ Déployée sur **[as-licences-insa-cvl.vercel.app](https://as-licences-insa-cvl.
 │   ├── components/
 │   │   ├── AdherentEditor.jsx         # Éditeur de fiche (2 onglets : Licence / Informations)
 │   │   ├── BulkAdherentEditor.jsx     # Édition en masse
+│   │   ├── RecapMerchModal.jsx        # Récap de commande merch (quantités par taille, flocages, export CSV)
 │   │   ├── QrCodeModal.jsx            # Affichage et envoi d'un QR Code individuel
 │   │   ├── EnvoiQrModal.jsx           # Modal de sélection pour envoi groupé
 │   │   ├── ImportFormsModal.jsx       # Import depuis Google Forms CSV/Excel
@@ -93,6 +95,8 @@ Déployée sur **[as-licences-insa-cvl.vercel.app](https://as-licences-insa-cvl.
 │   │   ├── supabase.js                # Client Supabase côté client
 │   │   ├── texte.js                   # Utilitaires texte (nomComplet, reparerTexte, comparerParNom)
 │   │   ├── texte.test.js              # Tests unitaires (Vitest)
+│   │   ├── merch.js                   # Articles de merch, reste à remettre, récap de commande
+│   │   ├── merch.test.js              # Tests unitaires (Vitest)
 │   │   └── publicAccess.js            # Construction de l'URL publique d'un adhérent
 │   │
 │   ├── dev/                           # Développement uniquement (absent du build de production)
@@ -143,6 +147,11 @@ Table `adherents` dans Supabase :
 | `manque_paiement` | boolean | Manque le paiement |
 | `manque_yeps` | boolean | Manque l'aide YEPS |
 | `manque_passport` | boolean | Manque l'aide PASS'SPORT |
+| `maillot` / `short` | boolean | Article de merch commandé |
+| `flocage` | boolean | Option du maillot (impossible sans maillot) |
+| `taille_maillot` / `taille_short` | text | `XS` à `3XL` (ou la taille importée telle quelle) |
+| `texte_flocage` | text | Nom floqué au dos, 20 caractères maximum |
+| `maillot_recupere` / `short_recupere` | boolean | Article remis à l'adhérent (le flocage est remis avec le maillot) |
 
 > **Statut de licence = `questionnaire_sante_ok AND paiement_global`**  
 > La licence FFSU est informative uniquement (nécessaire pour les compétitions, pas pour les entraînements).
@@ -157,6 +166,7 @@ Table `adherents` dans Supabase :
 | `2026-10-25-1-fonction-scan.sql` | Avant de déployer le nouveau scan (ajoute la fonction `scanner_adherent`, sans rien retirer) |
 | `2026-10-25-2-restreindre-lecture-coach.sql` | **Après** le déploiement (retire au compte respos-sports l'accès direct à la table) |
 | `2026-10-25-3-limites-longueur.sql` | N'importe quand (limites de longueur des noms et emails) |
+| `2026-10-26-4-merch.sql` | **Avant** de déployer la fonctionnalité merch (ajoute les colonnes du merch) |
 
 ---
 
