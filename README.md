@@ -51,8 +51,9 @@ Déployée sur **[as-licences-insa-cvl.vercel.app](https://as-licences-insa-cvl.
 ├── api/                               # Fonctions serverless Vercel
 │   ├── send-qr.js                     # Envoi d'emails avec QR Code (individuel + groupé + relance)
 │   ├── public-adherent.js             # Lecture publique d'un adhérent par token
-│   ├── change-password.js             # Changement du mot de passe bureau
-│   └── change-coach-password.js       # Changement du mot de passe respos-sports
+│   └── change-password.js             # Changement du mot de passe respos-sports (par le bureau)
+│
+├── migrations/                        # Scripts SQL à exécuter une fois sur une base existante
 │
 ├── src/
 │   ├── pages/
@@ -82,6 +83,7 @@ Déployée sur **[as-licences-insa-cvl.vercel.app](https://as-licences-insa-cvl.
 │   └── context/
 │       └── AuthContext.jsx            # Authentification et rôle (bureau / coach)
 │
+├── schema.sql                         # Schéma complet de la base (tables, RLS, fonctions)
 ├── vercel.json                        # Réécriture SPA — toutes les routes → index.html
 └── package.json
 ```
@@ -124,6 +126,9 @@ Table `adherents` dans Supabase :
 
 > **Statut de licence = `questionnaire_sante_ok AND paiement_global`**  
 > La licence FFSU est informative uniquement (nécessaire pour les compétitions, pas pour les entraînements).
+
+- **Nouvelle base** : exécuter `schema.sql` dans l'éditeur SQL Supabase.
+- **Base existante** : exécuter dans l'ordre les scripts de `migrations/` qui n'ont pas encore été appliqués.
 
 ---
 
@@ -206,7 +211,8 @@ Les adhérents n'ont pas de compte — ils accèdent à leur QR Code via un lien
 - Les liens adhérents utilisent `public_token` (UUID aléatoire), jamais l'`id` interne
 - `SUPABASE_SERVICE_ROLE_KEY` et `GMAIL_APP_PASSWORD` ne sont jamais exposés côté client
 - `/api/send-qr` vérifie la session Supabase et le rôle `bureau` avant tout envoi
-- Les politiques RLS Supabase protègent l'accès direct à la base
+- Les politiques RLS Supabase protègent l'accès direct à la base : seul le rôle `bureau` lit la table `adherents`
+- Le compte respos-sports n'a aucun accès direct à la table : le scan passe par la fonction SQL `scanner_adherent(token)`, qui renvoie un seul adhérent et uniquement les champs du statut (pas d'adresse, de date de naissance ni de données médicales)
 
 ---
 
