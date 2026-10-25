@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { verifierRegles } from '../src/lib/passwordPolicy.js';
 
 const supabase = createClient(
   process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL,
@@ -6,26 +7,12 @@ const supabase = createClient(
   { auth: { persistSession: false } }
 );
 
-// ---------- Validation mdp côté serveur (même règles que le client) ----------
-
-const MOTS_INTERDITS = [
-  'as', 'insa', 'cvl', 'bureau', 'coach', 'login', 'licence',
-  'password', 'motdepasse', '2024', '2025', '2026', '2027',
-];
+// ---------- Validation mdp côté serveur (mêmes règles que le client) ----------
 
 function validerMotDePasse(mdp) {
-  const v = mdp ?? '';
-  const lower = v.toLowerCase();
-  const echecs = [];
-
-  if (v.length < 8) echecs.push('Au moins 8 caractères');
-  if (!/[A-Z]/.test(v)) echecs.push('Au moins 1 majuscule');
-  if (!/[a-z]/.test(v)) echecs.push('Au moins 1 minuscule');
-  if (!/[0-9]/.test(v)) echecs.push('Au moins 1 chiffre');
-  if (!/[^A-Za-z0-9]/.test(v)) echecs.push('Au moins 1 caractère spécial');
-  if (MOTS_INTERDITS.some((mot) => lower.includes(mot))) {
-    echecs.push('Ne doit pas contenir de mots courants (as, insa, bureau…)');
-  }
+  const echecs = verifierRegles(String(mdp ?? ''))
+    .filter((regle) => !regle.ok)
+    .map((regle) => regle.libelle);
 
   return echecs.length > 0 ? echecs : null;
 }
