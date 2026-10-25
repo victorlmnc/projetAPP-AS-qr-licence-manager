@@ -9,7 +9,7 @@ Déployée sur **[as-licences-insa-cvl.vercel.app](https://as-licences-insa-cvl.
 
 ### Espace Bureau
 - Tableau de bord avec liste complète des adhérents, statistiques (à jour / non à jour), filtres et recherche par nom, prénom ou email
-- Fiche adhérent détaillée : informations personnelles, adresse, type(s) de licence, rôle, médical, documents et paiement
+- Fiche adhérent détaillée (un clic sur la ligne l'ouvre) : informations personnelles, adresse, type(s) de licence, rôle, médical, documents et paiement
 - Import depuis l'export CSV de Google Forms (upsert automatique — double soumission gérée)
 - Import complémentaire CSV/Excel pour mettre à jour des champs spécifiques (paiement, YEPS, PASS'SPORT…)
 - Export de la liste filtrée en CSV, Excel (.xlsx) ou PDF
@@ -61,6 +61,7 @@ Déployée sur **[as-licences-insa-cvl.vercel.app](https://as-licences-insa-cvl.
 │   ├── fenetres.spec.js               # Éditeur de fiche et envoi groupé (Échap, focus, mobile)
 │   ├── scan.spec.js                   # Résultat du scan terrain
 │   ├── adherent.spec.js               # Page publique adhérent
+│   ├── captures.spec.js               # Captures d'écran pour revue visuelle (CAPTURES=1, non lancé par défaut)
 │   └── outils.js                      # Aides communes (ouverture, détection de débordements)
 │
 ├── src/
