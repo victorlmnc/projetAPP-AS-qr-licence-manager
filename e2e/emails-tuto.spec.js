@@ -11,11 +11,11 @@ const LIEN = 'https://as-licences-insa-cvl.vercel.app/adherent/3d1ca70c-6444-47e
 const DATE = '16/06/2026';
 
 const aJour = {
-  prenom: 'Jeanne', nom: 'Martin',
-  questionnaire_sante_ok: true, paiement_global: true, licence_ffsu_a_jour: true,
+  prenom: 'Jeanne', nom: 'Martin', types_licence: ['Sportive', 'Arbitre'],
+  questionnaire_sante_ok: true, paiement_global: true, licence_ffsu_a_jour: true, activite_contraintes: true,
 };
 const incomplet = {
-  prenom: 'Lucas', nom: 'Bernard',
+  prenom: 'Lucas', nom: 'Bernard', types_licence: ['Sportive'],
   questionnaire_sante_ok: true, paiement_global: false, manque_paiement: true, manque_yeps: true,
 };
 

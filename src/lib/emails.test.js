@@ -1,28 +1,49 @@
 import { describe, it, expect } from 'vitest';
-import { emailQrCode, emailRelance, esc } from './emails.js';
+import { emailQrCode, emailRelance, esc, recapitulatifLicence } from './emails.js';
 import { calculerStatutLicence } from './licence.js';
 
 const DATE = '16/06/2026';
 const LIEN = 'https://exemple.test/adherent/11111111-1111-4111-8111-000000000001';
 
 const aJour = {
-  prenom: 'Jeanne', nom: 'Martin',
+  prenom: 'Jeanne', nom: 'Martin', types_licence: ['Sportive', 'Arbitre'],
   questionnaire_sante_ok: true, paiement_global: true,
   licence_ffsu_a_jour: true, activite_contraintes: false,
 };
 const incomplet = {
-  prenom: 'Emma', nom: 'Dubois',
+  prenom: 'Emma', nom: 'Dubois', types_licence: null,
   questionnaire_sante_ok: false, paiement_global: false, manque_paiement: true, manque_yeps: true,
 };
 
+describe('recapitulatifLicence', () => {
+  it('liste tous les types de licence et dit oui comme non', () => {
+    expect(recapitulatifLicence(aJour)).toEqual([
+      ['Types de licence', 'Sportive, Arbitre'],
+      ['Licence FFSU', 'Valide'],
+      ['Activités à contraintes', 'Non éligible'],
+    ]);
+  });
+
+  it('un seul type au singulier, aucun type renseigné', () => {
+    expect(recapitulatifLicence({ types_licence: ['Encadrant'] })[0]).toEqual(['Type de licence', 'Encadrant']);
+    expect(recapitulatifLicence(incomplet)).toEqual([
+      ['Type de licence', 'Non renseigné'],
+      ['Licence FFSU', 'Non valide'],
+      ['Activités à contraintes', 'Non éligible'],
+    ]);
+  });
+});
+
 describe('emailQrCode', () => {
-  it('dossier à jour : message positif, badge FFSU, lien vers le QR Code', () => {
+  it('dossier à jour : statut, récapitulatif de la licence et lien vers le QR Code', () => {
     const { sujet, texte, html } = emailQrCode(aJour, calculerStatutLicence(aJour), LIEN, DATE);
     expect(sujet).toBe('Votre QR Code de licence - Jeanne Martin');
     expect(html).toContain('Dossier complet et à jour.');
-    expect(html).toContain('✓ Licence FFSU');
-    expect(html).not.toContain('Activités à contraintes');
+    expect(html).toContain('Votre licence');
+    expect(html).toContain('Sportive, Arbitre');
+    expect(html).toContain('Non éligible');
     expect(html).toContain(`href="${LIEN}"`);
+    expect(texte).toContain('- Licence FFSU : Valide');
     expect(texte).toContain(`Lien du QR Code : ${LIEN}`);
   });
 
@@ -30,7 +51,14 @@ describe('emailQrCode', () => {
     const { texte, html } = emailQrCode(incomplet, calculerStatutLicence(incomplet), LIEN, DATE);
     expect(html).toContain(`Dossier incomplet au ${DATE}. Il manque :`);
     expect(html).toContain('<li style="margin:2px 0;">Questionnaire santé manquant</li>');
-    expect(texte).toContain('- Paiement non régularisé. Manque : Paiement, Aide YEPS');
+    expect(texte).toContain('- Paiement non régularisé. Manque : Paiement, Aide YEPS (QR code et numéro)');
+  });
+
+  it('pas d\'aplat de couleur : ni bouton ni encadré sur fond vert, rouge ou violet', () => {
+    const { html } = emailQrCode(incomplet, calculerStatutLicence(incomplet), LIEN, DATE);
+    for (const couleur of ['#4b2177', '#15803d', '#b91c1c', '#f0fdf4', '#fef2f2']) {
+      expect(html).not.toContain(`background:${couleur}`);
+    }
   });
 
   it('échappe le nom de l\'adhérent dans le HTML', () => {
@@ -42,10 +70,11 @@ describe('emailQrCode', () => {
 });
 
 describe('emailRelance', () => {
-  it('sujet, liste des manques et aucun lien', () => {
+  it('sujet, liste des manques, récapitulatif et aucun lien', () => {
     const { sujet, texte, html } = emailRelance(incomplet, calculerStatutLicence(incomplet), DATE);
     expect(sujet).toBe('Licence incomplète - Emma Dubois');
     expect(html).toContain(`Dossier incomplet au ${DATE}. Il manque :`);
+    expect(html).toContain('Votre licence');
     expect(html).not.toContain('href=');
     expect(texte).toContain('Pensez à régulariser votre situation auprès du bureau de l\'AS.');
   });

@@ -1,21 +1,20 @@
 // Contenu des emails envoyés aux adhérents (utilisé par api/send-qr.js).
 // Mise en page en tableaux et styles en ligne : c'est ce que les clients mail
-// (Gmail, Outlook…) affichent de façon fiable. Mêmes couleurs que le site.
+// (Gmail, Outlook…) affichent de façon fiable. Mêmes couleurs que le site,
+// sans aplat de couleur : la couleur se limite à une pastille de statut.
 
 const C = {
   fond: '#f4f4f5',
   carte: '#ffffff',
+  encadre: '#fafafa',
   ligne: '#e4e4e7',
+  ligneForte: '#d4d4d8',
   texte: '#18181b',
   texte2: '#3f3f46',
   discret: '#71717a',
   accent: '#4b2177',
   ok: '#15803d',
-  okFond: '#f0fdf4',
-  okLigne: '#bbf7d0',
   ko: '#b91c1c',
-  koFond: '#fef2f2',
-  koLigne: '#fecaca',
 };
 
 const POLICE = "system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif";
@@ -34,6 +33,17 @@ export function esc(valeur) {
 // Date du jour au format français, heure de Paris (16/06/2026).
 export function dateDuJour() {
   return new Date().toLocaleDateString('fr-FR', { timeZone: 'Europe/Paris' });
+}
+
+// Ce que l'adhérent doit savoir sur sa licence, dans l'ordre d'affichage.
+// Les deux dernières lignes sont toujours présentes, que la réponse soit oui ou non.
+export function recapitulatifLicence(adherent) {
+  const types = Array.isArray(adherent.types_licence) ? adherent.types_licence.filter(Boolean) : [];
+  return [
+    [types.length > 1 ? 'Types de licence' : 'Type de licence', types.length > 0 ? types.join(', ') : 'Non renseigné'],
+    ['Licence FFSU', adherent.licence_ffsu_a_jour ? 'Valide' : 'Non valide'],
+    ['Activités à contraintes', adherent.activite_contraintes ? 'Éligible' : 'Non éligible'],
+  ];
 }
 
 function gabarit(titre, contenu) {
@@ -77,24 +87,42 @@ function salutation(prenom, nom) {
   return `<p style="margin:0 0 12px 0;color:${C.texte};">Bonjour ${esc(prenom)} ${esc(nom)},</p>`;
 }
 
-function listeManques(anomalies) {
-  const items = anomalies.map((a) => `<li style="margin:2px 0;">${esc(a)}</li>`).join('');
-  return `<ul style="margin:0;padding-left:20px;">${items}</ul>`;
-}
+// Encadré neutre ; seule la pastille indique le statut (vert ou rouge).
+function blocStatut(valide, anomalies, date) {
+  const pastille = `<span style="color:${valide ? C.ok : C.ko};">&#9679;</span>&nbsp;`;
+  const titre = valide ? 'Dossier complet et à jour.' : `Dossier incomplet au ${esc(date)}. Il manque :`;
+  const liste = valide
+    ? ''
+    : `<ul style="margin:6px 0 0 0;padding-left:22px;color:${C.texte2};">${anomalies
+      .map((a) => `<li style="margin:2px 0;">${esc(a)}</li>`)
+      .join('')}</ul>`;
 
-function blocDossierIncomplet(anomalies, date) {
-  return `<div style="margin:0 0 20px 0;padding:12px 14px;background:${C.koFond};border:1px solid ${C.koLigne};border-radius:8px;color:${C.ko};">
-                <p style="margin:0 0 6px 0;font-weight:600;">Dossier incomplet au ${esc(date)}. Il manque :</p>
-                ${listeManques(anomalies)}
+  return `<div style="margin:0 0 20px 0;padding:12px 14px;background:${C.encadre};border:1px solid ${C.ligne};border-radius:8px;">
+                <p style="margin:0;color:${C.texte};font-weight:600;">${pastille}${titre}</p>
+                ${liste}
               </div>`;
 }
 
-function blocDossierComplet() {
-  return `<p style="margin:0 0 20px 0;padding:12px 14px;background:${C.okFond};border:1px solid ${C.okLigne};border-radius:8px;color:${C.ok};font-weight:600;">Dossier complet et à jour.</p>`;
+function blocLicence(adherent) {
+  const lignes = recapitulatifLicence(adherent);
+  const rangees = lignes
+    .map(([libelle, valeur], i) => {
+      const bordure = i < lignes.length - 1 ? `border-bottom:1px solid ${C.ligne};` : '';
+      return `<tr>
+                  <td style="padding:9px 14px;${bordure}color:${C.discret};font-size:14px;">${esc(libelle)}</td>
+                  <td style="padding:9px 14px;${bordure}color:${C.texte};font-size:14px;font-weight:500;text-align:right;">${esc(valeur)}</td>
+                </tr>`;
+    })
+    .join('');
+
+  return `<p style="margin:0 0 8px 0;color:${C.texte};font-weight:600;">Votre licence</p>
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 20px 0;border:1px solid ${C.ligne};border-radius:8px;border-collapse:separate;">
+                ${rangees}
+              </table>`;
 }
 
-function badge(texte) {
-  return `<span style="display:inline-block;margin:0 6px 6px 0;padding:3px 10px;background:${C.okFond};border:1px solid ${C.okLigne};border-radius:999px;color:${C.ok};font-size:13px;font-weight:500;">✓ ${texte}</span>`;
+function texteLicence(adherent) {
+  return `Votre licence :\n${recapitulatifLicence(adherent).map(([l, v]) => `- ${l} : ${v}`).join('\n')}`;
 }
 
 // Le motif est vide si l'adhérent n'a aucune anomalie listée (cas improbable).
@@ -104,7 +132,7 @@ function anomaliesOuDefaut(statut) {
 
 /**
  * Email d'envoi du QR Code.
- * @param adherent  { prenom, nom, licence_ffsu_a_jour, activite_contraintes }
+ * @param adherent  { prenom, nom, types_licence, licence_ffsu_a_jour, activite_contraintes }
  * @param statut    résultat de calculerStatutLicence(adherent)
  * @param lien      URL de la page publique de l'adhérent
  * @param date      date affichée pour un dossier incomplet
@@ -112,20 +140,16 @@ function anomaliesOuDefaut(statut) {
  */
 export function emailQrCode(adherent, statut, lien, date = dateDuJour()) {
   const anomalies = anomaliesOuDefaut(statut);
-  const infos = [
-    adherent.licence_ffsu_a_jour ? 'Licence FFSU' : null,
-    adherent.activite_contraintes ? 'Activités à contraintes' : null,
-  ].filter(Boolean);
 
   const html = gabarit('Votre QR Code de licence', `
               ${salutation(adherent.prenom, adherent.nom)}
               <p style="margin:0 0 20px 0;">Voici votre QR Code pour la saison sportive. Il vous sera demandé à l'entrée des entraînements.</p>
-              ${statut.valide ? blocDossierComplet() : blocDossierIncomplet(anomalies, date)}
-              ${infos.length > 0 ? `<div style="margin:0 0 14px 0;">${infos.map(badge).join('')}</div>` : ''}
+              ${blocStatut(statut.valide, anomalies, date)}
+              ${blocLicence(adherent)}
               <table role="presentation" cellpadding="0" cellspacing="0">
                 <tr>
-                  <td style="border-radius:8px;background:${C.accent};">
-                    <a href="${esc(lien)}" style="display:inline-block;padding:12px 22px;color:#ffffff;font-size:15px;font-weight:600;text-decoration:none;border-radius:8px;">Afficher mon QR Code</a>
+                  <td style="border-radius:8px;background:${C.carte};border:1px solid ${C.ligneForte};">
+                    <a href="${esc(lien)}" style="display:inline-block;padding:11px 20px;color:${C.texte};font-size:15px;font-weight:600;text-decoration:none;border-radius:8px;">Afficher mon QR Code</a>
                   </td>
                 </tr>
               </table>
@@ -137,13 +161,14 @@ export function emailQrCode(adherent, statut, lien, date = dateDuJour()) {
   const statutTexte = statut.valide
     ? 'Dossier complet et à jour.'
     : `Dossier incomplet au ${date}. Il manque :\n- ${anomalies.join('\n- ')}`;
-  const infosTexte = infos.length > 0 ? `\n${infos.map((i) => `${i} : oui`).join('\n')}` : '';
 
   const texte = `Bonjour ${adherent.prenom} ${adherent.nom},
 
 Voici votre QR Code pour la saison sportive. Il vous sera demandé à l'entrée des entraînements.
 
-${statutTexte}${infosTexte}
+${statutTexte}
+
+${texteLicence(adherent)}
 
 Lien du QR Code : ${lien}
 
@@ -163,7 +188,8 @@ export function emailRelance(adherent, statut, date = dateDuJour()) {
   const html = gabarit('Dossier de licence incomplet', `
               ${salutation(adherent.prenom, adherent.nom)}
               <p style="margin:0 0 20px 0;">Votre dossier d'inscription à l'AS n'est pas encore complet.</p>
-              ${blocDossierIncomplet(anomalies, date)}
+              ${blocStatut(false, anomalies, date)}
+              ${blocLicence(adherent)}
               <p style="margin:0;">Pensez à régulariser votre situation auprès du bureau de l'AS.</p>`);
 
   const texte = `Bonjour ${adherent.prenom} ${adherent.nom},
@@ -172,6 +198,8 @@ Votre dossier d'inscription à l'AS n'est pas encore complet.
 
 Dossier incomplet au ${date}. Il manque :
 - ${anomalies.join('\n- ')}
+
+${texteLicence(adherent)}
 
 Pensez à régulariser votre situation auprès du bureau de l'AS.
 
