@@ -12,6 +12,33 @@ async function ouvrirEditeur(page) {
 }
 
 test.describe('Éditeur de fiche', () => {
+  test('un clic sur la ligne ouvre la fiche, pas un clic sur la case à cocher', async ({ page }) => {
+    await ouvrir(page, 'bureau', 'demo');
+    const ligne = page.locator('.dash-table tbody tr').filter({ hasText: 'Emma Dubois' });
+
+    await ligne.getByRole('checkbox').check();
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+
+    await ligne.getByText('emma.dubois@example.com').click();
+    await expect(page.getByRole('dialog', { name: 'Emma Dubois' })).toBeVisible();
+  });
+
+  test('Annuler et Enregistrer restent visibles quand la fiche défile', async ({ page }) => {
+    await ouvrirEditeur(page);
+    await page.getByRole('tab', { name: 'Informations personnelles' }).click();
+    const enregistrer = page.getByRole('button', { name: 'Enregistrer' });
+    const hauteur = page.viewportSize().height;
+
+    for (const position of ['haut', 'bas']) {
+      await page.locator('.editor__corps').evaluate((el, pos) => {
+        el.scrollTop = pos === 'bas' ? el.scrollHeight : 0;
+      }, position);
+      const boite = await enregistrer.boundingBox();
+      expect(boite.y + boite.height, `bouton visible en ${position} de fiche`).toBeLessThanOrEqual(hauteur);
+      await expect(page.getByRole('button', { name: 'Annuler' })).toBeInViewport();
+    }
+  });
+
   test('centré à l\'écran', async ({ page }) => {
     await ouvrirEditeur(page);
     const boite = await page.locator('.editor').boundingBox();

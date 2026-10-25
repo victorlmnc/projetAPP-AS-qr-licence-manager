@@ -168,193 +168,195 @@ export default function AdherentEditor({ adherent, onClose, onSaved, onDeleted }
 
   return (
     <Modal onClose={demanderFermeture} labelledBy={titreId} className="editor editor--large">
-      <form onSubmit={enregistrer}>
-        <h3 id={titreId}>{creation ? 'Nouvel adhérent' : nomComplet(adherent)}</h3>
+      <form className="editor__form" onSubmit={enregistrer}>
+        {/* Contenu qui défile ; les boutons restent fixés en bas de la fenêtre. */}
+        <div className="editor__corps">
+          <h3 id={titreId}>{creation ? 'Nouvel adhérent' : nomComplet(adherent)}</h3>
 
-        {/* ── Sélecteur d'onglets ── */}
-        <div className="editor-tabs" role="tablist" aria-label="Sections de la fiche">
-          <button
-            type="button"
-            role="tab"
-            aria-selected={onglet === 'licence'}
-            className={`editor-tab${onglet === 'licence' ? ' editor-tab--active' : ''}`}
-            onClick={() => setOnglet('licence')}
-          >
-            Licence
-          </button>
-          <button
-            type="button"
-            role="tab"
-            aria-selected={onglet === 'infos'}
-            className={`editor-tab${onglet === 'infos' ? ' editor-tab--active' : ''}`}
-            onClick={() => setOnglet('infos')}
-          >
-            Informations personnelles
-          </button>
-        </div>
-
-        {/* ══════ Onglet Licence ══════ */}
-        {onglet === 'licence' && (
-          <div>
-            <label className="check">
-              <input type="checkbox" checked={form.questionnaire_sante_ok}
-                     onChange={(e) => set('questionnaire_sante_ok', e.target.checked)} />
-              Questionnaire santé OK
-            </label>
-
-            <label className="check">
-              <input type="checkbox" checked={form.paiement_global}
-                     onChange={(e) => set('paiement_global', e.target.checked)} />
-              Paiement global à jour
-            </label>
-
-            {!form.paiement_global && (
-              <fieldset className="manques">
-                <legend>Ce qu'il manque :</legend>
-                <label className="check">
-                  <input type="checkbox" checked={form.manque_paiement}
-                         onChange={(e) => set('manque_paiement', e.target.checked)} />
-                  Paiement (chèque, espèces, CB…)
-                </label>
-                <label className="check">
-                  <input type="checkbox" checked={form.manque_yeps}
-                         onChange={(e) => set('manque_yeps', e.target.checked)} />
-                  Aide YEPS
-                </label>
-                <label className="check">
-                  <input type="checkbox" checked={form.manque_passport}
-                         onChange={(e) => set('manque_passport', e.target.checked)} />
-                  Aide PASS'SPORT
-                </label>
-              </fieldset>
-            )}
-
-            <div className={`apercu ${apercu.valide ? 'apercu--ok' : 'apercu--ko'}`}>
-              Statut résultant : <strong>{apercu.valide ? 'À jour' : 'Non à jour'}</strong>
-            </div>
+          {/* ── Sélecteur d'onglets ── */}
+          <div className="editor-tabs" role="tablist" aria-label="Sections de la fiche">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={onglet === 'licence'}
+              className={`editor-tab${onglet === 'licence' ? ' editor-tab--active' : ''}`}
+              onClick={() => setOnglet('licence')}
+            >
+              Licence
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={onglet === 'infos'}
+              className={`editor-tab${onglet === 'infos' ? ' editor-tab--active' : ''}`}
+              onClick={() => setOnglet('infos')}
+            >
+              Informations personnelles
+            </button>
           </div>
-        )}
 
-        {/* ══════ Onglet Informations personnelles ══════ */}
-        {onglet === 'infos' && (
-          <div>
-            {/* ── Identité ── */}
-            <p className="editor-section-title">Identité</p>
-            <div className="editor-grid editor-grid--3">
-              <label>Prénom<input type="text" maxLength={100} value={form.prenom} onChange={(e) => set('prenom', e.target.value)} /></label>
-              <label>Nom<input type="text" maxLength={100} value={form.nom} onChange={(e) => set('nom', e.target.value)} /></label>
-              <label>Sexe
-                <select value={form.sexe} onChange={(e) => set('sexe', e.target.value)}>
-                  <option value="">—</option>
-                  <option value="H">H</option>
-                  <option value="F">F</option>
-                </select>
+          {/* ══════ Onglet Licence ══════ */}
+          {onglet === 'licence' && (
+            <div>
+              <label className="check">
+                <input type="checkbox" checked={form.questionnaire_sante_ok}
+                       onChange={(e) => set('questionnaire_sante_ok', e.target.checked)} />
+                Questionnaire santé OK
               </label>
-              <label>E-mail<input type="email" maxLength={254} value={form.email} onChange={(e) => set('email', e.target.value)} /></label>
-              <label>Téléphone<input type="tel" value={form.telephone} onChange={(e) => set('telephone', e.target.value)} /></label>
-              <label>Année d'étude<input type="text" placeholder="ex. 3A étudiant" value={form.annee_etude} onChange={(e) => set('annee_etude', e.target.value)} /></label>
-              <label>Date de naissance<input type="text" placeholder="ex. 16/07/2005" value={form.date_naissance} onChange={(e) => set('date_naissance', e.target.value)} /></label>
-              <label>Pays de naissance<input type="text" value={form.pays_naissance} onChange={(e) => set('pays_naissance', e.target.value)} /></label>
-              <label>Dept. naissance<input ref={deptRef} type="text" placeholder="ex. 45" value={form.dept_naissance} onChange={(e) => set('dept_naissance', e.target.value)} className={easterEgg67 ? 'easter-egg-67' : ''} /></label>
-              <label className="editor-grid__span2">Ville de naissance<input type="text" value={form.ville_naissance} onChange={(e) => set('ville_naissance', e.target.value)} /></label>
-            </div>
 
-            {/* ── Adresse ── */}
-            <p className="editor-section-title">Adresse</p>
-            <label>Adresse<input type="text" value={form.adresse} onChange={(e) => set('adresse', e.target.value)} /></label>
-            <div className="editor-grid">
-              <label>Code postal<input type="text" inputMode="numeric" value={form.code_postal} onChange={(e) => set('code_postal', e.target.value)} /></label>
-              <label>Ville<input type="text" value={form.ville} onChange={(e) => set('ville', e.target.value)} /></label>
-            </div>
+              <label className="check">
+                <input type="checkbox" checked={form.paiement_global}
+                       onChange={(e) => set('paiement_global', e.target.checked)} />
+                Paiement global à jour
+              </label>
 
-            {/* ── Types de licence ── */}
-            <p className="editor-section-title">Types de licence</p>
-            <div className="editor-checks-row">
-              {TYPES_LICENCE.map((type) => (
-                <label key={type} className="check check--inline">
+              {!form.paiement_global && (
+                <fieldset className="manques">
+                  <legend>Ce qu'il manque :</legend>
+                  <label className="check">
+                    <input type="checkbox" checked={form.manque_paiement}
+                           onChange={(e) => set('manque_paiement', e.target.checked)} />
+                    Paiement (chèque, espèces, CB…)
+                  </label>
+                  <label className="check">
+                    <input type="checkbox" checked={form.manque_yeps}
+                           onChange={(e) => set('manque_yeps', e.target.checked)} />
+                    Aide YEPS
+                  </label>
+                  <label className="check">
+                    <input type="checkbox" checked={form.manque_passport}
+                           onChange={(e) => set('manque_passport', e.target.checked)} />
+                    Aide PASS'SPORT
+                  </label>
+                </fieldset>
+              )}
+
+              <div className={`apercu ${apercu.valide ? 'apercu--ok' : 'apercu--ko'}`}>
+                Statut résultant : <strong>{apercu.valide ? 'À jour' : 'Non à jour'}</strong>
+              </div>
+            </div>
+          )}
+
+          {/* ══════ Onglet Informations personnelles ══════ */}
+          {onglet === 'infos' && (
+            <div>
+              {/* ── Identité ── */}
+              <p className="editor-section-title">Identité</p>
+              <div className="editor-grid editor-grid--3">
+                <label>Prénom<input type="text" maxLength={100} value={form.prenom} onChange={(e) => set('prenom', e.target.value)} /></label>
+                <label>Nom<input type="text" maxLength={100} value={form.nom} onChange={(e) => set('nom', e.target.value)} /></label>
+                <label>Sexe
+                  <select value={form.sexe} onChange={(e) => set('sexe', e.target.value)}>
+                    <option value="">—</option>
+                    <option value="H">H</option>
+                    <option value="F">F</option>
+                  </select>
+                </label>
+                <label>E-mail<input type="email" maxLength={254} value={form.email} onChange={(e) => set('email', e.target.value)} /></label>
+                <label>Téléphone<input type="tel" value={form.telephone} onChange={(e) => set('telephone', e.target.value)} /></label>
+                <label>Année d'étude<input type="text" placeholder="ex. 3A étudiant" value={form.annee_etude} onChange={(e) => set('annee_etude', e.target.value)} /></label>
+                <label>Date de naissance<input type="text" placeholder="ex. 16/07/2005" value={form.date_naissance} onChange={(e) => set('date_naissance', e.target.value)} /></label>
+                <label>Pays de naissance<input type="text" value={form.pays_naissance} onChange={(e) => set('pays_naissance', e.target.value)} /></label>
+                <label>Dept. naissance<input ref={deptRef} type="text" placeholder="ex. 45" value={form.dept_naissance} onChange={(e) => set('dept_naissance', e.target.value)} className={easterEgg67 ? 'easter-egg-67' : ''} /></label>
+                <label className="editor-grid__span2">Ville de naissance<input type="text" value={form.ville_naissance} onChange={(e) => set('ville_naissance', e.target.value)} /></label>
+              </div>
+
+              {/* ── Adresse ── */}
+              <p className="editor-section-title">Adresse</p>
+              <label>Adresse<input type="text" value={form.adresse} onChange={(e) => set('adresse', e.target.value)} /></label>
+              <div className="editor-grid">
+                <label>Code postal<input type="text" inputMode="numeric" value={form.code_postal} onChange={(e) => set('code_postal', e.target.value)} /></label>
+                <label>Ville<input type="text" value={form.ville} onChange={(e) => set('ville', e.target.value)} /></label>
+              </div>
+
+              {/* ── Types de licence ── */}
+              <p className="editor-section-title">Types de licence</p>
+              <div className="editor-checks-row">
+                {TYPES_LICENCE.map((type) => (
+                  <label key={type} className="check check--inline">
+                    <input
+                      type="checkbox"
+                      checked={form.types_licence.includes(type)}
+                      onChange={() => toggleLicence(type)}
+                    />
+                    {type}
+                  </label>
+                ))}
+              </div>
+
+              {/* ── Rôle ── */}
+              <p className="editor-section-title">Rôle</p>
+              <div className="editor-checks-row">
+                <label className="check check--inline">
                   <input
                     type="checkbox"
-                    checked={form.types_licence.includes(type)}
-                    onChange={() => toggleLicence(type)}
+                    checked={form.est_responsable_as}
+                    onChange={(e) => {
+                      const checked = e.target.checked;
+                      setForm((f) => ({
+                        ...f,
+                        est_responsable_as: checked,
+                        types_licence: checked
+                          ? f.types_licence.includes('Encadrant') ? f.types_licence : [...f.types_licence, 'Encadrant']
+                          : f.types_licence.filter((t) => t !== 'Encadrant'),
+                      }));
+                    }}
                   />
-                  {type}
+                  Respo AS
                 </label>
-              ))}
-            </div>
+                <label className="check check--inline">
+                  <input type="checkbox" checked={form.adherent_bde} onChange={(e) => set('adherent_bde', e.target.checked)} />
+                  Adhérent BDE
+                </label>
+                <label className="check check--inline">
+                  <input type="checkbox" checked={form.licence_ffsu_a_jour} onChange={(e) => set('licence_ffsu_a_jour', e.target.checked)} />
+                  Licence FFSU
+                </label>
+              </div>
 
-            {/* ── Rôle ── */}
-            <p className="editor-section-title">Rôle</p>
-            <div className="editor-checks-row">
-              <label className="check check--inline">
-                <input
-                  type="checkbox"
-                  checked={form.est_responsable_as}
-                  onChange={(e) => {
-                    const checked = e.target.checked;
-                    setForm((f) => ({
-                      ...f,
-                      est_responsable_as: checked,
-                      types_licence: checked
-                        ? f.types_licence.includes('Encadrant') ? f.types_licence : [...f.types_licence, 'Encadrant']
-                        : f.types_licence.filter((t) => t !== 'Encadrant'),
-                    }));
-                  }}
-                />
-                Respo AS
-              </label>
-              <label className="check check--inline">
-                <input type="checkbox" checked={form.adherent_bde} onChange={(e) => set('adherent_bde', e.target.checked)} />
-                Adhérent BDE
-              </label>
-              <label className="check check--inline">
-                <input type="checkbox" checked={form.licence_ffsu_a_jour} onChange={(e) => set('licence_ffsu_a_jour', e.target.checked)} />
-                Licence FFSU
-              </label>
+              {/* ── Médical et autres ── */}
+              <p className="editor-section-title">Médical et autres</p>
+              <div className="editor-checks-row">
+                <label className="check check--inline">
+                  <input type="checkbox" checked={form.activite_contraintes} onChange={(e) => set('activite_contraintes', e.target.checked)} />
+                  Activité à contraintes
+                </label>
+              </div>
+              <div className="editor-checks-row" style={{ marginTop: 8 }}>
+                <label className="check check--inline">
+                  <input type="checkbox" checked={form.situation_handicap} onChange={(e) => set('situation_handicap', e.target.checked)} />
+                  Situation de handicap
+                </label>
+                <label className="check check--inline">
+                  <input type="checkbox" checked={form.droit_image} onChange={(e) => set('droit_image', e.target.checked)} />
+                  Droit à l'image autorisé
+                </label>
+              </div>
             </div>
+          )}
 
-            {/* ── Médical et autres ── */}
-            <p className="editor-section-title">Médical et autres</p>
-            <div className="editor-checks-row">
-              <label className="check check--inline">
-                <input type="checkbox" checked={form.activite_contraintes} onChange={(e) => set('activite_contraintes', e.target.checked)} />
-                Activité à contraintes
-              </label>
+          {!creation && (
+            <div className="editor-danger">
+              <button
+                type="button"
+                className="btn-danger-ghost"
+                onClick={() => setConfirmationSuppression(true)}
+                disabled={suppression}
+              >
+                {suppression ? 'Suppression…' : 'Supprimer cet adhérent'}
+              </button>
             </div>
-            <div className="editor-checks-row" style={{ marginTop: 8 }}>
-              <label className="check check--inline">
-                <input type="checkbox" checked={form.situation_handicap} onChange={(e) => set('situation_handicap', e.target.checked)} />
-                Situation de handicap
-              </label>
-              <label className="check check--inline">
-                <input type="checkbox" checked={form.droit_image} onChange={(e) => set('droit_image', e.target.checked)} />
-                Droit à l'image autorisé
-              </label>
-            </div>
-          </div>
-        )}
+          )}
+        </div>
 
-        {erreur && <p className="error" style={{ marginTop: 16 }}>{erreur}</p>}
-
-        <div className="modal-actions">
+        <div className="modal-actions editor__pied">
+          {erreur && <p className="error editor__erreur" role="alert">{erreur}</p>}
           <button type="button" className="btn-ghost" onClick={demanderFermeture}>Annuler</button>
           <button type="submit" disabled={enCours}>
             {enCours ? 'Enregistrement…' : creation ? 'Créer' : 'Enregistrer'}
           </button>
         </div>
       </form>
-
-      {!creation && (
-        <div className="editor-danger">
-          <button
-            type="button"
-            className="btn-danger"
-            onClick={() => setConfirmationSuppression(true)}
-            disabled={suppression}
-          >
-            {suppression ? 'Suppression…' : 'Supprimer cet adhérent'}
-          </button>
-        </div>
-      )}
 
       {confirmationSuppression && (
         <ConfirmDialog

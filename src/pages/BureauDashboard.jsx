@@ -44,8 +44,16 @@ const LigneAdherent = memo(function LigneAdherent({
   onModifier,
   onQrCode,
 }) {
+  // Un clic n'importe où sur la ligne ouvre la fiche, sauf sur la case à cocher,
+  // sur un bouton, ou à la fin d'une sélection de texte (copier un email).
+  function ouvrirFiche(e) {
+    if (e.target.closest('button, input, label, a, .dash-select-col')) return;
+    if (window.getSelection()?.toString()) return;
+    onModifier({ adherent: a });
+  }
+
   return (
-    <tr>
+    <tr className="dash-ligne" onClick={ouvrirFiche}>
       <td className="dash-select-col">
         <input
           type="checkbox"
@@ -497,7 +505,7 @@ export default function BureauDashboard() {
               </summary>
               <div className="export-dropdown__menu">
                 <button className="export-dropdown__item" onClick={() => { setImportMode('forms'); importRef.current.open = false; }}>
-                  Données du forms
+                  Réponses du formulaire
                 </button>
                 <button className="export-dropdown__item" onClick={() => { setImportMode('complementaire'); importRef.current.open = false; }}>
                   Infos complémentaires
