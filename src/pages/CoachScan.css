@@ -99,8 +99,11 @@
 .scan-result__main h2 {
   margin: 0;
   color: var(--as-purple-950);
-  font-size: clamp(42px, 8vw, 72px);
+  /* 34px minimum : un nom comme « Wiśniewska-Kowalczyk » tient à 320px.
+     Au-delà, un mot trop long se coupe plutôt que d'être masqué par la carte. */
+  font-size: clamp(34px, 8vw, 72px);
   line-height: 0.96;
+  overflow-wrap: anywhere;
 }
 
 .scan-result__status-big {

@@ -112,10 +112,10 @@ export default function EnvoiQrModal({
               checked={selectionnes.has(a.id)}
               onChange={() => toggle(a.id)}
             />
-            <span className="envoi-item__name">
-              {nomComplet(a)}
+            <span className="envoi-item__texte">
+              <span className="envoi-item__name">{nomComplet(a)}</span>
+              <span className="muted small envoi-item__email">{a.email}</span>
             </span>
-            <span className="muted small envoi-item__email">{a.email}</span>
           </label>
         ))}
       </div>

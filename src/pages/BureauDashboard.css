@@ -134,6 +134,7 @@
   color: var(--as-purple-900);
   font-size: 34px;
   font-weight: 800;
+  font-variant-numeric: tabular-nums;
   line-height: 1;
 }
 
@@ -246,11 +247,36 @@
   background: rgba(243, 237, 248, 0.45);
 }
 
+/* Le flex est sur un <div> dans la cellule : posé sur le <td>, il cassait
+   l'alignement des bordures sur les lignes de plusieurs lignes de texte. */
 .dash-row-actions {
   display: flex;
   justify-content: flex-end;
   gap: 8px;
   white-space: nowrap;
+}
+
+/* Un email sans espace peut se couper n'importe où plutôt que d'élargir la colonne. */
+.dash-email {
+  overflow-wrap: anywhere;
+}
+
+/* Sans cette largeur, l'email sécable laisse le tableau réduire la colonne
+   et les noms passent inutilement sur deux lignes. */
+.dash-nom-col {
+  min-width: 300px;
+}
+
+.dash-select-all {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+
+/* Libellé visible seulement en affichage cartes (téléphone). */
+.dash-select-all__texte {
+  display: none;
 }
 
 .dash-row-actions .btn-ghost {
@@ -298,11 +324,27 @@
 }
 
 .dash-empty {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
   padding: 26px;
   border: 1px dashed rgba(80, 35, 124, 0.28);
   border-radius: 18px;
   background: rgba(255, 255, 255, 0.72);
   text-align: center;
+}
+
+.dash-empty p {
+  margin: 0;
+}
+
+.dash-empty__titre {
+  color: var(--as-purple-900);
+  font-weight: 700;
+}
+
+.dash-empty button {
+  margin-top: 8px;
 }
 
 .editor-danger {
@@ -335,8 +377,125 @@
 }
 
 @media (max-width: 760px) {
+  /* Les trois compteurs restent côte à côte, en plus compact. */
   .stats {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .stat {
+    min-height: 0;
+    padding: 12px 10px 12px 15px;
+    border-radius: 16px;
+  }
+
+  .stat-num {
+    font-size: 26px;
+  }
+
+  .stat-lib {
+    margin-top: 4px;
+    font-size: 13px;
+  }
+
+  /* Tableau → cartes : sur téléphone, chaque adhérent devient une carte
+     avec ses actions visibles, sans défilement horizontal. */
+  .dash-table-wrap {
+    overflow: visible;
+    border: 0;
+    border-radius: 0;
+    background: none;
+    box-shadow: none;
+  }
+
+  .dash-table,
+  .dash-table thead,
+  .dash-table tbody {
+    display: block;
+    min-width: 0;
+  }
+
+  .dash-table thead tr {
+    display: flex;
+    margin-bottom: 10px;
+  }
+
+  .dash-table thead th {
+    display: none;
+  }
+
+  .dash-table thead th.dash-select-col {
+    display: block;
+    width: auto;
+    padding: 4px 2px;
+    border: 0;
+    background: none;
+    color: var(--as-purple-800);
+    font-size: 14px;
+    letter-spacing: 0;
+    text-transform: none;
+  }
+
+  .dash-select-all__texte {
+    display: inline;
+  }
+
+  /* Nom et email sur toute la largeur, le statut en dessous : les emails
+     longs ne sont coupés qu'en dernier recours. */
+  .dash-table tbody tr {
+    display: grid;
+    grid-template-columns: 24px minmax(0, 1fr);
+    grid-template-areas:
+      'select nom'
+      '. statut'
+      '. detail'
+      '. actions';
+    align-items: start;
+    gap: 8px 12px;
+    margin-bottom: 10px;
+    padding: 14px;
+    border: 1px solid rgba(232, 222, 239, 0.95);
+    border-radius: 18px;
+    background: var(--surface);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .dash-table tbody td {
+    display: block;
+    padding: 0;
+    border: 0;
+  }
+
+  .dash-table tbody td.dash-select-col {
+    grid-area: select;
+    width: auto;
+    padding-top: 2px;
+  }
+
+  .dash-nom-col {
+    grid-area: nom;
+    min-width: 0;
+  }
+
+  .dash-statut-col {
+    grid-area: statut;
+  }
+
+  .dash-detail-col {
+    grid-area: detail;
+  }
+
+  /* Rien à détailler pour un adhérent à jour : pas de tiret orphelin. */
+  .dash-table tbody td.dash-detail-col--vide {
+    display: none;
+  }
+
+  .dash-actions-col {
+    grid-area: actions;
+  }
+
+  .dash-row-actions .btn-ghost {
+    flex: 1;
   }
 
   .dash-top {

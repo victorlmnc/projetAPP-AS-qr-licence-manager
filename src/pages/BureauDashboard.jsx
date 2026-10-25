@@ -1,4 +1,4 @@
-import { useEffect, useId, useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { calculerStatutLicence } from '../lib/licence';
 import Header from '../components/Header';
@@ -10,17 +10,17 @@ import ImportFormsModal from '../components/ImportFormsModal';
 import ImportComplementaireModal from '../components/ImportComplementaireModal';
 import EnvoiQrModal from '../components/EnvoiQrModal';
 import Modal from '../components/Modal';
-import { nomComplet, reparerTexte } from '../lib/texte';
+import { comparerParNom, nomComplet, reparerTexte } from '../lib/texte';
 import { adherentsDeTest } from '../dev/donneesTest';
 import { useJeuDeTest } from '../dev/SelecteurDonnees';
 import './BureauDashboard.css';
 
-// Liste des filtres. `test(adherent)` renvoie true si l'adhérent doit
+// Liste des filtres. `test(adherent, statut)` renvoie true si l'adhérent doit
 // apparaître quand ce filtre est actif.
 const FILTRES = [
   { cle: 'tous', libelle: 'Tous', test: () => true },
-  { cle: 'a_jour', libelle: 'À jour', test: (a) => calculerStatutLicence(a).valide },
-  { cle: 'non_a_jour', libelle: 'Non à jour', test: (a) => !calculerStatutLicence(a).valide },
+  { cle: 'a_jour', libelle: 'À jour', test: (a, statut) => statut.valide },
+  { cle: 'non_a_jour', libelle: 'Non à jour', test: (a, statut) => !statut.valide },
   { cle: 'fiche', libelle: 'Questionnaire manquant', test: (a) => !a.questionnaire_sante_ok },
   { cle: 'yeps', libelle: 'Manque YEPS', test: (a) => a.manque_yeps },
   { cle: 'passport', libelle: "Manque PASS'SPORT", test: (a) => a.manque_passport },
@@ -30,6 +30,52 @@ const FILTRES = [
 function champCsv(valeur) {
   return `"${String(valeur ?? '').replace(/"/g, '""')}"`;
 }
+
+// « 1 284 » plutôt que « 1284 ».
+const formatNombre = new Intl.NumberFormat('fr-FR').format;
+
+// Une ligne du tableau. Mémoïsée : changer un filtre ou cocher une case ne
+// redessine que les lignes concernées (utile avec plusieurs centaines d'adhérents).
+const LigneAdherent = memo(function LigneAdherent({
+  adherent: a,
+  statut,
+  selectionne,
+  onBasculer,
+  onModifier,
+  onQrCode,
+}) {
+  return (
+    <tr>
+      <td className="dash-select-col">
+        <input
+          type="checkbox"
+          className="dash-select"
+          checked={selectionne}
+          onChange={() => onBasculer(a.id)}
+          aria-label={`Sélectionner ${nomComplet(a)}`}
+        />
+      </td>
+      <td className="dash-nom-col">
+        <strong>{nomComplet(a)}</strong>
+        {a.email && <div className="muted small dash-email">{a.email}</div>}
+      </td>
+      <td className="dash-statut-col"><StatusBadge valide={statut.valide} /></td>
+      <td className={`small dash-detail-col${statut.valide ? ' dash-detail-col--vide' : ''}`}>
+        {statut.valide ? '—' : statut.anomalies.join(' · ')}
+      </td>
+      <td className="dash-actions-col">
+        <div className="dash-row-actions">
+          <button className="btn-ghost" onClick={() => onModifier({ adherent: a })}>
+            Modifier
+          </button>
+          <button className="btn-ghost" onClick={() => onQrCode(a)}>
+            QR Code
+          </button>
+        </div>
+      </td>
+    </tr>
+  );
+});
 
 // La barre se remplit avec scaleX (animé par le GPU) plutôt qu'avec width.
 function BarreProgression({ envoyes, total }) {
@@ -82,6 +128,12 @@ export default function BureauDashboard() {
   const titreEnvoiId = useId();
   const titreResultatId = useId();
 
+  // Statut de chaque adhérent, calculé une seule fois quand la liste change.
+  const statuts = useMemo(
+    () => new Map(adherents.map((a) => [a.id, calculerStatutLicence(a)])),
+    [adherents]
+  );
+
   // Adhérents éligibles à l'envoi : email présent
   const adherentsEligibles = useMemo(
     () => adherents.filter((a) => a.email),
@@ -89,8 +141,8 @@ export default function BureauDashboard() {
   );
 
   const relancesPossibles = useMemo(
-    () => adherents.filter((a) => a.email && !calculerStatutLicence(a).valide),
-    [adherents]
+    () => adherents.filter((a) => a.email && !statuts.get(a.id).valide),
+    [adherents, statuts]
   );
 
   // Développement uniquement : jeu de données de test (?data=…) à la place de Supabase.
@@ -99,7 +151,7 @@ export default function BureauDashboard() {
   // Chargement initial et abonnement Realtime depuis Supabase.
   useEffect(() => {
     if (import.meta.env.DEV && jeuTest) {
-      setAdherents(adherentsDeTest(jeuTest));
+      setAdherents(adherentsDeTest(jeuTest).sort(comparerParNom));
       setErreur(null);
       setChargement(false);
       return undefined;
@@ -112,7 +164,7 @@ export default function BureauDashboard() {
         .order('nom', { ascending: true });
 
       if (error) setErreur('Chargement impossible : ' + error.message);
-      else setAdherents(data);
+      else setAdherents([...data].sort(comparerParNom));
       setChargement(false);
     }
     charger();
@@ -127,13 +179,13 @@ export default function BureauDashboard() {
             const nv = payload.new;
             setAdherents((prev) => {
               if (prev.some((a) => a.id === nv.id)) return prev;
-              return [...prev, nv].sort((a, b) => a.nom.localeCompare(b.nom));
+              return [...prev, nv].sort(comparerParNom);
             });
           } else if (payload.eventType === 'UPDATE') {
             const nv = payload.new;
             setAdherents((prev) => {
               const maj = prev.map((a) => (a.id === nv.id ? nv : a));
-              return maj.sort((a, b) => a.nom.localeCompare(b.nom));
+              return maj.sort(comparerParNom);
             });
           } else if (payload.eventType === 'DELETE') {
             const anc = payload.old;
@@ -170,7 +222,7 @@ export default function BureauDashboard() {
     const filtres = FILTRES.filter((x) => x.cle !== 'tous' && filtresActifs.includes(x.cle));
 
     return adherents
-      .filter((a) => filtres.every((f) => f.test(a)))
+      .filter((a) => filtres.every((f) => f.test(a, statuts.get(a.id))))
       .filter((a) => {
         if (!q) return true;
         const nom = norm(a.nom);
@@ -184,7 +236,7 @@ export default function BureauDashboard() {
           `${nom} ${prenom}`.includes(q)
         );
       });
-  }, [adherents, filtresActifs, recherche]);
+  }, [adherents, statuts, filtresActifs, recherche]);
 
   // Statistiques globales (sur tous les adhérents, pas seulement la liste filtrée).
   const idsVisibles = useMemo(() => liste.map((adherent) => adherent.id), [liste]);
@@ -202,11 +254,11 @@ export default function BureauDashboard() {
 
   const stats = useMemo(() => {
     let aJour = 0;
-    for (const a of adherents) {
-      if (calculerStatutLicence(a).valide) aJour++;
+    for (const statut of statuts.values()) {
+      if (statut.valide) aJour++;
     }
     return { total: adherents.length, aJour, nonAJour: adherents.length - aJour };
-  }, [adherents]);
+  }, [adherents.length, statuts]);
 
   useEffect(() => {
     if (!selectAllRef.current) return;
@@ -225,7 +277,7 @@ export default function BureauDashboard() {
       const maj = existe
         ? prev.map((a) => (a.id === adherent.id ? adherent : a))
         : [...prev, adherent];
-      return maj.sort((a, b) => a.nom.localeCompare(b.nom));
+      return maj.sort(comparerParNom);
     });
     setEditeur(null);
   }
@@ -236,7 +288,7 @@ export default function BureauDashboard() {
       for (const adherent of adherentsMaj) {
         map.set(adherent.id, adherent);
       }
-      return [...map.values()].sort((a, b) => a.nom.localeCompare(b.nom));
+      return [...map.values()].sort(comparerParNom);
     });
     setSelection([]);
     setEditionMultiple(false);
@@ -248,13 +300,14 @@ export default function BureauDashboard() {
     setEditeur(null);
   }
 
-  function basculerSelection(id) {
+  // Fonction stable : les lignes mémoïsées ne sont pas redessinées à chaque rendu.
+  const basculerSelection = useCallback((id) => {
     setSelection((prev) =>
       prev.includes(id)
         ? prev.filter((x) => x !== id)
         : [...prev, id]
     );
-  }
+  }, []);
 
   function basculerSelectionVisible() {
     if (toutVisibleSelectionne) {
@@ -272,11 +325,11 @@ export default function BureauDashboard() {
       setAdherents((prev) => {
         const map = new Map(prev.map((a) => [a.id, a]));
         for (const a of touches) map.set(a.id, a);
-        return [...map.values()].sort((a, b) => a.nom.localeCompare(b.nom));
+        return [...map.values()].sort(comparerParNom);
       });
     } else {
       const { data } = await supabase.from('adherents').select('*').order('nom', { ascending: true });
-      if (data) setAdherents(data);
+      if (data) setAdherents([...data].sort(comparerParNom));
     }
   }
 
@@ -469,14 +522,14 @@ export default function BureauDashboard() {
               disabled={envoi === 'loading' || adherentsEligibles.length === 0}
               title={adherentsEligibles.length === 0 ? 'Aucun adhérent avec une adresse email' : undefined}
             >
-              {envoi === 'loading' ? 'Envoi en cours…' : `Envoyer les QR par email (${adherentsEligibles.length})`}
+              {envoi === 'loading' ? 'Envoi en cours…' : `Envoyer les QR par email (${formatNombre(adherentsEligibles.length)})`}
             </button>
             <button
               className="btn-ghost"
               onClick={() => ouvrirEnvoiModal('reminder')}
               disabled={envoi === 'loading' || relancesPossibles.length === 0}
             >
-              Relancer non à jour ({relancesPossibles.length})
+              Relancer non à jour ({formatNombre(relancesPossibles.length)})
             </button>
             <button onClick={() => setEditeur({ adherent: null })}>+ Nouvel adhérent</button>
           </div>
@@ -487,8 +540,8 @@ export default function BureauDashboard() {
           <div className="envoi-progress">
             <BarreProgression envoyes={progression.envoyes} total={progression.total} />
             <p className="envoi-progress__label">
-              {progression.envoyes} / {progression.total ?? '…'} emails envoyés
-              {progression.total && (
+              {formatNombre(progression.envoyes)} / {progression.total ? formatNombre(progression.total) : '…'} emails envoyés
+              {progression.total > 0 && (
                 <span className="muted"> · {Math.round((progression.envoyes / progression.total) * 100)}%</span>
               )}
             </p>
@@ -497,15 +550,15 @@ export default function BureauDashboard() {
 
         <div className="stats">
           <div className="stat">
-            <span className="stat-num">{stats.total}</span>
+            <span className="stat-num">{formatNombre(stats.total)}</span>
             <span className="stat-lib">Adhérents</span>
           </div>
           <div className="stat stat--ok">
-            <span className="stat-num">{stats.aJour}</span>
+            <span className="stat-num">{formatNombre(stats.aJour)}</span>
             <span className="stat-lib">À jour</span>
           </div>
           <div className="stat stat--ko">
-            <span className="stat-num">{stats.nonAJour}</span>
+            <span className="stat-num">{formatNombre(stats.nonAJour)}</span>
             <span className="stat-lib">Non à jour</span>
           </div>
         </div>
@@ -545,7 +598,7 @@ export default function BureauDashboard() {
               className="btn-ghost"
               onClick={() => setEditionMultiple(true)}
             >
-              Modifier la sélection ({selection.length})
+              Modifier la sélection ({formatNombre(selection.length)})
             </button>
           </div>
         )}
@@ -553,60 +606,65 @@ export default function BureauDashboard() {
         {erreur && <p className="error">{erreur}</p>}
 
         {!chargement && !erreur && (
-          liste.length === 0 ? (
-            <p className="muted dash-empty">Aucun adhérent ne correspond.</p>
+          adherents.length === 0 ? (
+            <div className="dash-empty">
+              <p className="dash-empty__titre">Aucun adhérent pour l'instant.</p>
+              <p className="muted small">Importez les réponses du formulaire ou ajoutez un adhérent à la main.</p>
+              <button className="btn-ghost" onClick={() => setImportMode('forms')}>
+                Importer le formulaire
+              </button>
+            </div>
+          ) : liste.length === 0 ? (
+            <div className="dash-empty">
+              <p className="dash-empty__titre">Aucun adhérent ne correspond à la recherche ou aux filtres.</p>
+              <button
+                className="btn-ghost"
+                onClick={() => {
+                  setRecherche('');
+                  setFiltresActifs([]);
+                }}
+              >
+                Effacer la recherche et les filtres
+              </button>
+            </div>
           ) : (
             <div className="dash-table-wrap">
               <table className="dash-table">
                 <thead>
                   <tr>
                     <th className="dash-select-col">
-                      <input
-                        ref={selectAllRef}
-                        type="checkbox"
-                        className="dash-select"
-                        checked={toutVisibleSelectionne}
-                        onChange={basculerSelectionVisible}
-                        aria-label="Sélectionner tous les adhérents visibles"
-                      />
+                      <label className="dash-select-all">
+                        <input
+                          ref={selectAllRef}
+                          type="checkbox"
+                          className="dash-select"
+                          checked={toutVisibleSelectionne}
+                          onChange={basculerSelectionVisible}
+                          aria-label="Sélectionner tous les adhérents visibles"
+                        />
+                        <span className="dash-select-all__texte" aria-hidden="true">
+                          Tout sélectionner ({formatNombre(liste.length)})
+                        </span>
+                      </label>
                     </th>
                     <th>Nom</th>
                     <th>Statut</th>
                     <th>Détail</th>
-                    <th></th>
+                    <th><span className="sr-only">Actions</span></th>
                   </tr>
                 </thead>
                 <tbody>
-                  {liste.map((a) => {
-                    const { valide, anomalies } = calculerStatutLicence(a);
-                    return (
-                      <tr key={a.id}>
-                        <td className="dash-select-col">
-                          <input
-                            type="checkbox"
-                            className="dash-select"
-                            checked={selectionSet.has(a.id)}
-                            onChange={() => basculerSelection(a.id)}
-                            aria-label={`Sélectionner ${nomComplet(a)}`}
-                          />
-                        </td>
-                        <td>
-                          <strong>{nomComplet(a)}</strong>
-                          {a.email && <div className="muted small">{a.email}</div>}
-                        </td>
-                        <td><StatusBadge adherent={a} /></td>
-                        <td className="small">{valide ? '—' : anomalies.join(' · ')}</td>
-                        <td className="dash-row-actions">
-                          <button className="btn-ghost" onClick={() => setEditeur({ adherent: a })}>
-                            Modifier
-                          </button>
-                          <button className="btn-ghost" onClick={() => setQrAdherent(a)}>
-                            QR Code
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
+                  {liste.map((a) => (
+                    <LigneAdherent
+                      key={a.id}
+                      adherent={a}
+                      statut={statuts.get(a.id)}
+                      selectionne={selectionSet.has(a.id)}
+                      onBasculer={basculerSelection}
+                      onModifier={setEditeur}
+                      onQrCode={setQrAdherent}
+                    />
+                  ))}
                 </tbody>
               </table>
             </div>
@@ -682,7 +740,7 @@ export default function BureauDashboard() {
             <div className="sending-modal__progress">
               <BarreProgression envoyes={progression.envoyes} total={progression.total} />
               <p className="envoi-progress__label" aria-live="polite">
-                {progression.envoyes} / {progression.total ?? '…'} emails envoyés
+                {formatNombre(progression.envoyes)} / {progression.total ? formatNombre(progression.total) : '…'} emails envoyés
               </p>
             </div>
           )}
