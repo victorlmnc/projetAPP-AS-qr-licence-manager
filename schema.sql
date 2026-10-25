@@ -42,6 +42,17 @@ create table if not exists adherents (
   manque_yeps boolean not null default false,
   manque_passport boolean not null default false,
 
+  -- Merch : article commandé, taille, remis ou non. Le flocage est une
+  -- option du maillot, remise avec lui.
+  maillot boolean not null default false,
+  taille_maillot text,
+  maillot_recupere boolean not null default false,
+  flocage boolean not null default false,
+  texte_flocage text,
+  short boolean not null default false,
+  taille_short text,
+  short_recupere boolean not null default false,
+
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -66,6 +77,15 @@ alter table adherents add column if not exists activite_contraintes boolean not 
 alter table adherents add column if not exists situation_handicap boolean not null default false;
 alter table adherents add column if not exists droit_image boolean not null default false;
 alter table adherents add column if not exists fiche_renseignement boolean not null default false;
+alter table adherents add column if not exists maillot boolean not null default false;
+alter table adherents add column if not exists taille_maillot text;
+alter table adherents add column if not exists maillot_recupere boolean not null default false;
+alter table adherents add column if not exists flocage boolean not null default false;
+alter table adherents add column if not exists texte_flocage text;
+alter table adherents add column if not exists short boolean not null default false;
+alter table adherents add column if not exists taille_short text;
+alter table adherents add column if not exists short_recupere boolean not null default false;
+alter table adherents drop column if exists flocage_recupere;
 
 -- Migration si la table existait deja avant l'ajout du token public.
 alter table adherents add column if not exists public_token uuid;
@@ -81,6 +101,12 @@ alter table adherents add constraint adherents_nom_longueur
 alter table adherents drop constraint if exists adherents_prenom_longueur;
 alter table adherents add constraint adherents_prenom_longueur
   check (char_length(prenom) <= 100) not valid;
+alter table adherents drop constraint if exists adherents_texte_flocage_longueur;
+alter table adherents add constraint adherents_texte_flocage_longueur
+  check (char_length(texte_flocage) <= 20) not valid;
+alter table adherents drop constraint if exists adherents_flocage_sur_maillot;
+alter table adherents add constraint adherents_flocage_sur_maillot
+  check (not flocage or maillot) not valid;
 alter table adherents drop constraint if exists adherents_email_longueur;
 alter table adherents add constraint adherents_email_longueur
   check (char_length(email) <= 254) not valid;
