@@ -1,18 +1,43 @@
 -- Schema : Systeme de Controle des Licences QR
 -- A executer dans l'editeur SQL Supabase.
+-- Le script est rejouable : il cree ce qui manque sans toucher aux donnees.
 
 create extension if not exists "pgcrypto";
 
 create table if not exists adherents (
   id uuid primary key default gen_random_uuid(),
   public_token uuid not null default gen_random_uuid() unique,
+
+  -- Identite et contact
   nom text not null,
   prenom text not null,
   email text,
+  telephone text,
+  sexe text,
+  annee_etude text,
+  date_naissance text,
+  pays_naissance text,
+  dept_naissance text,
+  ville_naissance text,
+  adresse text,
+  code_postal text,
+  ville text,
 
+  -- Licence et role
+  types_licence text[],
+  est_responsable_as boolean not null default false,
+  adherent_bde boolean not null default false,
+  licence_ffsu_a_jour boolean not null default false,
+
+  -- Medical et autorisations
+  questionnaire_sante_ok boolean not null default false,
+  activite_contraintes boolean not null default false,
+  situation_handicap boolean not null default false,
+  droit_image boolean not null default false,
   fiche_renseignement boolean not null default false,
-  paiement_global boolean not null default false,
 
+  -- Paiement
+  paiement_global boolean not null default false,
   manque_paiement boolean not null default false,
   manque_yeps boolean not null default false,
   manque_passport boolean not null default false,
@@ -20,6 +45,27 @@ create table if not exists adherents (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+-- Migration si la table existait deja avant l'ajout de ces colonnes.
+alter table adherents add column if not exists telephone text;
+alter table adherents add column if not exists sexe text;
+alter table adherents add column if not exists annee_etude text;
+alter table adherents add column if not exists date_naissance text;
+alter table adherents add column if not exists pays_naissance text;
+alter table adherents add column if not exists dept_naissance text;
+alter table adherents add column if not exists ville_naissance text;
+alter table adherents add column if not exists adresse text;
+alter table adherents add column if not exists code_postal text;
+alter table adherents add column if not exists ville text;
+alter table adherents add column if not exists types_licence text[];
+alter table adherents add column if not exists est_responsable_as boolean not null default false;
+alter table adherents add column if not exists adherent_bde boolean not null default false;
+alter table adherents add column if not exists licence_ffsu_a_jour boolean not null default false;
+alter table adherents add column if not exists questionnaire_sante_ok boolean not null default false;
+alter table adherents add column if not exists activite_contraintes boolean not null default false;
+alter table adherents add column if not exists situation_handicap boolean not null default false;
+alter table adherents add column if not exists droit_image boolean not null default false;
+alter table adherents add column if not exists fiche_renseignement boolean not null default false;
 
 -- Migration si la table existait deja avant l'ajout du token public.
 alter table adherents add column if not exists public_token uuid;
@@ -45,6 +91,7 @@ drop policy if exists "coach_read_adherents" on adherents;
 drop policy if exists "adherent_read_own" on adherents;
 drop policy if exists "public_read_by_id" on adherents;
 drop policy if exists "read_adherents" on adherents;
+drop policy if exists "bureau_read_adherents" on adherents;
 drop policy if exists "bureau_insert_adherents" on adherents;
 drop policy if exists "bureau_update_adherents" on adherents;
 drop policy if exists "bureau_delete_adherents" on adherents;
@@ -72,54 +119,87 @@ as $$
   select role from profiles where id = (select auth.uid());
 $$;
 
-revoke execute on function get_my_role() from public;
+-- Supabase accorde par defaut l'execution a anon : on la retire explicitement.
+revoke execute on function get_my_role() from public, anon;
 grant execute on function get_my_role() to authenticated;
 grant execute on function get_my_role() to service_role;
 
+-- Scan terrain : le coach n'a aucun acces direct a la table adherents.
+-- Il lit un seul adherent a la fois, par token, avec les champs du statut uniquement.
+create or replace function scanner_adherent(p_token uuid)
+  returns table (
+    public_token uuid,
+    nom text,
+    prenom text,
+    questionnaire_sante_ok boolean,
+    paiement_global boolean,
+    manque_paiement boolean,
+    manque_yeps boolean,
+    manque_passport boolean,
+    licence_ffsu_a_jour boolean,
+    activite_contraintes boolean
+  )
+  language sql security definer stable
+  set search_path = public
+as $$
+  select
+    a.public_token, a.nom, a.prenom,
+    a.questionnaire_sante_ok, a.paiement_global,
+    a.manque_paiement, a.manque_yeps, a.manque_passport,
+    a.licence_ffsu_a_jour, a.activite_contraintes
+  from adherents a
+  where a.public_token = p_token
+    and (select get_my_role()) in ('bureau', 'coach');
+$$;
+
+revoke execute on function scanner_adherent(uuid) from public, anon;
+grant execute on function scanner_adherent(uuid) to authenticated;
+
 -- Important : aucun acces anonyme direct a la table.
 -- La page /adherent/:public_token passe par /api/public-adherent cote serveur.
-create policy "read_adherents"
+-- (select get_my_role()) est evalue une seule fois par requete, pas par ligne.
+create policy "bureau_read_adherents"
   on adherents for select
   to authenticated
-  using (get_my_role() in ('bureau', 'coach'));
+  using ((select get_my_role()) = 'bureau');
 
 create policy "bureau_insert_adherents"
   on adherents for insert
   to authenticated
-  with check (get_my_role() = 'bureau');
+  with check ((select get_my_role()) = 'bureau');
 
 create policy "bureau_update_adherents"
   on adherents for update
   to authenticated
-  using (get_my_role() = 'bureau')
-  with check (get_my_role() = 'bureau');
+  using ((select get_my_role()) = 'bureau')
+  with check ((select get_my_role()) = 'bureau');
 
 create policy "bureau_delete_adherents"
   on adherents for delete
   to authenticated
-  using (get_my_role() = 'bureau');
+  using ((select get_my_role()) = 'bureau');
 
 create policy "read_profiles"
   on profiles for select
   to authenticated
-  using (id = (select auth.uid()) or get_my_role() = 'bureau');
+  using (id = (select auth.uid()) or (select get_my_role()) = 'bureau');
 
 -- Le bureau peut gerer les profils non-bureau, sans creer d'escalade.
 create policy "bureau_insert_profiles"
   on profiles for insert
   to authenticated
-  with check (get_my_role() = 'bureau' and role = 'coach');
+  with check ((select get_my_role()) = 'bureau' and role = 'coach');
 
 create policy "bureau_update_profiles"
   on profiles for update
   to authenticated
-  using (get_my_role() = 'bureau' and role != 'bureau')
+  using ((select get_my_role()) = 'bureau' and role != 'bureau')
   with check (role = 'coach');
 
 create policy "bureau_delete_profiles"
   on profiles for delete
   to authenticated
-  using (get_my_role() = 'bureau' and role != 'bureau');
+  using ((select get_my_role()) = 'bureau' and role != 'bureau');
 
 create or replace function set_updated_at()
   returns trigger language plpgsql

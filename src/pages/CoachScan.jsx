@@ -6,6 +6,14 @@ import { nomComplet } from '../lib/texte';
 import './CoachScan.css';
 
 const READER_ID = 'reader';
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+// Le coach n'a pas acces au temps reel : on relit la fiche affichee a intervalle regulier.
+const ACTUALISATION_MS = 10000;
+
+// Lecture limitee aux champs du statut, via la fonction SQL scanner_adherent.
+function lireAdherentScanne(token) {
+  return supabase.rpc('scanner_adherent', { p_token: token }).maybeSingle();
+}
 
 function extraireIdentifiantQr(texteLu) {
   const valeur = texteLu.trim();
@@ -63,11 +71,12 @@ export default function CoachScan() {
       return;
     }
 
-    const { data, error } = await supabase
-      .from('adherents')
-      .select('*')
-      .eq('public_token', identifiant)
-      .maybeSingle();
+    if (!UUID_RE.test(identifiant)) {
+      setErreur('Adherent introuvable ou QR invalide.');
+      return;
+    }
+
+    const { data, error } = await lireAdherentScanne(identifiant);
 
     if (error || !data) {
       setErreur('Adherent introuvable ou QR invalide.');
@@ -78,28 +87,22 @@ export default function CoachScan() {
   }, []);
 
   useEffect(() => {
-    if (!adherent?.id) return;
+    const token = adherent?.public_token;
+    if (!token) return;
 
-    const canal = supabase
-      .channel('adherent_coach_realtime')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'adherents' },
-        (payload) => {
-          if (payload.eventType === 'UPDATE' && payload.new.id === adherent.id) {
-            setAdherent(payload.new);
-          } else if (payload.eventType === 'DELETE' && payload.old.id === adherent.id) {
-            setAdherent(null);
-            setErreur('Cet adherent a ete supprime de la base de donnees.');
-          }
-        }
-      )
-      .subscribe();
+    const timer = setInterval(async () => {
+      const { data, error } = await lireAdherentScanne(token);
+      if (error) return;
+      if (!data) {
+        setAdherent(null);
+        setErreur('Cet adherent a ete supprime de la base de donnees.');
+        return;
+      }
+      setAdherent(data);
+    }, ACTUALISATION_MS);
 
-    return () => {
-      supabase.removeChannel(canal);
-    };
-  }, [adherent?.id]);
+    return () => clearInterval(timer);
+  }, [adherent?.public_token]);
 
   useEffect(() => {
     let annule = false;
