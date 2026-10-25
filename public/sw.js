@@ -1,4 +1,4 @@
-const CACHE_NAME = 'licences-qr-v3';
+const CACHE_NAME = 'licences-qr-v4';
 const APP_ASSETS = ['/', '/manifest.json', '/icon-192.png', '/icon-512.png', '/logo.png'];
 
 self.addEventListener('install', (event) => {
@@ -26,6 +26,10 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(event.request.url);
   if (url.origin !== self.location.origin) return;
+
+  // Jamais de cache pour l'API : un statut de licence perime ne doit pas
+  // s'afficher hors ligne, et les donnees adherent ne restent pas sur l'appareil.
+  if (url.pathname.startsWith('/api/')) return;
 
   // Navigation requests: network-first, fallback to cached shell
   if (event.request.mode === 'navigate') {
