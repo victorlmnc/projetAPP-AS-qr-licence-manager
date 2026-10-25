@@ -18,6 +18,7 @@ Déployée sur **[as-licences-insa-cvl.vercel.app](https://as-licences-insa-cvl.
 - Édition en masse de plusieurs adhérents simultanément
 - Mise à jour temps réel via Supabase Realtime
 - Paramètres : changement des mots de passe, remise à zéro de la base en fin de saison
+- Utilisable sur ordinateur et sur téléphone (sur petit écran, le tableau s'affiche en cartes)
 
 ### Espace Respos-Sports
 - Scanner de QR Codes sur le terrain via la caméra du téléphone
@@ -40,7 +41,7 @@ Déployée sur **[as-licences-insa-cvl.vercel.app](https://as-licences-insa-cvl.
 | Email | Nodemailer via SMTP Gmail |
 | QR Code | `qrcode.react` (génération), `html5-qrcode` (scan) |
 | Import/Export | PapaParse (CSV), SheetJS xlsx, jsPDF + jspdf-autotable |
-| Tests | Vitest |
+| Tests | Vitest (unitaires), Playwright (bout en bout) |
 | Déploiement | Vercel |
 
 ---
@@ -54,6 +55,13 @@ Déployée sur **[as-licences-insa-cvl.vercel.app](https://as-licences-insa-cvl.
 │   └── change-password.js             # Changement du mot de passe respos-sports (par le bureau)
 │
 ├── migrations/                        # Scripts SQL à exécuter une fois sur une base existante
+│
+├── e2e/                               # Tests de bout en bout (Playwright)
+│   ├── bureau.spec.js                 # Tableau de bord : tri, filtres, états vides, 1 284 lignes
+│   ├── fenetres.spec.js               # Éditeur de fiche et envoi groupé (Échap, focus, mobile)
+│   ├── scan.spec.js                   # Résultat du scan terrain
+│   ├── adherent.spec.js               # Page publique adhérent
+│   └── outils.js                      # Aides communes (ouverture, détection de débordements)
 │
 ├── src/
 │   ├── pages/
@@ -71,19 +79,26 @@ Déployée sur **[as-licences-insa-cvl.vercel.app](https://as-licences-insa-cvl.
 │   │   ├── ImportComplementaireModal.jsx  # Import complémentaire CSV/Excel
 │   │   ├── TutorialModal.jsx          # Tutoriel intégré (bureau + respos-sports)
 │   │   ├── SettingsModal.jsx          # Paramètres
+│   │   ├── Modal.jsx                  # Fenêtre modale commune (<dialog> : Échap, focus, fond inerte)
 │   │   └── ...
 │   │
 │   ├── lib/
 │   │   ├── licence.js                 # Calcul du statut de licence et messages
 │   │   ├── licence.test.js            # Tests unitaires (Vitest)
 │   │   ├── supabase.js                # Client Supabase côté client
-│   │   ├── texte.js                   # Utilitaires texte (nomComplet, reparerTexte)
+│   │   ├── texte.js                   # Utilitaires texte (nomComplet, reparerTexte, comparerParNom)
+│   │   ├── texte.test.js              # Tests unitaires (Vitest)
 │   │   └── publicAccess.js            # Construction de l'URL publique d'un adhérent
+│   │
+│   ├── dev/                           # Développement uniquement (absent du build de production)
+│   │   ├── donneesTest.js             # Jeux de données de test : démo, pire cas, vide, un seul, 1 284 lignes
+│   │   └── SelecteurDonnees.jsx       # Sélecteur de jeu de données affiché sur les routes /dev/*
 │   │
 │   └── context/
 │       └── AuthContext.jsx            # Authentification et rôle (bureau / coach)
 │
 ├── schema.sql                         # Schéma complet de la base (tables, RLS, fonctions)
+├── playwright.config.js               # Configuration des tests de bout en bout
 ├── vercel.json                        # Réécriture SPA — toutes les routes → index.html
 └── package.json
 ```
@@ -127,8 +142,16 @@ Table `adherents` dans Supabase :
 > **Statut de licence = `questionnaire_sante_ok AND paiement_global`**  
 > La licence FFSU est informative uniquement (nécessaire pour les compétitions, pas pour les entraînements).
 
+> Longueurs maximales : 100 caractères pour `nom` et `prenom`, 254 pour `email` (contraintes SQL et champs du formulaire).
+
 - **Nouvelle base** : exécuter `schema.sql` dans l'éditeur SQL Supabase.
-- **Base existante** : exécuter dans l'ordre les scripts de `migrations/` qui n'ont pas encore été appliqués.
+- **Base existante** : exécuter dans l'ordre les scripts de `migrations/` qui n'ont pas encore été appliqués :
+
+| Script | Quand l'exécuter |
+|---|---|
+| `2026-10-25-1-fonction-scan.sql` | Avant de déployer le nouveau scan (ajoute la fonction `scanner_adherent`, sans rien retirer) |
+| `2026-10-25-2-restreindre-lecture-coach.sql` | **Après** le déploiement (retire au compte respos-sports l'accès direct à la table) |
+| `2026-10-25-3-limites-longueur.sql` | N'importe quand (limites de longueur des noms et emails) |
 
 ---
 
@@ -148,6 +171,9 @@ SUPABASE_SERVICE_ROLE_KEY=eyJ...
 # Gmail SMTP — envoi des emails
 GMAIL_USER=votre.adresse@gmail.com
 GMAIL_APP_PASSWORD=xxxx xxxx xxxx xxxx
+
+# URL publique du site, utilisée dans les liens des emails (obligatoire pour l'envoi des QR Codes)
+APP_BASE_URL=https://as-licences-insa-cvl.vercel.app
 ```
 
 > `GMAIL_APP_PASSWORD` doit être un **mot de passe d'application** généré dans les paramètres de sécurité du compte Google (authentification à deux facteurs requise).  
@@ -171,13 +197,32 @@ npm run dev
 # Lancer les tests unitaires
 npm test
 
+# Lancer les tests de bout en bout (démarre le serveur de dev tout seul)
+npm run test:e2e
+
 # Build de production
 npm run build
 ```
 
-> En développement local, les fonctions `/api/` Vercel ne s'exécutent pas.  
-> La page publique adhérent bascule automatiquement sur un fallback Supabase direct.  
+> En développement local, les fonctions `/api/` Vercel ne s'exécutent pas (envoi d'emails, changement du mot de passe respos-sports).  
+> La page publique adhérent bascule sur une lecture Supabase directe, qui ne fonctionne que connecté avec le compte bureau dans le même navigateur.  
 > La caméra (CoachScan) fonctionne en HTTPS sur Vercel et sur `localhost` en développement.
+
+### Tester avec des données de test
+
+En développement uniquement, trois routes affichent les pages **sans connexion ni Supabase**, avec un sélecteur de jeu de données en bas de l'écran (Démo, Pire cas, Vide, Un seul, 1 284 lignes) :
+
+| Route | Page |
+|---|---|
+| `http://localhost:5173/dev/bureau` | Tableau de bord |
+| `http://localhost:5173/dev/scan` | Résultat du scan terrain (sans caméra) |
+| `http://localhost:5173/dev/adherent` | Page publique adhérent |
+
+Le jeu « Pire cas » contient des valeurs réalistes qui cassent souvent les interfaces : noms très longs, emails insécables, homonymes, caractères accentués, arabes ou chinois, texte encodé de travers, saisie `<script>`. Les tests de bout en bout s'appuient sur ces mêmes routes.
+
+Ces routes et les données de test sont retirées du build de production (`import.meta.env.DEV`).
+
+Les tests Playwright utilisent Chromium : si aucun n'est installé sur la machine, lancer une fois `npx playwright install chromium`.
 
 ---
 
