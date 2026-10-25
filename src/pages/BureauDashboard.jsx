@@ -10,6 +10,7 @@ import ImportFormsModal from '../components/ImportFormsModal';
 import ImportComplementaireModal from '../components/ImportComplementaireModal';
 import EnvoiQrModal from '../components/EnvoiQrModal';
 import RecapMerchModal from '../components/RecapMerchModal';
+import ImportMerchModal from '../components/ImportMerchModal';
 import Modal from '../components/Modal';
 import { merchARemettre, resumeArticles } from '../lib/merch';
 import { comparerParNom, nomComplet, reparerTexte } from '../lib/texte';
@@ -139,7 +140,7 @@ export default function BureauDashboard() {
   // editeur : null = fermé ; { adherent: objet } = édition ; { adherent: null } = création
   const [editeur, setEditeur] = useState(null);
   const [qrAdherent, setQrAdherent] = useState(null);
-  const [importMode, setImportMode] = useState(null); // null | 'forms' | 'complementaire'
+  const [importMode, setImportMode] = useState(null); // null | 'forms' | 'complementaire' | 'merch'
   const [recapMerchOuvert, setRecapMerchOuvert] = useState(false);
 
   // État de l'envoi groupé des QR codes
@@ -539,6 +540,9 @@ export default function BureauDashboard() {
                 <button className="export-dropdown__item" onClick={() => { setImportMode('complementaire'); importRef.current.open = false; }}>
                   Infos complémentaires
                 </button>
+                <button className="export-dropdown__item" onClick={() => { setImportMode('merch'); importRef.current.open = false; }}>
+                  Commandes de merch
+                </button>
               </div>
             </details>
             <details className="export-dropdown" ref={exportRef}>
@@ -740,6 +744,14 @@ export default function BureauDashboard() {
           onImported={onImported}
         />
       )}
+      {importMode === 'merch' && (
+        <ImportMerchModal
+          adherents={adherents}
+          onClose={() => setImportMode(null)}
+          onImported={onImported}
+        />
+      )}
+
       {recapMerchOuvert && (
         <RecapMerchModal adherents={adherents} onClose={() => setRecapMerchOuvert(false)} />
       )}

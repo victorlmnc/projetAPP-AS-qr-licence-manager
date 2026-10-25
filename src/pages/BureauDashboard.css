@@ -346,6 +346,43 @@
   font-size: 14px;
 }
 
+/* ---------- Import des commandes de merch ---------- */
+
+.import-merch {
+  margin-top: 12px;
+}
+
+.import-merch > p {
+  margin: 0 0 8px;
+}
+
+.import-merch__liste {
+  max-height: 260px;
+  overflow-y: auto;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.import-merch__alerte {
+  margin-top: 12px;
+  padding: 10px 12px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  font-size: 14px;
+}
+
+.import-merch__alerte p {
+  margin: 0 0 4px;
+}
+
+.import-merch__alerte ul {
+  margin: 0;
+  padding-left: 20px;
+  color: var(--ink-2);
+  overflow-wrap: anywhere;
+}
+
 .recap-merch__texte {
   font-weight: 600;
   overflow-wrap: anywhere;
