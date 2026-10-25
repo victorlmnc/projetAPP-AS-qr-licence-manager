@@ -5,6 +5,10 @@ node_modules/
 dist/
 .vercel/
 
+# Playwright (résultats des tests de bout en bout)
+test-results/
+playwright-report/
+
 # Environment files and secrets
 .env
 .env.*

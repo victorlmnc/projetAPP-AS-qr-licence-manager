@@ -11,5 +11,7 @@ export default defineConfig({
   },
   test: {
     environment: 'node',
+    // Les tests de bout en bout (e2e/) sont lancés par Playwright, pas par Vitest.
+    include: ['src/**/*.test.js'],
   },
 });
