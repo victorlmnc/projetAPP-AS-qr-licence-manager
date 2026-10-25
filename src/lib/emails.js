@@ -126,6 +126,12 @@ function informations(adherent) {
       apres: '. Nous vous rembourserons les 50 €.',
     });
   }
+  const arbitreDemande = Array.isArray(adherent.types_licence) && adherent.types_licence.includes('Arbitre');
+  if (arbitreDemande && !adherent.licence_arbitre_obtenue) {
+    infos.push({
+      avant: "Vous avez demandé une licence arbitre : renseignez-vous auprès du bureau de l'AS pour en savoir plus.",
+    });
+  }
   if (adherent.competitions_universitaires && !adherent.licence_ffsu_a_jour) {
     infos.push({
       avant: "Vous avez indiqué vouloir participer aux compétitions universitaires : il vous faut pour cela une licence FFSU. Rapprochez-vous du bureau de l'AS ou du responsable de votre sport pour savoir comment la prendre.",
@@ -157,7 +163,7 @@ function anomaliesOuDefaut(statut) {
 /**
  * Email d'envoi du QR Code.
  * @param adherent  { prenom, nom, types_licence, licence_ffsu_a_jour, activite_contraintes,
- *                    boursier, pass_sport_recu, rib_recu, pass_sport_rembourse,
+ *                    licence_arbitre_obtenue, boursier, pass_sport_recu, rib_recu, pass_sport_rembourse,
  *                    competitions_universitaires }
  * @param statut    résultat de calculerStatutLicence(adherent)
  * @param lien      URL de la page publique de l'adhérent

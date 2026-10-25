@@ -6,7 +6,14 @@ import { LONGUEUR_MAX_FLOCAGE, TAILLES } from '../lib/merch';
 import ConfirmDialog from './ConfirmDialog';
 import Modal from './Modal';
 
-const TYPES_LICENCE = ['Sportive', 'Arbitre', 'Encadrant'];
+// Licences demandées dans le formulaire. `obtenue` : case cochée par le bureau
+// une fois la licence prise. Sans case, la licence suit le statut du dossier
+// (et, pour l'encadrant, le contrôle d'honorabilité).
+const LICENCES = [
+  { type: 'Sportive' },
+  { type: 'Arbitre', obtenue: 'licence_arbitre_obtenue' },
+  { type: 'Encadrant', aide: 'Respo AS' },
+];
 
 // Choix de la question « Sport principal » du formulaire d'inscription.
 const SPORTS = [
@@ -51,6 +58,7 @@ export default function AdherentEditor({ adherent, onClose, onSaved, onDeleted }
     licencie_annee_derniere: adherent?.licencie_annee_derniere ?? false,
     adherent_bde: adherent?.adherent_bde ?? false,
     licence_ffsu_a_jour: adherent?.licence_ffsu_a_jour ?? false,
+    licence_arbitre_obtenue: adherent?.licence_arbitre_obtenue ?? false,
     questionnaire_sante_ok: adherent?.questionnaire_sante_ok ?? false,
     activite_contraintes: adherent?.activite_contraintes ?? false,
     situation_handicap: adherent?.situation_handicap ?? false,
@@ -136,6 +144,14 @@ export default function AdherentEditor({ adherent, onClose, onSaved, onDeleted }
 
   const apercu = calculerStatutLicence(form);
 
+  // Licence sans case « obtenue » : à jour avec le dossier ; l'encadrant doit
+  // en plus avoir attesté le contrôle d'honorabilité.
+  function statutLicence(type) {
+    if (!form.types_licence.includes(type)) return '—';
+    const aJour = apercu.valide && (type !== 'Encadrant' || form.honorabilite_attestee);
+    return aJour ? 'À jour' : 'Non à jour';
+  }
+
   async function enregistrer(e) {
     e.preventDefault();
     setErreur(null);
@@ -173,6 +189,7 @@ export default function AdherentEditor({ adherent, onClose, onSaved, onDeleted }
       licencie_annee_derniere: form.licencie_annee_derniere,
       adherent_bde: form.adherent_bde,
       licence_ffsu_a_jour: form.licence_ffsu_a_jour,
+      licence_arbitre_obtenue: form.licence_arbitre_obtenue,
       questionnaire_sante_ok: form.questionnaire_sante_ok,
       activite_contraintes: form.activite_contraintes,
       situation_handicap: form.situation_handicap,
@@ -185,7 +202,8 @@ export default function AdherentEditor({ adherent, onClose, onSaved, onDeleted }
       // Le suivi n'a de sens que pour un boursier : effacé si la case est décochée.
       pass_sport_recu: form.boursier && form.pass_sport_recu,
       rib_recu: form.boursier && form.rib_recu,
-      pass_sport_rembourse: form.boursier && form.pass_sport_rembourse,
+      // On ne rembourse qu'après avoir reçu le Pass'Sport et le RIB.
+      pass_sport_rembourse: form.boursier && form.pass_sport_recu && form.rib_recu && form.pass_sport_rembourse,
       // Un article décoché efface sa taille et sa remise ; le flocage est une
       // option du maillot, il disparaît avec lui.
       maillot: form.maillot,
@@ -296,6 +314,76 @@ export default function AdherentEditor({ adherent, onClose, onSaved, onDeleted }
                 Statut résultant : <strong>{apercu.valide ? 'À jour' : 'Non à jour'}</strong>
               </div>
 
+              {/* Demandée : réponse au formulaire. Obtenue : renseignée par le bureau. */}
+              <p className="editor-section-title">Licences</p>
+              <table className="editor-licences">
+                <thead>
+                  <tr>
+                    <th scope="col"><span className="sr-only">Licence</span></th>
+                    <th scope="col">Demandée</th>
+                    <th scope="col">Obtenue</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {LICENCES.map(({ type, obtenue, aide }) => (
+                    <tr key={type}>
+                      <th scope="row">
+                        {type}
+                        {aide && <span className="editor-licences__aide">{aide}</span>}
+                      </th>
+                      <td>
+                        <label className="check editor-licences__case">
+                          <input type="checkbox" aria-label={`Licence ${type} demandée`}
+                                 checked={form.types_licence.includes(type)} onChange={() => toggleLicence(type)} />
+                        </label>
+                      </td>
+                      <td>
+                        {obtenue ? (
+                          <label className="check editor-licences__case">
+                            <input type="checkbox" aria-label={`Licence ${type} obtenue`}
+                                   checked={form[obtenue]} onChange={(e) => set(obtenue, e.target.checked)} />
+                          </label>
+                        ) : (
+                          <span className="editor-licences__statut">{statutLicence(type)}</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                  {/* FFSU : demandée par ceux qui veulent faire les compétitions universitaires. */}
+                  <tr>
+                    <th scope="row">
+                      FFSU
+                      <span className="editor-licences__aide">Compétitions universitaires</span>
+                    </th>
+                    <td>
+                      <label className="check editor-licences__case">
+                        <input type="checkbox" aria-label="Licence FFSU demandée"
+                               checked={form.competitions_universitaires}
+                               onChange={(e) => set('competitions_universitaires', e.target.checked)} />
+                      </label>
+                    </td>
+                    <td>
+                      <label className="check editor-licences__case">
+                        <input type="checkbox" aria-label="Licence FFSU obtenue"
+                               checked={form.licence_ffsu_a_jour}
+                               onChange={(e) => set('licence_ffsu_a_jour', e.target.checked)} />
+                      </label>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+
+              {form.types_licence.includes('Encadrant') && (
+                <label className="check">
+                  <input type="checkbox" checked={form.honorabilite_attestee} onChange={(e) => set('honorabilite_attestee', e.target.checked)} />
+                  Contrôle d'honorabilité attesté
+                </label>
+              )}
+              <label className="check">
+                <input type="checkbox" checked={form.activite_contraintes} onChange={(e) => set('activite_contraintes', e.target.checked)} />
+                Activités à contraintes (certificat médical présenté)
+              </label>
+
               {/* N'entre pas dans le statut : l'email du QR Code explique le remboursement. */}
               <p className="editor-section-title">Pass'Sport</p>
               <label className="check">
@@ -316,11 +404,13 @@ export default function AdherentEditor({ adherent, onClose, onSaved, onDeleted }
                            onChange={(e) => set('rib_recu', e.target.checked)} />
                     RIB reçu
                   </label>
-                  <label className="check">
-                    <input type="checkbox" checked={form.pass_sport_rembourse}
-                           onChange={(e) => set('pass_sport_rembourse', e.target.checked)} />
-                    50 € remboursés
-                  </label>
+                  {form.pass_sport_recu && form.rib_recu && (
+                    <label className="check">
+                      <input type="checkbox" checked={form.pass_sport_rembourse}
+                             onChange={(e) => set('pass_sport_rembourse', e.target.checked)} />
+                      50 € remboursés
+                    </label>
+                  )}
                 </fieldset>
               )}
             </div>
@@ -358,23 +448,23 @@ export default function AdherentEditor({ adherent, onClose, onSaved, onDeleted }
                 <label>Ville<input type="text" value={form.ville} onChange={(e) => set('ville', e.target.value)} /></label>
               </div>
 
-              {/* Types de licence */}
-              <p className="editor-section-title">Types de licence</p>
+              {/* Pratique sportive */}
+              <p className="editor-section-title">Pratique sportive</p>
               <div className="editor-checks-row">
-                {TYPES_LICENCE.map((type) => (
-                  <label key={type} className="check check--inline">
-                    <input
-                      type="checkbox"
-                      checked={form.types_licence.includes(type)}
-                      onChange={() => toggleLicence(type)}
-                    />
-                    {type}
+                {optionsSports(form.sports).map((sport) => (
+                  <label key={sport} className="check check--inline">
+                    <input type="checkbox" checked={form.sports.includes(sport)} onChange={() => toggleSport(sport)} />
+                    {sport}
                   </label>
                 ))}
               </div>
+              <label className="check">
+                <input type="checkbox" checked={form.licencie_annee_derniere} onChange={(e) => set('licencie_annee_derniere', e.target.checked)} />
+                Licencié(e) l'année dernière
+              </label>
 
-              {/* Rôle */}
-              <p className="editor-section-title">Rôle</p>
+              {/* Rôle et autorisations */}
+              <p className="editor-section-title">Rôle et autorisations</p>
               <div className="editor-checks-row">
                 <label className="check check--inline">
                   <input
@@ -393,52 +483,10 @@ export default function AdherentEditor({ adherent, onClose, onSaved, onDeleted }
                   />
                   Respo AS
                 </label>
-                {form.est_responsable_as && (
-                  <label className="check check--inline">
-                    <input type="checkbox" checked={form.honorabilite_attestee} onChange={(e) => set('honorabilite_attestee', e.target.checked)} />
-                    Contrôle d'honorabilité attesté
-                  </label>
-                )}
                 <label className="check check--inline">
                   <input type="checkbox" checked={form.adherent_bde} onChange={(e) => set('adherent_bde', e.target.checked)} />
                   Adhérent BDE
                 </label>
-                <label className="check check--inline">
-                  <input type="checkbox" checked={form.licence_ffsu_a_jour} onChange={(e) => set('licence_ffsu_a_jour', e.target.checked)} />
-                  Licence FFSU
-                </label>
-              </div>
-
-              {/* Pratique sportive */}
-              <p className="editor-section-title">Pratique sportive</p>
-              <div className="editor-checks-row">
-                {optionsSports(form.sports).map((sport) => (
-                  <label key={sport} className="check check--inline">
-                    <input type="checkbox" checked={form.sports.includes(sport)} onChange={() => toggleSport(sport)} />
-                    {sport}
-                  </label>
-                ))}
-              </div>
-              <div className="editor-checks-row" style={{ marginTop: 8 }}>
-                <label className="check check--inline">
-                  <input type="checkbox" checked={form.competitions_universitaires} onChange={(e) => set('competitions_universitaires', e.target.checked)} />
-                  Compétitions universitaires
-                </label>
-                <label className="check check--inline">
-                  <input type="checkbox" checked={form.licencie_annee_derniere} onChange={(e) => set('licencie_annee_derniere', e.target.checked)} />
-                  Licencié(e) l'année dernière
-                </label>
-              </div>
-
-              {/* Médical et autres */}
-              <p className="editor-section-title">Médical et autres</p>
-              <div className="editor-checks-row">
-                <label className="check check--inline">
-                  <input type="checkbox" checked={form.activite_contraintes} onChange={(e) => set('activite_contraintes', e.target.checked)} />
-                  Activité à contraintes
-                </label>
-              </div>
-              <div className="editor-checks-row" style={{ marginTop: 8 }}>
                 <label className="check check--inline">
                   <input type="checkbox" checked={form.situation_handicap} onChange={(e) => set('situation_handicap', e.target.checked)} />
                   Situation de handicap

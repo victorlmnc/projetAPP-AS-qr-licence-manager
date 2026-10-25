@@ -612,6 +612,61 @@ body:has(dialog[open]) {
   gap: 0 20px;
 }
 
+/* Licences : une ligne par licence, demandée (formulaire) et obtenue (bureau). */
+.editor-licences {
+  width: 100%;
+  margin: 8px 0 4px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 14px;
+}
+
+.editor-licences th,
+.editor-licences td {
+  padding: 6px 12px;
+  border-top: 1px solid var(--line);
+  text-align: left;
+  vertical-align: middle;
+}
+
+.editor-licences thead th {
+  border-top: 0;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.editor-licences tbody th {
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.editor-licences thead th + th,
+.editor-licences td {
+  width: 92px;
+  text-align: center;
+}
+
+.editor-licences .editor-licences__case {
+  justify-content: center;
+  min-height: 28px;
+  margin: 0;
+}
+
+.editor-licences__aide {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.editor-licences__statut {
+  color: var(--muted);
+  font-size: 13px;
+}
+
 /* Onglet Merch : un encadré par article ; taille, texte et remise
    n'apparaissent que si l'article est commandé. */
 .merch {

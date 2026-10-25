@@ -37,6 +37,7 @@ function adherent(champs) {
     types_licence: ['Sportive'],
     est_responsable_as: false,
     honorabilite_attestee: false,
+    licence_arbitre_obtenue: false,
     sports: null,
     competitions_universitaires: false,
     licencie_annee_derniere: false,

@@ -96,6 +96,10 @@ test.describe('Éditeur de fiche', () => {
     await expect(editeur.getByLabel("Boursier, éligible au Pass'Sport")).toBeChecked();
     await expect(suivi.getByLabel("Pass'Sport reçu")).toBeChecked();
     await expect(suivi.getByLabel('RIB reçu')).not.toBeChecked();
+
+    // Le remboursement ne se coche qu'une fois le Pass'Sport et le RIB reçus.
+    await expect(suivi.getByLabel('50 € remboursés')).toHaveCount(0);
+    await suivi.getByLabel('RIB reçu').check();
     await expect(suivi.getByLabel('50 € remboursés')).not.toBeChecked();
 
     // Le suivi ne concerne que les boursiers.
@@ -103,7 +107,33 @@ test.describe('Éditeur de fiche', () => {
     await expect(suivi).toHaveCount(0);
   });
 
-  test('questions du formulaire : sports, compétitions, ancien licencié, honorabilité', async ({ page }) => {
+  test('licences demandées et obtenues, honorabilité pour les encadrants', async ({ page }) => {
+    await ouvrir(page, 'bureau', 'pire');
+    await page.locator('.dash-table tbody tr').filter({ hasText: 'Montgomery III' })
+      .getByRole('button', { name: 'Modifier' }).click();
+    const editeur = page.getByRole('dialog', { name: 'Christopher Alexander Montgomery III' });
+
+    await expect(editeur.getByLabel('Licence Arbitre demandée')).toBeChecked();
+    await expect(editeur.getByLabel('Licence Arbitre obtenue')).not.toBeChecked();
+    await expect(editeur.getByLabel('Licence FFSU demandée')).not.toBeChecked();
+    await expect(editeur.getByLabel('Licence FFSU obtenue')).toBeChecked();
+    await expect(editeur.getByLabel("Contrôle d'honorabilité attesté")).toBeChecked();
+    await attendreSansDebordement(page);
+
+    // Encadrant (respo AS) : à jour avec le dossier et l'attestation d'honorabilité.
+    const encadrant = editeur.getByRole('row', { name: /Encadrant/ });
+    await expect(encadrant).toContainText('Respo AS');
+    await expect(encadrant).toContainText('À jour');
+    await editeur.getByLabel("Contrôle d'honorabilité attesté").uncheck();
+    await expect(encadrant).toContainText('Non à jour');
+
+    // Non demandée : pas de statut, et l'attestation disparaît.
+    await editeur.getByLabel('Licence Encadrant demandée').uncheck();
+    await expect(encadrant.getByRole('cell').last()).toHaveText('—');
+    await expect(editeur.getByLabel("Contrôle d'honorabilité attesté")).toHaveCount(0);
+  });
+
+  test('informations personnelles : sports et ancien licencié', async ({ page }) => {
     await ouvrir(page, 'bureau', 'pire');
     await page.locator('.dash-table tbody tr').filter({ hasText: 'Montgomery III' })
       .getByRole('button', { name: 'Modifier' }).click();
@@ -113,12 +143,7 @@ test.describe('Éditeur de fiche', () => {
     // Les 11 sports du formulaire, plus celui importé hors liste.
     await expect(editeur.locator('.editor-checks-row').filter({ hasText: 'Running' }).getByRole('checkbox')).toHaveCount(12);
     await expect(editeur.getByLabel('Ultimate frisbee (ancienne saison)')).toBeChecked();
-    await expect(editeur.getByLabel('Compétitions universitaires')).not.toBeChecked();
-    await expect(editeur.getByLabel("Contrôle d'honorabilité attesté")).toBeChecked();
-
-    // L'attestation ne concerne que les respos.
-    await editeur.getByLabel('Respo AS').uncheck();
-    await expect(editeur.getByLabel("Contrôle d'honorabilité attesté")).toHaveCount(0);
+    await expect(editeur.getByLabel("Licencié(e) l'année dernière")).not.toBeChecked();
     await attendreSansDebordement(page);
   });
 });

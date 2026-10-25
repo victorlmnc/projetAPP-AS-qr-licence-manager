@@ -11,7 +11,7 @@ Application web de gestion des licences de l'Association Sportive de l'INSA CVL 
 - Import de l'export du formulaire d'inscription Google Forms, en CSV ou Excel (les doubles soumissions sont fusionnées). Toutes les questions sont reprises dans la fiche.
 - Import complémentaire CSV ou Excel pour mettre à jour certains champs (paiement, YEPS…)
 - Export de la liste filtrée en CSV, Excel ou PDF
-- Envoi des QR codes par email, à un adhérent ou à plusieurs. L'email explique aux boursiers comment se faire rembourser avec le Pass'Sport (tant que le bureau n'a pas reçu leurs documents), et à ceux qui veulent faire les compétitions universitaires sans licence FFSU comment la prendre.
+- Envoi des QR codes par email, à un adhérent ou à plusieurs. L'email explique aux boursiers comment se faire rembourser avec le Pass'Sport (tant que le bureau n'a pas reçu leurs documents), à ceux qui veulent faire les compétitions universitaires sans licence FFSU comment la prendre, et à ceux qui ont demandé une licence arbitre de se renseigner auprès du bureau.
 - Relance par email des dossiers incomplets
 - Modification de plusieurs adhérents à la fois, y compris la remise du merch
 - Suivi du merch (maillot avec flocage en option, short) : articles commandés, tailles, texte floqué, remise article par article. Le flocage est remis avec le maillot. Un filtre affiche le merch à remettre, et le récap de commande par taille se télécharge en bon de commande PDF ou en fichier Excel pour le fournisseur, sans nom d'adhérent.
@@ -137,6 +137,7 @@ Table `adherents` :
 | `honorabilite_attestee` | boolean | Le responsable atteste avoir compris le contrôle d'honorabilité |
 | `adherent_bde` | boolean | |
 | `licence_ffsu_a_jour` | boolean | Licence fédérale, n'entre pas dans le statut |
+| `licence_arbitre_obtenue` | boolean | Licence arbitre obtenue (`types_licence` contient les licences demandées). La licence encadrant est à jour quand le dossier l'est et que le contrôle d'honorabilité est attesté |
 | `sports` | text[] | Sports pratiqués, réponses à « Sport principal » |
 | `competitions_universitaires` | boolean | Participera aux compétitions universitaires |
 | `licencie_annee_derniere` | boolean | Déjà licencié(e) à l'AS la saison précédente |
@@ -171,6 +172,7 @@ Pour une nouvelle base, exécuter `schema.sql` dans l'éditeur SQL de Supabase. 
 | `2026-10-26-5-retirer-pass-sport.sql` | Après avoir déployé le retrait du Pass'Sport (supprime la colonne `manque_passport`) |
 | `2026-10-26-6-questions-forms.sql` | Avant de déployer l'import des questions du formulaire (ajoute leurs colonnes) |
 | `2026-10-26-7-suivi-pass-sport.sql` | Avant de déployer le suivi du remboursement Pass'Sport (ajoute ses colonnes) |
+| `2026-10-26-8-licences-obtenues.sql` | Avant de déployer la distinction licence demandée / obtenue (ajoute la colonne `licence_arbitre_obtenue`) |
 
 ## Variables d'environnement
 

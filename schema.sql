@@ -29,6 +29,8 @@ create table if not exists adherents (
   adherent_bde boolean not null default false,
   licence_ffsu_a_jour boolean not null default false,
   honorabilite_attestee boolean not null default false,
+  -- Licence arbitre demandee dans le formulaire (types_licence) puis obtenue.
+  licence_arbitre_obtenue boolean not null default false,
 
   -- Pratique sportive
   sports text[],
@@ -84,6 +86,7 @@ alter table adherents add column if not exists est_responsable_as boolean not nu
 alter table adherents add column if not exists adherent_bde boolean not null default false;
 alter table adherents add column if not exists licence_ffsu_a_jour boolean not null default false;
 alter table adherents add column if not exists honorabilite_attestee boolean not null default false;
+alter table adherents add column if not exists licence_arbitre_obtenue boolean not null default false;
 alter table adherents add column if not exists sports text[];
 alter table adherents add column if not exists competitions_universitaires boolean not null default false;
 alter table adherents add column if not exists licencie_annee_derniere boolean not null default false;

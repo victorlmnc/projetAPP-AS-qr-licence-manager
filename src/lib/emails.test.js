@@ -86,6 +86,16 @@ describe('emailQrCode', () => {
     expect(emailQrCode(enCours, calculerStatutLicence(enCours), LIEN, DATE).texte).toContain('sport-bourges@insa-cvl.fr');
   });
 
+  it("licence arbitre demandée et pas encore obtenue : se renseigner auprès du bureau", () => {
+    const arbitre = { ...aJour, types_licence: ['Sportive', 'Arbitre'] };
+    const { texte, html } = emailQrCode(arbitre, calculerStatutLicence(arbitre), LIEN, DATE);
+    expect(html).toContain('Vous avez demandé une licence arbitre');
+    expect(texte).toContain("renseignez-vous auprès du bureau de l'AS pour en savoir plus");
+
+    const obtenue = { ...arbitre, licence_arbitre_obtenue: true };
+    expect(emailQrCode(obtenue, calculerStatutLicence(obtenue), LIEN, DATE).texte).not.toContain('licence arbitre');
+  });
+
   it('compétitions universitaires sans licence FFSU : comment la prendre', () => {
     const competiteur = { ...incomplet, competitions_universitaires: true };
     const { texte, html } = emailQrCode(competiteur, calculerStatutLicence(competiteur), LIEN, DATE);
