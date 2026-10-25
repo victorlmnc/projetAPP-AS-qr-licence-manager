@@ -140,7 +140,7 @@ Table `adherents` dans Supabase :
 | `situation_handicap` | boolean | |
 | `droit_image` | boolean | Autorisation droit à l'image accordée |
 | `paiement_global` | boolean | Paiement complet reçu |
-| `manque_paiement` | boolean | Manque le paiement (chèque, CB, espèces…) |
+| `manque_paiement` | boolean | Manque le paiement |
 | `manque_yeps` | boolean | Manque l'aide YEPS |
 | `manque_passport` | boolean | Manque l'aide PASS'SPORT |
 
