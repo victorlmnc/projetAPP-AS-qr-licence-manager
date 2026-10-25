@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { emailQrCode, emailRelance, esc, recapitulatifLicence } from './emails.js';
-import { calculerStatutLicence } from './licence.js';
+import { emailQrCode, emailRelance, esc } from './emails.js';
+import { calculerStatutLicence, recapitulatifLicence } from './licence.js';
 
 const DATE = '16/06/2026';
 const LIEN = 'https://exemple.test/adherent/11111111-1111-4111-8111-000000000001';

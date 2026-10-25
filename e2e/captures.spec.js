@@ -17,7 +17,7 @@ for (const [nom, url] of ECRANS) {
     await page.goto(url);
     await page.waitForTimeout(1500);
     await page.addStyleTag({ content: '[aria-label="Jeu de données de test"] { display: none !important; }' });
-    await page.screenshot({ path: testInfo.outputPath(`${nom}.png`) });
+    await page.screenshot({ path: testInfo.outputPath(`${nom}.png`), fullPage: true });
   });
 }
 

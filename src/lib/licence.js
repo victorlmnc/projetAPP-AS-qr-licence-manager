@@ -31,6 +31,19 @@ export function calculerStatutLicence(adherent) {
   };
 }
 
+// Ce que l'adhérent doit savoir sur sa licence, dans l'ordre d'affichage
+// (emails et page publique). Les deux dernières lignes sont toujours présentes,
+// que la réponse soit oui ou non.
+export function recapitulatifLicence(adherent) {
+  const types = Array.isArray(adherent?.types_licence) ? adherent.types_licence.filter(Boolean) : [];
+  return [
+    [types.length > 1 ? 'Types de licence' : 'Type de licence', types.length > 0 ? types.join(', ') : 'Non renseigné'],
+    // Facultative (compétitions universitaires) : « Non souscrite » plutôt que « Non valide ».
+    ['Licence FFSU', adherent?.licence_ffsu_a_jour ? 'Valide' : 'Non souscrite'],
+    ['Activités à contraintes', adherent?.activite_contraintes ? 'Éligible' : 'Non éligible'],
+  ];
+}
+
 export function messageAdherent(adherent) {
   const { valide, anomalies } = calculerStatutLicence(adherent);
   if (valide) {

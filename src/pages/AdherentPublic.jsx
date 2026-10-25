@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { QRCodeCanvas } from 'qrcode.react';
 import { supabase } from '../lib/supabase';
-import { calculerStatutLicence } from '../lib/licence';
+import { calculerStatutLicence, recapitulatifLicence } from '../lib/licence';
 import { publicAdherentUrl } from '../lib/publicAccess';
 import { nomComplet, reparerTexte } from '../lib/texte';
 import { useTitrePage } from '../lib/useTitrePage';
@@ -26,7 +26,7 @@ async function chargerAdherentPublic(token) {
   // Fallback local limité aux mêmes champs publics.
   const { data, error } = await supabase
     .from('adherents')
-    .select('public_token, nom, prenom, questionnaire_sante_ok, paiement_global, manque_paiement, manque_yeps, manque_passport, licence_ffsu_a_jour, activite_contraintes')
+    .select('public_token, nom, prenom, types_licence, questionnaire_sante_ok, paiement_global, manque_paiement, manque_yeps, manque_passport, licence_ffsu_a_jour, activite_contraintes')
     .eq('public_token', token)
     .maybeSingle();
 
@@ -128,22 +128,37 @@ export default function AdherentPublic() {
           Présentez ce QR Code à votre Responsable Sport lors des entraînements.
         </p>
 
-        <p className={`pub-hint pub-hint--${statut.valide ? 'ok' : 'warning'}`}>
-          {statut.valide
-            ? 'Votre dossier est complet et à jour.'
-            : 'Votre dossier est incomplet. Rapprochez-vous du bureau de l\'AS pour le régulariser : asso.sportive-bourges@insa-cvl.fr'}
-        </p>
+        {/* Même présentation que dans les emails : encadré neutre, sans couleur de statut. */}
+        <div className="pub-statut">
+          <p className="pub-statut__titre">
+            {statut.valide ? 'Votre dossier est complet et à jour.' : 'Votre dossier est incomplet.'}
+          </p>
+          {!statut.valide && (
+            <>
+              <ul>
+                {statut.anomalies.map((anomalie) => (
+                  <li key={anomalie}>{anomalie}</li>
+                ))}
+              </ul>
+              <p className="pub-statut__contact">
+                Rapprochez-vous du bureau de l'AS pour le régulariser :{' '}
+                <a href="mailto:asso.sportive-bourges@insa-cvl.fr">asso.sportive-bourges@insa-cvl.fr</a>
+              </p>
+            </>
+          )}
+        </div>
 
-        {(adherent.licence_ffsu_a_jour || adherent.activite_contraintes) && (
-          <div className="pub-badges">
-            {adherent.licence_ffsu_a_jour && (
-              <span className="pub-badge pub-badge--ok">✓ Licence FFSU</span>
-            )}
-            {adherent.activite_contraintes && (
-              <span className="pub-badge pub-badge--ok">✓ Activités à contraintes</span>
-            )}
-          </div>
-        )}
+        <section className="pub-licence" aria-labelledby="pub-licence-titre">
+          <h2 id="pub-licence-titre">Votre licence</h2>
+          <dl className="pub-recap">
+            {recapitulatifLicence(adherent).map(([libelle, valeur]) => (
+              <div key={libelle} className="pub-recap__ligne">
+                <dt>{libelle}</dt>
+                <dd>{valeur}</dd>
+              </div>
+            ))}
+          </dl>
+        </section>
 
         <button className="btn-ghost pub-dl" onClick={telechargerQr}>
           Télécharger le QR Code
