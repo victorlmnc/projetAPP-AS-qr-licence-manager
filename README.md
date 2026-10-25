@@ -17,7 +17,7 @@ Déployée sur **[as-licences-insa-cvl.vercel.app](https://as-licences-insa-cvl.
 - Relance automatique par email des dossiers incomplets
 - Édition en masse de plusieurs adhérents simultanément (dont la remise du merch)
 - Merch (maillot avec flocage en option, short) : articles commandés, tailles, texte floqué et remise article par article (le flocage est remis avec le maillot) ; filtre « Merch à remettre » ; récap de commande par taille, téléchargeable en bon de commande PDF ou en fichier Excel pour le fournisseur (sans aucun nom d'adhérent)
-- Import des commandes de merch depuis l'export du site de paiement (ou un modèle Excel) : formules reconnues, aperçu avant d'appliquer, l'import n'ajoute que ce qui manque
+- Import des commandes de merch depuis l'export HelloAsso (ou un modèle Excel) : formules reconnues, colonnes de l'adhérent préférées à celles du payeur, commandes remboursées ou annulées ignorées, aide YEPS cochée pour les formules « avec YEPS », aperçu avant d'appliquer ; l'import n'ajoute que ce qui manque
 - Mise à jour temps réel via Supabase Realtime
 - Paramètres : changement des mots de passe, remise à zéro de la base en fin de saison
 - Utilisable sur ordinateur et sur téléphone (sur petit écran, le tableau s'affiche en cartes)

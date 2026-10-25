@@ -167,26 +167,33 @@ test.describe('Merch', () => {
     await page.getByRole('button', { name: 'Commandes de merch' }).click();
     const fenetre = page.getByRole('dialog', { name: 'Importer des commandes de merch' });
 
-    // Export type site de paiement : séparateur « ; », une ligne par article.
+    // Export façon HelloAsso : séparateur « ; », payeur distinct de l'adhérent,
+    // flocage en option du tarif, une commande remboursée.
     const csv = [
-      'Nom;Prénom;Email;Tarif;Taille du maillot;Nom au dos (flocage)',
-      'Bernard;Lucas;LUCAS.BERNARD@example.com;Licence + ensemble (avec YEPS);xl;',
-      'Bernard;Lucas;lucas.bernard@example.com;Flocage (nom au dos);;BERNARD',
-      'Dubois;Emma;emma.dubois@example.com;Licence seule;;',
-      'Petit;Hugo;hugo.petit@example.com;Flocage (nom au dos);;PETIT',
-      'Inconnu;Paul;paul@example.com;Maillot seul;M;',
+      'Référence commande;Statut de la commande;Nom payeur;Prénom payeur;Email payeur;Nom adhérent;Prénom adhérent;Email adhérent;Tarif;Montant tarif;Options;Taille du maillot;Nom à floquer',
+      '1001;Validé;Bernard;Marc;marc.bernard@example.com;Bernard;Lucas;LUCAS.BERNARD@example.com;Licence + ensemble (avec YEPS);55;Flocage (nom au dos);xl;BERNARD',
+      '1002;Validé;Dubois;Emma;emma.dubois@example.com;Dubois;Emma;emma.dubois@example.com;Licence seul (avec YEPS);25;;;',
+      '1003;Validé;Petit;Hugo;hugo.petit@example.com;Petit;Hugo;hugo.petit@example.com;Flocage (nom au dos);8;;;PETIT',
+      '1004;Remboursée;Robert;Léa;lea.robert@example.com;Robert;Léa;lea.robert@example.com;Licence + ensemble;55;;;',
+      '1005;Validé;Inconnu;Paul;paul@example.com;Inconnu;Paul;paul@example.com;Maillot seul;30;;M;',
     ].join('\n');
     await fenetre.locator('input[type="file"]').setInputFiles({
-      name: 'export-paiement.csv', mimeType: 'text/csv', buffer: Buffer.from(csv, 'utf-8'),
+      name: 'export-helloasso.csv', mimeType: 'text/csv', buffer: Buffer.from(csv, 'utf-8'),
     });
 
     const apercu = fenetre.getByLabel("Aperçu de l'import");
-    await expect(apercu).toContainText('5 ligne(s) lue(s)');
+    await expect(apercu).toContainText('5 ligne(s) lue(s), dont 1 commande(s) remboursée(s) ou annulée(s) ignorée(s)');
+    await expect(apercu).toContainText('Email → « Email adhérent »');
     await expect(apercu).toContainText('Formule → « Tarif »');
-    await expect(apercu.locator('tbody tr')).toHaveText([/Lucas Bernard\s*Maillot \(XL\), floqué « BERNARD »/]);
+    await expect(apercu.locator('tbody tr')).toHaveText([
+      // Lucas a déjà payé (paiement complet) : la case YEPS n'est pas cochée.
+      /Lucas Bernard\s*Maillot \(XL\), floqué « BERNARD »/,
+      /Emma Dubois\s*aide YEPS \(QR code et numéro\) à fournir/,
+    ]);
     await expect(apercu).toContainText('paul@example.com');
     await expect(apercu).toContainText('Hugo Petit : flocage sans maillot, ignoré.');
-    await expect(fenetre.getByRole('button', { name: 'Appliquer (1)' })).toBeVisible();
+    await expect(apercu).not.toContainText('Léa Robert');
+    await expect(fenetre.getByRole('button', { name: 'Appliquer (2)' })).toBeVisible();
   });
 
   test('import des commandes : le modèle se télécharge', async ({ page }) => {

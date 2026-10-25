@@ -1,5 +1,5 @@
-// Import des commandes de merch depuis un export du site de paiement (ou le
-// modèle fourni). Les colonnes sont reconnues par leur nom, les lignes d'un
+// Import des commandes de merch depuis un export HelloAsso (CSV ou Excel) ou
+// le modèle fourni. Les colonnes sont reconnues par leur nom, les lignes d'un
 // même adhérent sont regroupées, puis comparées aux fiches existantes.
 // L'import ne fait qu'ajouter : il ne retire jamais un article déjà noté et ne
 // touche pas aux cases « récupéré ».
@@ -15,7 +15,8 @@ export function normaliser(valeur) {
     .trim();
 }
 
-// Formules vendues par l'AS → articles. « avec YEPS » ne change pas les articles.
+// Formules vendues par l'AS → articles. « avec YEPS » ne change pas les articles
+// mais signale que l'adhérent paie avec l'aide YEPS.
 //   Licence seule                     → rien
 //   Licence + maillot / Maillot seul  → maillot
 //   Licence + ensemble                → maillot + short
@@ -28,6 +29,7 @@ export function articlesDepuisFormule(formule) {
     maillot: ensemble || f.includes('maillot'),
     short: ensemble || f.includes('short'),
     flocage: f.includes('flocage') || f.includes('nom au dos'),
+    yeps: f.includes('yeps'),
   };
 }
 
@@ -43,22 +45,38 @@ export function normaliserTaille(valeur) {
   return brut;
 }
 
-function trouverColonne(cles, test) {
-  return cles.find((cle) => test(normaliser(cle))) ?? null;
+// HelloAsso distingue le payeur (parent, ami…) de l'adhérent : on privilégie
+// toujours les colonnes de l'adhérent, et celles du payeur en dernier recours.
+const COLONNES_ADHERENT = ['adherent', 'participant', 'beneficiaire', 'licencie', 'membre'];
+const COLONNES_PAYEUR = ['payeur', 'acheteur', 'commanditaire'];
+
+function choisirColonne(cles, test) {
+  const rang = (cle) => {
+    const k = normaliser(cle);
+    if (COLONNES_ADHERENT.some((m) => k.includes(m))) return 0;
+    if (COLONNES_PAYEUR.some((m) => k.includes(m))) return 2;
+    return 1;
+  };
+  return cles.filter((cle) => test(normaliser(cle))).sort((a, b) => rang(a) - rang(b))[0] ?? null;
 }
+
+const estMontant = (k) => ['montant', 'prix', 'code', 'promo', 'reduction', 'quantite', 'date', 'reference'].some((m) => k.includes(m));
+const estFlocage = (k) => ['flocage', 'floqu', 'nom au dos', 'au dos', 'texte'].some((m) => k.includes(m));
+const estProduit = (k) => ['article', 'produit', 'tarif', 'formule', 'offre', 'option', 'campagne', 'formulaire'].some((m) => k.includes(m));
 
 // Colonnes utiles, repérées par leur nom (casse et accents ignorés).
 export function detecterColonnes(cles) {
-  const estFlocage = (k) => k.includes('flocage') || k.includes('nom au dos') || k.includes('texte');
   return {
-    email: trouverColonne(cles, (k) => k.includes('mail') || k.includes('courriel')),
-    prenom: trouverColonne(cles, (k) => k.includes('prenom')),
-    nom: trouverColonne(cles, (k) => /\bnom\b/.test(k) && !k.includes('prenom') && !estFlocage(k)),
-    formule: trouverColonne(cles, (k) => ['formule', 'tarif', 'offre', 'article', 'produit'].some((m) => k.includes(m))),
-    tailleMaillot: trouverColonne(cles, (k) => k.includes('taille') && k.includes('maillot')),
-    tailleShort: trouverColonne(cles, (k) => k.includes('taille') && k.includes('short')),
-    taille: trouverColonne(cles, (k) => k.includes('taille') && !k.includes('maillot') && !k.includes('short')),
-    texteFlocage: trouverColonne(cles, (k) => estFlocage(k) && !k.includes('formule') && !k.includes('tarif')),
+    email: choisirColonne(cles, (k) => k.includes('mail') || k.includes('courriel')),
+    prenom: choisirColonne(cles, (k) => k.includes('prenom')),
+    nom: choisirColonne(cles, (k) => /\bnom\b/.test(k) && !k.includes('prenom') && !estFlocage(k) && !estProduit(k)),
+    formule: choisirColonne(cles, (k) => ['formule', 'tarif', 'offre', 'article', 'produit'].some((m) => k.includes(m)) && !estMontant(k)),
+    options: cles.filter((cle) => normaliser(cle).includes('option') && !estMontant(normaliser(cle))),
+    statut: choisirColonne(cles, (k) => k.includes('statut') || k.includes('etat')),
+    tailleMaillot: choisirColonne(cles, (k) => k.includes('taille') && k.includes('maillot')),
+    tailleShort: choisirColonne(cles, (k) => k.includes('taille') && k.includes('short')),
+    taille: choisirColonne(cles, (k) => k.includes('taille') && !k.includes('maillot') && !k.includes('short')),
+    texteFlocage: choisirColonne(cles, (k) => estFlocage(k) && !estProduit(k) && !estMontant(k)),
   };
 }
 
@@ -66,11 +84,26 @@ function valeur(ligne, colonne) {
   return colonne ? reparerTexte(String(ligne[colonne] ?? '')).trim() : '';
 }
 
-// Regroupe les lignes par adhérent (email, sinon nom + prénom).
+// Commande remboursée, annulée ou refusée : à ne pas importer.
+function commandeAnnulee(statut) {
+  return /rembours|annul|refus|echou|abandon/.test(normaliser(statut));
+}
+
+/**
+ * Regroupe les lignes par adhérent (email, sinon nom + prénom).
+ * @returns {{ commandes: object[], lignesAnnulees: number }}
+ */
 export function regrouperCommandes(lignes, colonnes) {
   const commandes = new Map();
+  let lignesAnnulees = 0;
+  const avecFormule = !!colonnes.formule || (colonnes.options?.length ?? 0) > 0;
 
   for (const ligne of lignes) {
+    if (colonnes.statut && commandeAnnulee(valeur(ligne, colonnes.statut))) {
+      lignesAnnulees++;
+      continue;
+    }
+
     const email = valeur(ligne, colonnes.email).toLowerCase();
     const nom = valeur(ligne, colonnes.nom);
     const prenom = valeur(ligne, colonnes.prenom);
@@ -79,7 +112,7 @@ export function regrouperCommandes(lignes, colonnes) {
     const cle = email || `${normaliser(nom)}|${normaliser(prenom)}`;
     const commande = commandes.get(cle) ?? {
       email, nom, prenom,
-      maillot: false, short: false, flocage: false,
+      maillot: false, short: false, flocage: false, yeps: false,
       taille_maillot: null, taille_short: null, texte_flocage: null,
     };
 
@@ -88,14 +121,17 @@ export function regrouperCommandes(lignes, colonnes) {
     const tailleGenerique = normaliserTaille(valeur(ligne, colonnes.taille));
     const texte = valeur(ligne, colonnes.texteFlocage);
 
-    // Sans colonne « formule », les articles se déduisent des colonnes remplies.
-    const articles = colonnes.formule
-      ? articlesDepuisFormule(valeur(ligne, colonnes.formule))
-      : { maillot: !!tailleMaillot, short: !!tailleShort, flocage: !!texte };
+    // Formule et options (le flocage peut être une option du tarif sur HelloAsso).
+    // Sans colonne de formule, les articles se déduisent des colonnes remplies.
+    const texteCommande = [valeur(ligne, colonnes.formule), ...(colonnes.options ?? []).map((c) => valeur(ligne, c))].join(' ');
+    const articles = avecFormule
+      ? articlesDepuisFormule(texteCommande)
+      : { maillot: !!tailleMaillot, short: !!tailleShort, flocage: !!texte, yeps: false };
 
     commande.maillot ||= articles.maillot;
     commande.short ||= articles.short;
-    commande.flocage ||= articles.flocage || (!!texte && !colonnes.formule);
+    commande.flocage ||= articles.flocage || (!!texte && !avecFormule);
+    commande.yeps ||= articles.yeps;
 
     commande.taille_maillot = tailleMaillot
       ?? (articles.maillot && tailleGenerique ? tailleGenerique : null)
@@ -103,18 +139,12 @@ export function regrouperCommandes(lignes, colonnes) {
     commande.taille_short = tailleShort
       ?? (articles.short && !articles.maillot && tailleGenerique ? tailleGenerique : null)
       ?? commande.taille_short;
-    if (texte && (articles.flocage || !colonnes.formule || commande.flocage)) commande.texte_flocage = texte;
+    if (texte && (articles.flocage || !avecFormule || commande.flocage)) commande.texte_flocage = texte;
 
-    if (commande.maillot || commande.short || commande.flocage) {
-      commandes.set(cle, commande);
-    } else if (!commandes.has(cle)) {
-      // Licence seule : rien à importer, mais on garde la trace pour ne pas
-      // signaler la ligne comme « non reconnue ».
-      commandes.set(cle, commande);
-    }
+    commandes.set(cle, commande);
   }
 
-  return [...commandes.values()];
+  return { commandes: [...commandes.values()], lignesAnnulees };
 }
 
 function retrouverAdherent(commande, adherents) {
@@ -140,7 +170,7 @@ export function preparerImport(commandes, adherents) {
   const avertissements = [];
 
   for (const commande of commandes) {
-    if (!commande.maillot && !commande.short && !commande.flocage) continue;
+    if (!commande.maillot && !commande.short && !commande.flocage && !commande.yeps) continue;
 
     const adherent = retrouverAdherent(commande, adherents);
     if (!adherent) {
@@ -172,13 +202,19 @@ export function preparerImport(commandes, adherents) {
       changements.taille_short = commande.taille_short;
     }
 
+    // Paiement avec l'aide YEPS : l'aide est à fournir, sauf si le bureau a
+    // déjà marqué le paiement complet (la case n'a alors plus lieu d'être).
+    if (commande.yeps && !adherent.paiement_global && !adherent.manque_yeps) {
+      changements.manque_yeps = true;
+    }
+
     if (Object.keys(changements).length > 0) miseAJour.push({ adherent, changements });
   }
 
   return { miseAJour, introuvables, avertissements };
 }
 
-// « Maillot (M), floqué « DUPONT », Short (L) » : ce que l'import va noter.
+// « Maillot (M), floqué « DUPONT », Short (L), aide YEPS à fournir » : ce que l'import va noter.
 export function resumeChangements(changements, adherent) {
   const parties = [];
   if (changements.maillot || changements.taille_maillot) {
@@ -193,5 +229,6 @@ export function resumeChangements(changements, adherent) {
     const taille = changements.taille_short ?? adherent.taille_short;
     parties.push(taille ? `Short (${taille})` : 'Short');
   }
+  if (changements.manque_yeps) parties.push('aide YEPS (QR code et numéro) à fournir');
   return parties.join(', ');
 }

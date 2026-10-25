@@ -10,13 +10,15 @@ const LIBELLES_COLONNES = {
   nom: 'Nom',
   prenom: 'Prénom',
   formule: 'Formule',
+  options: 'Options',
+  statut: 'Statut',
   tailleMaillot: 'Taille maillot',
   tailleShort: 'Taille short',
   taille: 'Taille',
   texteFlocage: 'Texte flocage',
 };
 
-// Modèle à remplir si l'export du site de paiement ne convient pas.
+// Modèle à remplir si l'export HelloAsso ne convient pas.
 async function telechargerModele() {
   const XLSX = await import('xlsx');
   const feuille = XLSX.utils.aoa_to_sheet([
@@ -64,13 +66,14 @@ export default function ImportMerchModal({ adherents, onClose, onImported }) {
       setErreur("Aucune colonne pour retrouver les adhérents : il faut un email, ou un nom et un prénom.");
       return;
     }
-    if (!colonnes.formule && !colonnes.tailleMaillot && !colonnes.tailleShort && !colonnes.texteFlocage) {
-      setErreur('Aucune colonne de commande reconnue (formule, taille du maillot ou du short, flocage).');
+    if (!colonnes.formule && colonnes.options.length === 0 && !colonnes.tailleMaillot && !colonnes.tailleShort && !colonnes.texteFlocage) {
+      setErreur('Aucune colonne de commande reconnue (tarif ou formule, taille du maillot ou du short, flocage).');
       return;
     }
 
-    const plan = preparerImport(regrouperCommandes(lignes, colonnes), adherents);
-    setApercu({ ...plan, colonnes, nbLignes: lignes.length });
+    const { commandes, lignesAnnulees } = regrouperCommandes(lignes, colonnes);
+    const plan = preparerImport(commandes, adherents);
+    setApercu({ ...plan, colonnes, lignesAnnulees, nbLignes: lignes.length });
   }
 
   async function appliquer() {
@@ -87,16 +90,20 @@ export default function ImportMerchModal({ adherents, onClose, onImported }) {
   }
 
   const colonnesUtilisees = apercu
-    ? Object.entries(apercu.colonnes).filter(([, nom]) => nom).map(([cle, nom]) => `${LIBELLES_COLONNES[cle]} → « ${nom} »`)
+    ? Object.entries(apercu.colonnes)
+      .filter(([, nom]) => (Array.isArray(nom) ? nom.length > 0 : nom))
+      .map(([cle, nom]) => `${LIBELLES_COLONNES[cle]} → « ${[nom].flat().join(' », « ')} »`)
     : [];
 
   return (
     <Modal onClose={onClose} dismissible={!enCours} labelledBy={titreId} className="modal modal--wide">
       <h3 id={titreId}>Importer des commandes de merch</h3>
       <p className="muted import-aide">
-        Fichier CSV ou Excel exporté du site de paiement, ou rempli à partir du modèle. Chaque adhérent
-        est retrouvé par son email, sinon par son nom et son prénom. L'import ajoute les articles, les
-        tailles et les flocages : il ne retire rien et ne modifie pas les remises.
+        Export HelloAsso (CSV ou Excel) ou fichier rempli à partir du modèle. Chaque adhérent est
+        retrouvé par son email, sinon par son nom et son prénom (ceux de l'adhérent plutôt que du
+        payeur). L'import ajoute les articles, les tailles et les flocages, et coche l'aide YEPS pour
+        les formules « avec YEPS ». Il ne retire rien, ne modifie pas les remises et ignore les
+        commandes remboursées ou annulées.
       </p>
 
       <input
@@ -126,7 +133,9 @@ export default function ImportMerchModal({ adherents, onClose, onImported }) {
       {apercu && (
         <div className="import-merch" aria-label="Aperçu de l'import">
           <p className="muted small">
-            {apercu.nbLignes} ligne(s) lue(s). Colonnes utilisées : {colonnesUtilisees.join(', ')}.
+            {apercu.nbLignes} ligne(s) lue(s)
+            {apercu.lignesAnnulees > 0 && `, dont ${apercu.lignesAnnulees} commande(s) remboursée(s) ou annulée(s) ignorée(s)`}.
+            Colonnes utilisées : {colonnesUtilisees.join(', ')}.
           </p>
 
           {apercu.miseAJour.length === 0 ? (
