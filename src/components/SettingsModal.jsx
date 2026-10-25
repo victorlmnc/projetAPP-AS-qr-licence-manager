@@ -1,11 +1,13 @@
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import Modal from './Modal';
 import ChangePasswordModal from './ChangePasswordModal';
 import ResetAdherentsModal from './ResetAdherentsModal';
 
 export default function SettingsModal({ onClose }) {
   const { role } = useAuth();
   const [action, setAction] = useState(null);
+  const titreId = useId();
 
   function handleResetCompleted() {
     window.dispatchEvent(new CustomEvent('adherents:reset'));
@@ -28,39 +30,34 @@ export default function SettingsModal({ onClose }) {
     );
   }
 
-
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal settings-modal" onClick={(e) => e.stopPropagation()}>
-        <h3>Paramètres</h3>
+    <Modal onClose={onClose} labelledBy={titreId} className="modal settings-modal">
+      <h3 id={titreId}>Paramètres</h3>
 
-        <div className="settings-actions">
-          {role === 'bureau' && (
-            <button type="button" className="btn-ghost settings-action" onClick={() => setAction('password-self')}>
-              <span className="settings-action__title">Modifier le mot de passe du compte bureau</span>
-            </button>
-          )}
+      <div className="settings-actions">
+        {role === 'bureau' && (
+          <button type="button" className="btn-ghost settings-action" onClick={() => setAction('password-self')}>
+            <span className="settings-action__title">Modifier le mot de passe du compte bureau</span>
+          </button>
+        )}
 
-          {role === 'bureau' && (
-            <button type="button" className="btn-ghost settings-action" onClick={() => setAction('password-coach')}>
-              <span className="settings-action__title">Modifier le mot de passe de respos-sports</span>
-            </button>
-          )}
+        {role === 'bureau' && (
+          <button type="button" className="btn-ghost settings-action" onClick={() => setAction('password-coach')}>
+            <span className="settings-action__title">Modifier le mot de passe de respos-sports</span>
+          </button>
+        )}
 
-          {role === 'bureau' && (
-            <button type="button" className="btn-ghost settings-action settings-action--danger" onClick={() => setAction('reset')}>
-              <span className="settings-action__title">Réinitialiser la base de données.</span>
-              <span className="settings-action__text">Supprimer toutes les fiches des adhérents.</span>
-            </button>
-          )}
-
-
-        </div>
-
-        <div className="modal-actions">
-          <button type="button" onClick={onClose}>Fermer</button>
-        </div>
+        {role === 'bureau' && (
+          <button type="button" className="btn-ghost settings-action settings-action--danger" onClick={() => setAction('reset')}>
+            <span className="settings-action__title">Réinitialiser la base de données</span>
+            <span className="settings-action__text">Supprimer toutes les fiches des adhérents.</span>
+          </button>
+        )}
       </div>
-    </div>
+
+      <div className="modal-actions">
+        <button type="button" onClick={onClose}>Fermer</button>
+      </div>
+    </Modal>
   );
 }

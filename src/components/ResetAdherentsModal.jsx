@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
+import Modal from './Modal';
 
 const CONFIRMATION = 'SUPPRIMER';
 
@@ -10,6 +11,7 @@ export default function ResetAdherentsModal({ onClose, onResetCompleted }) {
   const [confirmation, setConfirmation] = useState('');
   const [erreur, setErreur] = useState(null);
   const [enCours, setEnCours] = useState(false);
+  const titreId = useId();
 
   async function valider(e) {
     e.preventDefault();
@@ -21,7 +23,7 @@ export default function ResetAdherentsModal({ onClose, onResetCompleted }) {
     }
 
     if (!user || !user.email) {
-      setErreur("Impossible de verifier l'utilisateur connecte.");
+      setErreur("Impossible de vérifier l'utilisateur connecté.");
       return;
     }
 
@@ -59,55 +61,61 @@ export default function ResetAdherentsModal({ onClose, onResetCompleted }) {
   }
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal danger-modal" onClick={(e) => e.stopPropagation()}>
-        <div className="confirm-icon" aria-hidden="true">!</div>
-        <h3>Reinitialiser les adherents</h3>
-        <p className="danger-copy">
-          Cette action supprime toutes les fiches adherents. Elle est definitive apres
-          confirmation du mot de passe bureau.
-        </p>
+    <Modal
+      onClose={onClose}
+      dismissible={!enCours}
+      role="alertdialog"
+      labelledBy={titreId}
+      className="modal danger-modal"
+    >
+      <div className="confirm-icon" aria-hidden="true">!</div>
+      <h3 id={titreId}>Réinitialiser les adhérents</h3>
+      <p className="danger-copy">
+        Cette action supprime toutes les fiches adhérents. Elle est définitive après
+        confirmation du mot de passe bureau.
+      </p>
 
-        <form onSubmit={valider}>
-          <label className="champ">
-            Mot de passe du compte bureau
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Mot de passe actuel"
-              required
-              autoFocus
-            />
-          </label>
+      <form onSubmit={valider}>
+        <label className="champ">
+          Mot de passe du compte bureau
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Mot de passe actuel"
+            autoComplete="current-password"
+            required
+          />
+        </label>
 
-          <label className="champ">
-            Tapez SUPPRIMER
-            <input
-              type="text"
-              value={confirmation}
-              onChange={(e) => setConfirmation(e.target.value)}
-              placeholder="SUPPRIMER"
-              required
-            />
-          </label>
+        <label className="champ">
+          Tapez SUPPRIMER
+          <input
+            type="text"
+            value={confirmation}
+            onChange={(e) => setConfirmation(e.target.value)}
+            placeholder="SUPPRIMER"
+            autoComplete="off"
+            spellCheck={false}
+            required
+          />
+        </label>
 
-          {erreur && <p className="error">{erreur}</p>}
+        {erreur && <p className="error">{erreur}</p>}
 
-          <div className="modal-actions">
-            <button type="button" className="btn-ghost" onClick={onClose} disabled={enCours}>
-              Annuler
-            </button>
-            <button
-              type="submit"
-              className="btn-danger"
-              disabled={enCours || confirmation.trim() !== CONFIRMATION}
-            >
-              {enCours ? 'Reinitialisation...' : 'Supprimer toutes les fiches'}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+        <div className="modal-actions">
+          <button type="button" className="btn-ghost" onClick={onClose} disabled={enCours}>
+            Annuler
+          </button>
+          <button
+            type="submit"
+            className="btn-danger"
+            disabled={enCours || confirmation.trim() !== CONFIRMATION}
+          >
+            {enCours ? 'Réinitialisation…' : 'Supprimer toutes les fiches'}
+          </button>
+        </div>
+      </form>
+    </Modal>
   );
 }

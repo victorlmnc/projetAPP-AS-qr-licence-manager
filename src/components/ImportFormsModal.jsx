@@ -1,5 +1,6 @@
-import { useRef, useState } from 'react';
+import { useId, useRef, useState } from 'react';
 import { supabase } from '../lib/supabase';
+import Modal from './Modal';
 import { reparerTexte } from '../lib/texte';
 
 function normaliser(s) {
@@ -91,6 +92,7 @@ export default function ImportFormsModal({ onClose, onImported }) {
   const [etat, setEtat] = useState(null);
   const [enCours, setEnCours] = useState(false);
   const inputRef = useRef(null);
+  const titreId = useId();
 
   // PapaParse et xlsx sont chargés seulement au moment de l'import.
   async function parseCsv(fichier) {
@@ -232,41 +234,39 @@ export default function ImportFormsModal({ onClose, onImported }) {
   }
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal modal--wide" onClick={(e) => e.stopPropagation()}>
-        <h3>Importer les données du forms</h3>
-        <p className="muted import-aide">
-          Fichier CSV ou Excel exporté depuis Google Forms. Les adhérents dont l'email existe déjà
-          sont mis à jour ; les autres sont créés. En cas de double soumission du forms, la dernière
-          version est conservée. Une mise à jour ne modifie ni le paiement ni l'aide PASS'SPORT,
-          et ne retire jamais un questionnaire santé déjà validé.
-        </p>
+    <Modal onClose={onClose} dismissible={!enCours} labelledBy={titreId} className="modal modal--wide">
+      <h3 id={titreId}>Importer les données du forms</h3>
+      <p className="muted import-aide">
+        Fichier CSV ou Excel exporté depuis Google Forms. Les adhérents dont l'email existe déjà
+        sont mis à jour ; les autres sont créés. En cas de double soumission du forms, la dernière
+        version est conservée. Une mise à jour ne modifie ni le paiement ni l'aide PASS'SPORT,
+        et ne retire jamais un questionnaire santé déjà validé.
+      </p>
 
-        <input
-          ref={inputRef}
-          type="file"
-          accept=".csv,.xlsx,text/csv"
-          style={{ display: 'none' }}
-          onChange={gererFichier}
+      <input
+        ref={inputRef}
+        type="file"
+        accept=".csv,.xlsx,text/csv"
+        style={{ display: 'none' }}
+        onChange={gererFichier}
+        disabled={enCours}
+      />
+
+      <div className="import-btns">
+        <button
+          className="btn-ghost"
+          onClick={() => { inputRef.current.value = ''; inputRef.current.click(); }}
           disabled={enCours}
-        />
-
-        <div className="import-btns">
-          <button
-            className="btn-ghost"
-            onClick={() => { inputRef.current.value = ''; inputRef.current.click(); }}
-            disabled={enCours}
-          >
-            {enCours ? 'Import en cours…' : 'Choisir le fichier du forms (CSV ou Excel)'}
-          </button>
-        </div>
-
-        {etat && <p className="import-etat">{etat}</p>}
-
-        <div className="modal-actions">
-          <button className="btn-ghost" onClick={onClose}>Fermer</button>
-        </div>
+        >
+          {enCours ? 'Import en cours…' : 'Choisir le fichier du forms (CSV ou Excel)'}
+        </button>
       </div>
-    </div>
+
+      {etat && <p className="import-etat" role="status">{etat}</p>}
+
+      <div className="modal-actions">
+        <button className="btn-ghost" onClick={onClose}>Fermer</button>
+      </div>
+    </Modal>
   );
 }

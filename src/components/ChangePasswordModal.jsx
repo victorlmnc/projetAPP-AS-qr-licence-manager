@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useId, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { verifierRegles, validerMotDePasse } from '../lib/passwordPolicy';
+import Modal from './Modal';
 
 /**
  * Modal de changement de mot de passe.
@@ -15,6 +16,7 @@ export default function ChangePasswordModal({ onClose, target = 'self' }) {
   const [erreur, setErreur] = useState(null);
   const [ok, setOk] = useState(false);
   const [enCours, setEnCours] = useState(false);
+  const titreId = useId();
 
   // Mode coach : identifiant du compte respos-sports unique
   const [coachId, setCoachId] = useState(null);
@@ -115,88 +117,86 @@ export default function ChangePasswordModal({ onClose, target = 'self' }) {
     : 'Changer mon mot de passe';
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal" onClick={(e) => e.stopPropagation()}>
-        <h3>{titre}</h3>
+    <Modal onClose={onClose} dismissible={!enCours} labelledBy={titreId}>
+      <h3 id={titreId}>{titre}</h3>
 
-        {ok ? (
-          <>
-            <p className="apercu apercu--ok">Mot de passe modifié avec succès.</p>
-            <div className="modal-actions">
-              <button onClick={onClose}>Fermer</button>
-            </div>
-          </>
-        ) : (
-          <form onSubmit={valider}>
-            {/* Affichage du compte ciblé */}
-            <div className="coach-target-info">
-              {target === 'self' ? (
-                <p className="coach-target-label">
-                  Compte ciblé : <strong>Bureau</strong>
-                </p>
-              ) : target === 'coach' ? (
-                chargementCoach ? (
-                  <p className="muted">Chargement du compte respos-sports…</p>
-                ) : coachId ? (
-                  <p className="coach-target-label">
-                    Compte ciblé : <strong>{coachNom}</strong>
-                  </p>
-                ) : null
-              ) : null}
-            </div>
-
-            <label className="champ">
-              Nouveau mot de passe
-              <input
-                type="password"
-                value={mdp}
-                onChange={(e) => setMdp(e.target.value)}
-                autoComplete="new-password"
-              />
-            </label>
-
-            {mdp.length > 0 && (
-              <ul className="pwd-rules">
-                {regles.map((r) => (
-                  <li key={r.cle} className={`pwd-rule ${r.ok ? 'pwd-rule--ok' : 'pwd-rule--ko'}`}>
-                    <span className="pwd-rule__icon">{r.ok ? '✓' : '✗'}</span>
-                    {r.libelle}
-                  </li>
-                ))}
-              </ul>
-            )}
-
-            <label className="champ">
-              Confirmer le mot de passe
-              <input
-                type="password"
-                value={confirme}
-                onChange={(e) => setConfirme(e.target.value)}
-                autoComplete="new-password"
-              />
-            </label>
-
-            {confirme.length > 0 && mdp !== confirme && (
-              <p className="pwd-rule pwd-rule--ko" style={{ marginTop: 6 }}>
-                <span className="pwd-rule__icon">✗</span>
-                Les mots de passe ne correspondent pas
+      {ok ? (
+        <>
+          <p className="apercu apercu--ok">Mot de passe modifié avec succès.</p>
+          <div className="modal-actions">
+            <button onClick={onClose}>Fermer</button>
+          </div>
+        </>
+      ) : (
+        <form onSubmit={valider}>
+          {/* Affichage du compte ciblé */}
+          <div className="coach-target-info">
+            {target === 'self' ? (
+              <p className="coach-target-label">
+                Compte ciblé : <strong>Bureau</strong>
               </p>
-            )}
+            ) : target === 'coach' ? (
+              chargementCoach ? (
+                <p className="muted">Chargement du compte respos-sports…</p>
+              ) : coachId ? (
+                <p className="coach-target-label">
+                  Compte ciblé : <strong>{coachNom}</strong>
+                </p>
+              ) : null
+            ) : null}
+          </div>
 
-            {erreur && <p className="error">{erreur}</p>}
+          <label className="champ">
+            Nouveau mot de passe
+            <input
+              type="password"
+              value={mdp}
+              onChange={(e) => setMdp(e.target.value)}
+              autoComplete="new-password"
+            />
+          </label>
 
-            <div className="modal-actions">
-              <button type="button" className="btn-ghost" onClick={onClose}>Annuler</button>
-              <button
-                type="submit"
-                disabled={enCours || !toutOk || mdp !== confirme || (target === 'coach' && !coachId)}
-              >
-                {enCours ? 'Modification…' : 'Valider'}
-              </button>
-            </div>
-          </form>
-        )}
-      </div>
-    </div>
+          {mdp.length > 0 && (
+            <ul className="pwd-rules">
+              {regles.map((r) => (
+                <li key={r.cle} className={`pwd-rule ${r.ok ? 'pwd-rule--ok' : 'pwd-rule--ko'}`}>
+                  <span className="pwd-rule__icon">{r.ok ? '✓' : '✗'}</span>
+                  {r.libelle}
+                </li>
+              ))}
+            </ul>
+          )}
+
+          <label className="champ">
+            Confirmer le mot de passe
+            <input
+              type="password"
+              value={confirme}
+              onChange={(e) => setConfirme(e.target.value)}
+              autoComplete="new-password"
+            />
+          </label>
+
+          {confirme.length > 0 && mdp !== confirme && (
+            <p className="pwd-rule pwd-rule--ko" style={{ marginTop: 6 }}>
+              <span className="pwd-rule__icon">✗</span>
+              Les mots de passe ne correspondent pas
+            </p>
+          )}
+
+          {erreur && <p className="error">{erreur}</p>}
+
+          <div className="modal-actions">
+            <button type="button" className="btn-ghost" onClick={onClose}>Annuler</button>
+            <button
+              type="submit"
+              disabled={enCours || !toutOk || mdp !== confirme || (target === 'coach' && !coachId)}
+            >
+              {enCours ? 'Modification…' : 'Valider'}
+            </button>
+          </div>
+        </form>
+      )}
+    </Modal>
   );
 }

@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import Modal from './Modal';
 
 const SECTIONS_BUREAU = [
   {
@@ -87,6 +88,7 @@ export default function TutorialModal({ onClose }) {
   const { role } = useAuth();
   const [sectionOuverte, setSectionOuverte] = useState(0);
   const [imgIndex, setImgIndex] = useState(0);
+  const titreId = useId();
 
   const sections = role === 'coach' ? SECTIONS_COACH : SECTIONS_BUREAU;
   const section = sections[sectionOuverte];
@@ -97,110 +99,106 @@ export default function TutorialModal({ onClose }) {
   }
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal tuto-modal" onClick={(e) => e.stopPropagation()}>
+    <Modal onClose={onClose} labelledBy={titreId} className="modal tuto-modal">
+      {/* SIDEBAR NAVIGATION */}
+      <div className="tuto-sidebar">
+        <h3 id={titreId}>Tutoriel {role === 'coach' ? 'respos-sports' : 'Bureau'}</h3>
+        <div className="tuto-nav-vertical">
+          {sections.map((s, i) => (
+            <button
+              key={i}
+              type="button"
+              className={`tuto-nav__btn ${i === sectionOuverte ? 'tuto-nav__btn--active' : ''}`}
+              onClick={() => changerSection(i)}
+            >
+              {s.titre}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* CONTENT AREA */}
+      <div className="tuto-body">
         
-        {/* SIDEBAR NAVIGATION */}
-        <div className="tuto-sidebar">
-          <h3>Tutoriel {role === 'coach' ? 'respos-sports' : 'Bureau'}</h3>
-          <div className="tuto-nav-vertical">
-            {sections.map((s, i) => (
-              <button
-                key={i}
+        <div className="tuto-media-container" style={{ position: 'relative', marginBottom: '16px', display: section.images.length > 0 ? 'block' : 'none' }}>
+          {section.images.length > 1 && (
+            <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', alignItems: 'center', marginBottom: '8px' }}>
+              <button 
                 type="button"
-                className={`tuto-nav__btn ${i === sectionOuverte ? 'tuto-nav__btn--active' : ''}`}
-                onClick={() => changerSection(i)}
+                className="btn-ghost"
+                style={{ padding: '4px 8px', minWidth: 'auto' }}
+                disabled={imgIndex === 0}
+                onClick={() => setImgIndex(i => i - 1)}
               >
-                {s.titre}
+                ◀
               </button>
-            ))}
+              <span style={{ fontSize: '13px', fontWeight: 'bold' }}>
+                {imgIndex + 1} / {section.images.length}
+              </span>
+              <button 
+                type="button"
+                className="btn-ghost"
+                style={{ padding: '4px 8px', minWidth: 'auto' }}
+                disabled={imgIndex === section.images.length - 1}
+                onClick={() => setImgIndex(i => i + 1)}
+              >
+                ▶
+              </button>
+            </div>
+          )}
+          
+          <div className="tuto-placeholder" style={{ position: 'relative', height: '350px', width: '100%', borderRadius: '8px', overflow: 'hidden', border: '1px solid #e1d8f5' }}>
+            <img 
+              key={`${sectionOuverte}-${imgIndex}`}
+              src={section.images[imgIndex] || ''} 
+              alt={`Illustration pour ${section.titre}`}
+              style={{ width: '100%', height: '100%', objectFit: 'contain', position: 'absolute', top: 0, left: 0 }}
+              onLoad={(e) => {
+                e.target.style.display = 'block';
+                if (e.target.nextSibling) e.target.nextSibling.style.display = 'none';
+              }}
+              onError={(e) => {
+                e.target.style.display = 'none';
+                if (e.target.nextSibling) e.target.nextSibling.style.display = 'flex';
+              }}
+            />
+            <div style={{ width: '100%', height: '100%', display: 'none', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#e0d8eb', color: '#5e3a8c', fontWeight: 'bold' }}>
+              Écran : {section.titre} {section.images.length > 1 ? `(${imgIndex + 1})` : ''}
+              <span style={{ fontSize: '11px', marginTop: '4px', fontWeight: 'normal' }}>(Image introuvable : {section.images[imgIndex]})</span>
+            </div>
           </div>
         </div>
 
-        {/* CONTENT AREA */}
-        <div className="tuto-body">
-          
-          <div className="tuto-media-container" style={{ position: 'relative', marginBottom: '16px', display: section.images.length > 0 ? 'block' : 'none' }}>
-            {section.images.length > 1 && (
-              <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', alignItems: 'center', marginBottom: '8px' }}>
-                <button 
-                  type="button"
-                  className="btn-ghost"
-                  style={{ padding: '4px 8px', minWidth: 'auto' }}
-                  disabled={imgIndex === 0}
-                  onClick={() => setImgIndex(i => i - 1)}
-                >
-                  ◀
-                </button>
-                <span style={{ fontSize: '13px', fontWeight: 'bold' }}>
-                  {imgIndex + 1} / {section.images.length}
-                </span>
-                <button 
-                  type="button"
-                  className="btn-ghost"
-                  style={{ padding: '4px 8px', minWidth: 'auto' }}
-                  disabled={imgIndex === section.images.length - 1}
-                  onClick={() => setImgIndex(i => i + 1)}
-                >
-                  ▶
-                </button>
-              </div>
-            )}
-            
-            <div className="tuto-placeholder" style={{ position: 'relative', height: '350px', width: '100%', borderRadius: '8px', overflow: 'hidden', border: '1px solid #e1d8f5' }}>
-              <img 
-                key={`${sectionOuverte}-${imgIndex}`}
-                src={section.images[imgIndex] || ''} 
-                alt={`Illustration pour ${section.titre}`}
-                style={{ width: '100%', height: '100%', objectFit: 'contain', position: 'absolute', top: 0, left: 0 }}
-                onLoad={(e) => {
-                  e.target.style.display = 'block';
-                  if (e.target.nextSibling) e.target.nextSibling.style.display = 'none';
-                }}
-                onError={(e) => {
-                  e.target.style.display = 'none';
-                  if (e.target.nextSibling) e.target.nextSibling.style.display = 'flex';
-                }}
-              />
-              <div style={{ width: '100%', height: '100%', display: 'none', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#e0d8eb', color: '#5e3a8c', fontWeight: 'bold' }}>
-                Ecran : {section.titre} {section.images.length > 1 ? `(${imgIndex + 1})` : ''}
-                <span style={{ fontSize: '11px', marginTop: '4px', fontWeight: 'normal' }}>(Image introuvable : {section.images[imgIndex]})</span>
-              </div>
-            </div>
-          </div>
+        <h4 className="tuto-content__title">{section.titre}</h4>
+        
+        <ul className="tuto-step-list">
+          {section.contenu.map((texte, i) => (
+            <li key={i}>{texte}</li>
+          ))}
+        </ul>
 
-          <h4 className="tuto-content__title">{section.titre}</h4>
-          
-          <ul className="tuto-step-list">
-            {section.contenu.map((texte, i) => (
-              <li key={i}>{texte}</li>
-            ))}
-          </ul>
-
-          <div className="tuto-actions">
-            <button
-              type="button"
-              className="btn-ghost"
-              disabled={sectionOuverte === 0}
-              onClick={() => changerSection(sectionOuverte - 1)}
-            >
-              ← Précédent
-            </button>
-            <button
-              type="button"
-              className={sectionOuverte === sections.length - 1 ? "btn-danger" : ""}
-              onClick={() => {
-                if (sectionOuverte === sections.length - 1) onClose();
-                else changerSection(sectionOuverte + 1);
-              }}
-            >
-              {sectionOuverte === sections.length - 1 ? 'Terminer' : 'Suivant →'}
-            </button>
-          </div>
-
+        <div className="tuto-actions">
+          <button
+            type="button"
+            className="btn-ghost"
+            disabled={sectionOuverte === 0}
+            onClick={() => changerSection(sectionOuverte - 1)}
+          >
+            ← Précédent
+          </button>
+          <button
+            type="button"
+            className={sectionOuverte === sections.length - 1 ? "btn-danger" : ""}
+            onClick={() => {
+              if (sectionOuverte === sections.length - 1) onClose();
+              else changerSection(sectionOuverte + 1);
+            }}
+          >
+            {sectionOuverte === sections.length - 1 ? 'Terminer' : 'Suivant →'}
+          </button>
         </div>
 
       </div>
-    </div>
+    </Modal>
   );
 }

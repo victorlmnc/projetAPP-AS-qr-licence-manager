@@ -1,5 +1,6 @@
-import { useMemo, useState } from 'react';
+import { useId, useMemo, useState } from 'react';
 import { nomComplet, reparerTexte } from '../lib/texte';
+import Modal from './Modal';
 
 // Modale de confirmation avant l'envoi groupé des QR codes.
 // `adherents` = liste des adhérents éligibles.
@@ -14,6 +15,7 @@ export default function EnvoiQrModal({
 }) {
   const [recherche, setRecherche] = useState('');
   const [selectionnes, setSelectionnes] = useState(() => new Set(adherents.map((a) => a.id)));
+  const titreId = useId();
 
   const filtres = useMemo(() => {
     const norm = (s) =>
@@ -64,65 +66,66 @@ export default function EnvoiQrModal({
   const tousCoches = selectionnes.size === adherents.length && adherents.length > 0;
 
   return (
-    <div className="modal-overlay modal-overlay--top" onClick={onClose}>
-      <div className="modal modal--envoi" onClick={(e) => e.stopPropagation()}>
-        <h3>{title}</h3>
-        <p className="muted" style={{ marginBottom: 16 }}>
-          {subtitle ?? `${selectionnes.size} destinataire(s) sélectionné(s) sur ${adherents.length} éligible(s)`}
-        </p>
+    <Modal onClose={onClose} labelledBy={titreId} className="modal modal--envoi">
+      <h3 id={titreId}>{title}</h3>
+      <p className="muted" style={{ marginBottom: 16 }}>
+        {subtitle ?? `${selectionnes.size} destinataire(s) sélectionné(s) sur ${adherents.length} éligible(s)`}
+      </p>
 
-        <input
-          className="envoi-search"
-          placeholder="Rechercher un nom, un prénom ou un email…"
-          value={recherche}
-          onChange={(e) => setRecherche(e.target.value)}
-          autoFocus
-        />
+      <input
+        type="search"
+        className="envoi-search"
+        placeholder="Rechercher un nom, un prénom ou un email…"
+        aria-label="Rechercher un destinataire"
+        autoComplete="off"
+        spellCheck={false}
+        value={recherche}
+        onChange={(e) => setRecherche(e.target.value)}
+      />
 
-        <div className="envoi-list-header">
-          <label className="envoi-item envoi-item--header">
+      <div className="envoi-list-header">
+        <label className="envoi-item envoi-item--header">
+          <input
+            type="checkbox"
+            checked={tousCoches}
+            onChange={toggleTout}
+          />
+          <span style={{ fontWeight: 600 }}>
+            {tousCoches ? 'Tout décocher' : 'Tout cocher'}
+          </span>
+          <span className="muted small" style={{ marginLeft: 'auto' }}>
+            {filtres.length} résultat(s)
+          </span>
+        </label>
+      </div>
+
+      <div className="envoi-list">
+        {filtres.length === 0 && (
+          <p className="muted small" style={{ padding: '12px 0', textAlign: 'center' }}>
+            Aucun résultat.
+          </p>
+        )}
+        {filtres.map((a) => (
+          <label key={a.id} className="envoi-item">
             <input
               type="checkbox"
-              checked={tousCoches}
-              onChange={toggleTout}
+              checked={selectionnes.has(a.id)}
+              onChange={() => toggle(a.id)}
             />
-            <span style={{ fontWeight: 600 }}>
-              {tousCoches ? 'Tout décocher' : 'Tout cocher'}
+            <span className="envoi-item__name">
+              {nomComplet(a)}
             </span>
-            <span className="muted small" style={{ marginLeft: 'auto' }}>
-              {filtres.length} résultat(s)
-            </span>
+            <span className="muted small envoi-item__email">{a.email}</span>
           </label>
-        </div>
-
-        <div className="envoi-list">
-          {filtres.length === 0 && (
-            <p className="muted small" style={{ padding: '12px 0', textAlign: 'center' }}>
-              Aucun résultat.
-            </p>
-          )}
-          {filtres.map((a) => (
-            <label key={a.id} className="envoi-item">
-              <input
-                type="checkbox"
-                checked={selectionnes.has(a.id)}
-                onChange={() => toggle(a.id)}
-              />
-              <span className="envoi-item__name">
-                {nomComplet(a)}
-              </span>
-              <span className="muted small envoi-item__email">{a.email}</span>
-            </label>
-          ))}
-        </div>
-
-        <div className="modal-actions">
-          <button className="btn-ghost" onClick={onClose}>Annuler</button>
-          <button onClick={confirmer} disabled={selectionnes.size === 0}>
-            {confirmLabel} ({selectionnes.size})
-          </button>
-        </div>
+        ))}
       </div>
-    </div>
+
+      <div className="modal-actions">
+        <button className="btn-ghost" onClick={onClose}>Annuler</button>
+        <button onClick={confirmer} disabled={selectionnes.size === 0}>
+          {confirmLabel} ({selectionnes.size})
+        </button>
+      </div>
+    </Modal>
   );
 }

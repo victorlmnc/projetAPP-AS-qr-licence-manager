@@ -1,5 +1,6 @@
-import { useRef, useState } from 'react';
+import { useId, useRef, useState } from 'react';
 import { supabase } from '../lib/supabase';
+import Modal from './Modal';
 
 function normaliser(s) {
   return String(s || '').trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
@@ -30,6 +31,7 @@ export default function ImportComplementaireModal({ onClose, onImported }) {
   const [etat, setEtat] = useState(null);
   const [enCours, setEnCours] = useState(false);
   const inputRef = useRef(null);
+  const titreId = useId();
 
   // PapaParse et xlsx sont chargés seulement au moment de l'import.
   async function parseCsv(fichier) {
@@ -176,41 +178,39 @@ export default function ImportComplementaireModal({ onClose, onImported }) {
   }
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal modal--wide" onClick={(e) => e.stopPropagation()}>
-        <h3>Importer des informations complémentaires</h3>
-        <p className="muted import-aide">
-          Fichier CSV ou Excel avec les colonnes <code>nom</code>, <code>prenom</code> et/ou{' '}
-          <code>email</code> pour identifier les adhérents, plus les colonnes à mettre à jour
-          (ex. <code>adherent bde</code>, <code>licence ffsu</code>, <code>yeps</code>…).
-          Seuls les adhérents déjà présents dans la base sont mis à jour — aucune création.
-        </p>
+    <Modal onClose={onClose} dismissible={!enCours} labelledBy={titreId} className="modal modal--wide">
+      <h3 id={titreId}>Importer des informations complémentaires</h3>
+      <p className="muted import-aide">
+        Fichier CSV ou Excel avec les colonnes <code>nom</code>, <code>prenom</code> et/ou{' '}
+        <code>email</code> pour identifier les adhérents, plus les colonnes à mettre à jour
+        (ex. <code>adherent bde</code>, <code>licence ffsu</code>, <code>yeps</code>…).
+        Seuls les adhérents déjà présents dans la base sont mis à jour — aucune création.
+      </p>
 
-        <input
-          ref={inputRef}
-          type="file"
-          accept=".csv,.xlsx,text/csv"
-          style={{ display: 'none' }}
-          onChange={gererFichier}
+      <input
+        ref={inputRef}
+        type="file"
+        accept=".csv,.xlsx,text/csv"
+        style={{ display: 'none' }}
+        onChange={gererFichier}
+        disabled={enCours}
+      />
+
+      <div className="import-btns">
+        <button
+          className="btn-ghost"
+          onClick={() => { inputRef.current.value = ''; inputRef.current.click(); }}
           disabled={enCours}
-        />
-
-        <div className="import-btns">
-          <button
-            className="btn-ghost"
-            onClick={() => { inputRef.current.value = ''; inputRef.current.click(); }}
-            disabled={enCours}
-          >
-            {enCours ? 'Import en cours…' : 'Choisir le fichier (CSV ou Excel)'}
-          </button>
-        </div>
-
-        {etat && <p className="import-etat" style={{ whiteSpace: 'pre-line' }}>{etat}</p>}
-
-        <div className="modal-actions">
-          <button className="btn-ghost" onClick={onClose}>Fermer</button>
-        </div>
+        >
+          {enCours ? 'Import en cours…' : 'Choisir le fichier (CSV ou Excel)'}
+        </button>
       </div>
-    </div>
+
+      {etat && <p className="import-etat" role="status">{etat}</p>}
+
+      <div className="modal-actions">
+        <button className="btn-ghost" onClick={onClose}>Fermer</button>
+      </div>
+    </Modal>
   );
 }

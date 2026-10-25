@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { calculerStatutLicence } from '../lib/licence';
 import Header from '../components/Header';
@@ -9,6 +9,7 @@ import QrCodeModal from '../components/QrCodeModal';
 import ImportFormsModal from '../components/ImportFormsModal';
 import ImportComplementaireModal from '../components/ImportComplementaireModal';
 import EnvoiQrModal from '../components/EnvoiQrModal';
+import Modal from '../components/Modal';
 import { nomComplet, reparerTexte } from '../lib/texte';
 import './BureauDashboard.css';
 
@@ -26,6 +27,23 @@ const FILTRES = [
 
 function champCsv(valeur) {
   return `"${String(valeur ?? '').replace(/"/g, '""')}"`;
+}
+
+// La barre se remplit avec scaleX (animé par le GPU) plutôt qu'avec width.
+function BarreProgression({ envoyes, total }) {
+  const ratio = total ? Math.min(envoyes / total, 1) : 0;
+  return (
+    <div
+      className="envoi-progress__bar"
+      role="progressbar"
+      aria-label="Emails envoyés"
+      aria-valuemin={0}
+      aria-valuemax={total || 0}
+      aria-valuenow={envoyes}
+    >
+      <div className="envoi-progress__fill" style={{ transform: `scaleX(${ratio})` }} />
+    </div>
+  );
 }
 
 export default function BureauDashboard() {
@@ -59,6 +77,8 @@ export default function BureauDashboard() {
   const [envoiModal, setEnvoiModal] = useState(null);
   const [envoi, setEnvoi] = useState(null); // null | 'loading' | { sent, remaining, errors }
   const [progression, setProgression] = useState(null); // null | { envoyes, total }
+  const titreEnvoiId = useId();
+  const titreResultatId = useId();
 
   // Adhérents éligibles à l'envoi : email présent
   const adherentsEligibles = useMemo(
@@ -404,7 +424,7 @@ export default function BureauDashboard() {
 
       <main className="container dash">
         <div className="dash-top">
-          <h2>Adhérents <span className="muted"></span></h2>
+          <h2>Adhérents</h2>
           <div className="dash-top-actions">
             <details className="export-dropdown" ref={importRef}>
               <summary className="btn-ghost export-dropdown__trigger">
@@ -453,16 +473,7 @@ export default function BureauDashboard() {
 
         {envoi === 'loading' && progression && (
           <div className="envoi-progress">
-            <div className="envoi-progress__bar">
-              <div
-                className="envoi-progress__fill"
-                style={{
-                  width: progression.total
-                    ? `${Math.round((progression.envoyes / progression.total) * 100)}%`
-                    : '0%',
-                }}
-              />
-            </div>
+            <BarreProgression envoyes={progression.envoyes} total={progression.total} />
             <p className="envoi-progress__label">
               {progression.envoyes} / {progression.total ?? '…'} emails envoyés
               {progression.total && (
@@ -488,8 +499,12 @@ export default function BureauDashboard() {
         </div>
 
         <input
+          type="search"
           className="dash-search"
           placeholder="Rechercher un nom, un prénom ou un email…"
+          aria-label="Rechercher un adhérent"
+          autoComplete="off"
+          spellCheck={false}
           value={recherche}
           onChange={(e) => setRecherche(e.target.value)}
         />
@@ -518,7 +533,7 @@ export default function BureauDashboard() {
               className="btn-ghost"
               onClick={() => setEditionMultiple(true)}
             >
-              Modifier la selection ({selection.length})
+              Modifier la sélection ({selection.length})
             </button>
           </div>
         )}
@@ -540,7 +555,7 @@ export default function BureauDashboard() {
                         className="dash-select"
                         checked={toutVisibleSelectionne}
                         onChange={basculerSelectionVisible}
-                        aria-label="Selectionner tous les adherents visibles"
+                        aria-label="Sélectionner tous les adhérents visibles"
                       />
                     </th>
                     <th>Nom</th>
@@ -560,7 +575,7 @@ export default function BureauDashboard() {
                             className="dash-select"
                             checked={selectionSet.has(a.id)}
                             onChange={() => basculerSelection(a.id)}
-                            aria-label={`Selectionner ${nomComplet(a)}`}
+                            aria-label={`Sélectionner ${nomComplet(a)}`}
                           />
                         </td>
                         <td>
@@ -637,59 +652,51 @@ export default function BureauDashboard() {
       )}
 
       {envoi === 'loading' && (
-        <div className="modal-overlay modal-overlay--top" role="alertdialog" aria-modal="true">
-          <div className="modal sending-modal">
-            <div className="sending-spinner" aria-hidden="true" />
-            <h3>Envoi en cours...</h3>
-            <p className="muted">
-              Les emails sont en train d'etre envoyes.
-            </p>
-            <p className="sending-modal__warning">
-              Ne quittez pas et ne rafraichissez pas la page.
-            </p>
-            {progression && (
-              <div className="sending-modal__progress">
-                <div className="envoi-progress__bar">
-                  <div
-                    className="envoi-progress__fill"
-                    style={{
-                      width: progression.total
-                        ? `${Math.round((progression.envoyes / progression.total) * 100)}%`
-                        : '0%',
-                    }}
-                  />
-                </div>
-                <p className="envoi-progress__label">
-                  {progression.envoyes} / {progression.total ?? '...'} emails envoyes
-                </p>
-              </div>
-            )}
-          </div>
-        </div>
+        <Modal
+          dismissible={false}
+          role="alertdialog"
+          labelledBy={titreEnvoiId}
+          className="modal sending-modal"
+        >
+          <div className="sending-spinner" aria-hidden="true" />
+          <h3 id={titreEnvoiId}>Envoi en cours…</h3>
+          <p className="muted">
+            Les emails sont en train d'être envoyés.
+          </p>
+          <p className="sending-modal__warning">
+            Ne quittez pas et ne rafraîchissez pas la page.
+          </p>
+          {progression && (
+            <div className="sending-modal__progress">
+              <BarreProgression envoyes={progression.envoyes} total={progression.total} />
+              <p className="envoi-progress__label" aria-live="polite">
+                {progression.envoyes} / {progression.total ?? '…'} emails envoyés
+              </p>
+            </div>
+          )}
+        </Modal>
       )}
 
       {envoi && envoi !== 'loading' && (
-        <div className="modal-overlay" onClick={() => setEnvoi(null)}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <h3>{envoi.mode === 'reminder' ? 'Résultat de la relance' : "Résultat de l'envoi"}</h3>
-            <p>
-              <strong className="send-ok">{envoi.sent} email(s) envoyé(s)</strong>
-            </p>
-            {envoi.errors?.length > 0 && (
-              <>
-                <p className="error">{envoi.errors.length} échec(s) :</p>
-                <ul className="send-errors">
-                  {envoi.errors.map((e, i) => (
-                    <li key={i} className="small error">{reparerTexte(e.nom)} — {e.raison}</li>
-                  ))}
-                </ul>
-              </>
-            )}
-            <div className="modal-actions">
-              <button onClick={() => setEnvoi(null)}>Fermer</button>
-            </div>
+        <Modal onClose={() => setEnvoi(null)} labelledBy={titreResultatId}>
+          <h3 id={titreResultatId}>{envoi.mode === 'reminder' ? 'Résultat de la relance' : "Résultat de l'envoi"}</h3>
+          <p>
+            <strong className="send-ok">{envoi.sent} email(s) envoyé(s)</strong>
+          </p>
+          {envoi.errors?.length > 0 && (
+            <>
+              <p className="error">{envoi.errors.length} échec(s) :</p>
+              <ul className="send-errors">
+                {envoi.errors.map((e, i) => (
+                  <li key={i} className="small error">{reparerTexte(e.nom)} — {e.raison}</li>
+                ))}
+              </ul>
+            </>
+          )}
+          <div className="modal-actions">
+            <button onClick={() => setEnvoi(null)}>Fermer</button>
           </div>
-        </div>
+        </Modal>
       )}
     </div>
   );

@@ -29,7 +29,7 @@ export default function Header({ titre }) {
             <span>AS INSA CVL - Bourges</span>
             <strong>{titre}</strong>
           </div>
-          {role && <span className="badge">{role === 'coach' ? 'Responsable Sport' : role}</span>}
+          {role && <span className="badge">{role === 'coach' ? 'Responsable Sport' : 'Bureau'}</span>}
         </div>
 
         <div className="topbar__actions">
