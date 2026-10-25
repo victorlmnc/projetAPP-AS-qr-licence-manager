@@ -216,12 +216,12 @@ export default function AdherentEditor({ adherent, onClose, onSaved, onDeleted }
                   <label className="check">
                     <input type="checkbox" checked={form.manque_paiement}
                            onChange={(e) => set('manque_paiement', e.target.checked)} />
-                    Paiement (chèque, espèces, CB…)
+                    Paiement
                   </label>
                   <label className="check">
                     <input type="checkbox" checked={form.manque_yeps}
                            onChange={(e) => set('manque_yeps', e.target.checked)} />
-                    Aide YEPS
+                    Aide YEPS (QR code et numéro)
                   </label>
                   <label className="check">
                     <input type="checkbox" checked={form.manque_passport}

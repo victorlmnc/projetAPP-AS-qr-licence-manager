@@ -12,12 +12,13 @@ export function calculerStatutLicence(adherent) {
   if (!paiementOk) {
     const manques = [];
     if (adherent?.manque_paiement) manques.push('Paiement');
-    if (adherent?.manque_yeps) manques.push('Aide YEPS');
+    if (adherent?.manque_yeps) manques.push('Aide YEPS (QR code et numéro)');
     if (adherent?.manque_passport) manques.push("Aide PASS'SPORT");
 
+    // Sans détail coché, on garde un libellé général plutôt qu'un « Manque : » vide.
     anomalies.push(
       manques.length > 0
-        ? `Paiement non régularisé. Manque : ${manques.join(', ')}`
+        ? `Manque : ${manques.join(', ')}`
         : 'Paiement non régularisé'
     );
   }
