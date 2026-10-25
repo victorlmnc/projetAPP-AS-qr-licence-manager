@@ -67,8 +67,7 @@ jobs:
           git config user.name  "$mirror_login"
           git config user.email "${mirror_id}+${mirror_login}@users.noreply.github.com"
 
-          # --- Delete ALL tracked files, then copy everything from source ---
-          # This guarantees a perfect 1:1 copy every time.
+          # --- Replace the mirror content with an exact copy of the source ---
           git rm -rf --ignore-unmatch . > /dev/null 2>&1 || true
           rm -rf ./*  # also remove untracked leftovers (but keep .git)
 
@@ -78,11 +77,11 @@ jobs:
           # --- Stage, commit & force-push ---
           git add -A
           if git diff --cached --quiet; then
-            echo "No differences detected — forcing an empty commit for Vercel."
+            echo "No differences detected, pushing an empty commit to trigger Vercel."
             git commit --allow-empty -m "Mirror group main ${GITHUB_SHA} (no-diff)"
           else
             git commit -m "Mirror group main ${GITHUB_SHA}"
           fi
 
           git push --force "$mirror_url" main
-          echo "✅ Mirror push complete."
+          echo "Mirror push complete."

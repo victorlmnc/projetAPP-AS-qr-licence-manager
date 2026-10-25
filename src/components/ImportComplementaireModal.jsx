@@ -184,7 +184,7 @@ export default function ImportComplementaireModal({ onClose, onImported }) {
         Fichier CSV ou Excel avec les colonnes <code>nom</code>, <code>prenom</code> et/ou{' '}
         <code>email</code> pour identifier les adhérents, plus les colonnes à mettre à jour
         (ex. <code>adherent bde</code>, <code>licence ffsu</code>, <code>yeps</code>…).
-        Seuls les adhérents déjà présents dans la base sont mis à jour — aucune création.
+        Seuls les adhérents déjà présents dans la base sont mis à jour, aucune fiche n'est créée.
       </p>
 
       <input

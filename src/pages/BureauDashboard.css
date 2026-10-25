@@ -479,7 +479,7 @@
     grid-template-columns: 1fr;
   }
 
-  /* Tableau → cartes : chaque adhérent devient une carte, actions visibles,
+  /* Le tableau devient une liste de cartes : chaque adhérent devient une carte, actions visibles,
      sans défilement horizontal. */
   .dash-table-wrap {
     overflow: visible;

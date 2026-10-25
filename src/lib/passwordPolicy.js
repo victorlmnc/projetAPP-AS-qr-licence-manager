@@ -1,5 +1,5 @@
 /**
- * Validation de mot de passe — politique de sécurité AS INSA CVL.
+ * Validation des mots de passe (politique de sécurité de l'AS INSA CVL).
  *
  * Critères :
  *  - ≥ 8 caractères

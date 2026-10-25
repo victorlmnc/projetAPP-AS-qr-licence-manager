@@ -1,133 +1,124 @@
-# AS INSA CVL — Gestion des Licences
+# AS INSA CVL : gestion des licences
 
-Application web de gestion des licences sportives pour l'**Association Sportive INSA CVL** (campus de Bourges).  
-Déployée sur **[as-licences-insa-cvl.vercel.app](https://as-licences-insa-cvl.vercel.app)**.
-
----
+Application web de gestion des licences de l'Association Sportive de l'INSA CVL (campus de Bourges), en ligne sur [as-licences-insa-cvl.vercel.app](https://as-licences-insa-cvl.vercel.app).
 
 ## Fonctionnalités
 
-### Espace Bureau
-- Tableau de bord avec liste complète des adhérents, statistiques (à jour / non à jour), filtres et recherche par nom, prénom ou email
-- Fiche adhérent détaillée (un clic sur la ligne l'ouvre) : informations personnelles, adresse, type(s) de licence, rôle, médical, documents et paiement
-- Import depuis l'export CSV de Google Forms (upsert automatique — double soumission gérée)
-- Import complémentaire CSV/Excel pour mettre à jour des champs spécifiques (paiement, YEPS, PASS'SPORT…)
-- Export de la liste filtrée en CSV, Excel (.xlsx) ou PDF
-- Génération et envoi par email des QR Codes (individuel ou groupé)
-- Relance automatique par email des dossiers incomplets
-- Édition en masse de plusieurs adhérents simultanément (dont la remise du merch)
-- Merch (maillot avec flocage en option, short) : articles commandés, tailles, texte floqué et remise article par article (le flocage est remis avec le maillot) ; filtre « Merch à remettre » ; récap de commande par taille, téléchargeable en bon de commande PDF ou en fichier Excel pour le fournisseur (sans aucun nom d'adhérent)
-- Import des commandes de merch depuis l'export HelloAsso (ou un modèle Excel) : formules reconnues, colonnes de l'adhérent préférées à celles du payeur, commandes remboursées ou annulées ignorées, aide YEPS cochée pour les formules « avec YEPS », aperçu avant d'appliquer ; l'import n'ajoute que ce qui manque
-- Mise à jour temps réel via Supabase Realtime
-- Paramètres : changement des mots de passe, remise à zéro de la base en fin de saison
-- Utilisable sur ordinateur et sur téléphone (sur petit écran, le tableau s'affiche en cartes)
+### Espace bureau
 
-### Espace Respos-Sports
-- Scanner de QR Codes sur le terrain via la caméra du téléphone
-- Résultat immédiat : écran vert (dossier à jour) ou rouge (dossier incomplet, avec le détail des éléments manquants)
+- Liste des adhérents avec statistiques (à jour ou non), filtres et recherche par nom, prénom ou email
+- Fiche adhérent, ouverte d'un clic sur la ligne : informations personnelles, adresse, types de licence, rôle, médical, documents et paiement
+- Import de l'export CSV de Google Forms (les doubles soumissions sont fusionnées)
+- Import complémentaire CSV ou Excel pour mettre à jour certains champs (paiement, YEPS, PASS'SPORT…)
+- Export de la liste filtrée en CSV, Excel ou PDF
+- Envoi des QR codes par email, à un adhérent ou à plusieurs
+- Relance par email des dossiers incomplets
+- Modification de plusieurs adhérents à la fois, y compris la remise du merch
+- Suivi du merch (maillot avec flocage en option, short) : articles commandés, tailles, texte floqué, remise article par article. Le flocage est remis avec le maillot. Un filtre affiche le merch à remettre, et le récap de commande par taille se télécharge en bon de commande PDF ou en fichier Excel pour le fournisseur, sans nom d'adhérent.
+- Import des commandes de merch depuis l'export HelloAsso ou un modèle Excel. Les formules sont reconnues, les colonnes de l'adhérent sont préférées à celles du payeur, les commandes remboursées ou annulées sont ignorées et l'aide YEPS est cochée pour les formules « avec YEPS ». Un aperçu s'affiche avant d'appliquer, et l'import ne fait qu'ajouter ce qui manque.
+- Mise à jour en temps réel (Supabase Realtime)
+- Paramètres : mots de passe, remise à zéro de la base en fin de saison
+- Utilisable sur ordinateur et sur téléphone, où le tableau s'affiche en cartes
+
+### Espace respos-sports
+
+- Scan des QR codes sur le terrain avec la caméra du téléphone
+- Résultat immédiat : écran vert si le dossier est à jour, rouge sinon, avec la liste de ce qui manque
 
 ### Page publique adhérent
-- Accessible via le lien / QR Code envoyé par email, sans compte
-- Affiche le statut de la licence et le QR Code à présenter lors des entraînements
-- Téléchargement du QR Code en PNG
 
----
+- Ouverte par le lien ou le QR code reçu par email, sans compte
+- Affiche le statut de la licence et le QR code à présenter aux entraînements
+- Le QR code se télécharge en PNG
 
 ## Stack technique
 
 | Couche | Technologie |
 |---|---|
-| Frontend | React 18 + Vite, React Router v6 |
-| Base de données | Supabase (PostgreSQL + Auth + Realtime) |
+| Frontend | React 18, Vite, React Router 6 |
+| Base de données | Supabase (PostgreSQL, Auth, Realtime) |
 | Fonctions serveur | Vercel Serverless Functions (`/api/`) |
-| Email | Nodemailer via SMTP Gmail |
-| QR Code | `qrcode.react` (génération), `html5-qrcode` (scan) |
-| Import/Export | PapaParse (CSV), SheetJS xlsx, jsPDF + jspdf-autotable |
+| Email | Nodemailer, SMTP Gmail |
+| QR code | `qrcode.react` (génération), `html5-qrcode` (scan) |
+| Import et export | PapaParse (CSV), SheetJS (xlsx), jsPDF et jspdf-autotable |
 | Tests | Vitest (unitaires), Playwright (bout en bout) |
 | Déploiement | Vercel |
 
----
-
-## Architecture du projet
+## Structure du projet
 
 ```
 ├── api/                               # Fonctions serverless Vercel
-│   ├── send-qr.js                     # Envoi d'emails avec QR Code (individuel + groupé + relance)
+│   ├── send-qr.js                     # Envoi des emails avec QR code (individuel, groupé, relance)
 │   ├── public-adherent.js             # Lecture publique d'un adhérent par token
-│   └── change-password.js             # Changement du mot de passe respos-sports (par le bureau)
+│   └── change-password.js             # Changement du mot de passe respos-sports par le bureau
 │
 ├── migrations/                        # Scripts SQL à exécuter une fois sur une base existante
 │
 ├── e2e/                               # Tests de bout en bout (Playwright)
 │   ├── bureau.spec.js                 # Tableau de bord : tri, filtres, états vides, 1 284 lignes
 │   ├── fenetres.spec.js               # Éditeur de fiche et envoi groupé (Échap, focus, mobile)
+│   ├── merch.spec.js                  # Merch : fiche, récap, bon de commande, import
 │   ├── scan.spec.js                   # Résultat du scan terrain
 │   ├── adherent.spec.js               # Page publique adhérent
-│   ├── captures.spec.js               # Captures d'écran pour revue visuelle (CAPTURES=1, non lancé par défaut)
-│   ├── emails-tuto.spec.js            # Régénère les images d'emails du tutoriel (TUTO=1, non lancé par défaut)
-│   └── outils.js                      # Aides communes (ouverture, détection de débordements)
+│   ├── captures.spec.js               # Captures d'écran pour relecture (CAPTURES=1, non lancé par défaut)
+│   ├── emails-tuto.spec.js            # Images d'emails du tutoriel (TUTO=1, non lancé par défaut)
+│   └── outils.js                      # Fonctions communes (ouverture, détection des débordements)
 │
 ├── src/
 │   ├── pages/
-│   │   ├── Login.jsx                  # Page de connexion (bureau ou respos-sports)
-│   │   ├── BureauDashboard.jsx        # Tableau de bord principal
-│   │   ├── CoachScan.jsx              # Scanner QR terrain
-│   │   └── AdherentPublic.jsx         # Page publique (QR Code adhérent)
+│   │   ├── Login.jsx                  # Connexion (bureau ou respos-sports)
+│   │   ├── BureauDashboard.jsx        # Tableau de bord
+│   │   ├── CoachScan.jsx              # Scan terrain
+│   │   └── AdherentPublic.jsx         # Page publique de l'adhérent
 │   │
 │   ├── components/
-│   │   ├── AdherentEditor.jsx         # Éditeur de fiche (2 onglets : Licence / Informations)
-│   │   ├── BulkAdherentEditor.jsx     # Édition en masse
+│   │   ├── AdherentEditor.jsx         # Fiche adhérent (onglets Licence, Informations, Merch)
+│   │   ├── BulkAdherentEditor.jsx     # Modification en masse
 │   │   ├── RecapMerchModal.jsx        # Récap de commande merch, bon de commande PDF et fichier Excel
-│   │   ├── ImportMerchModal.jsx       # Import des commandes de merch (aperçu puis application)
-│   │   ├── QrCodeModal.jsx            # Affichage et envoi d'un QR Code individuel
-│   │   ├── EnvoiQrModal.jsx           # Modal de sélection pour envoi groupé
-│   │   ├── ImportFormsModal.jsx       # Import depuis Google Forms CSV/Excel
-│   │   ├── ImportComplementaireModal.jsx  # Import complémentaire CSV/Excel
-│   │   ├── TutorialModal.jsx          # Tutoriel intégré (bureau + respos-sports)
+│   │   ├── ImportMerchModal.jsx       # Import des commandes de merch
+│   │   ├── QrCodeModal.jsx            # Affichage et envoi d'un QR code
+│   │   ├── EnvoiQrModal.jsx           # Sélection des adhérents pour l'envoi groupé
+│   │   ├── ImportFormsModal.jsx       # Import Google Forms (CSV ou Excel)
+│   │   ├── ImportComplementaireModal.jsx  # Import complémentaire (CSV ou Excel)
+│   │   ├── TutorialModal.jsx          # Tutoriel (bureau et respos-sports)
 │   │   ├── SettingsModal.jsx          # Paramètres
-│   │   ├── Modal.jsx                  # Fenêtre modale commune (<dialog> : Échap, focus, fond inerte)
+│   │   ├── Modal.jsx                  # Fenêtre modale commune basée sur <dialog>
 │   │   └── ...
 │   │
 │   ├── lib/
-│   │   ├── licence.js                 # Calcul du statut de licence et messages
-│   │   ├── licence.test.js            # Tests unitaires (Vitest)
-│   │   ├── emails.js                  # Contenu des emails (QR Code, relance), utilisé par api/send-qr.js
-│   │   ├── emails.test.js             # Tests unitaires (Vitest)
-│   │   ├── useTitrePage.js            # Titre de l'onglet propre à chaque page
-│   │   ├── supabase.js                # Client Supabase côté client
-│   │   ├── texte.js                   # Utilitaires texte (nomComplet, reparerTexte, comparerParNom)
-│   │   ├── texte.test.js              # Tests unitaires (Vitest)
-│   │   ├── merch.js                   # Articles de merch, reste à remettre, récap de commande
-│   │   ├── merch.test.js              # Tests unitaires (Vitest)
-│   │   ├── importMerch.js             # Lecture des commandes : formules, tailles, colonnes, regroupement
-│   │   ├── importMerch.test.js        # Tests unitaires (Vitest)
-│   │   ├── fichierTableur.js          # Lecture CSV (séparateur et encodage détectés) ou Excel
-│   │   └── publicAccess.js            # Construction de l'URL publique d'un adhérent
+│   │   ├── licence.js                 # Statut de licence et messages
+│   │   ├── emails.js                  # Contenu des emails, utilisé par api/send-qr.js
+│   │   ├── merch.js                   # Articles, remise, récap de commande
+│   │   ├── importMerch.js             # Lecture des commandes (formules, tailles, colonnes)
+│   │   ├── fichierTableur.js          # Lecture d'un CSV ou d'un fichier Excel
+│   │   ├── texte.js                   # Noms, réparation de l'encodage, tri
+│   │   ├── useTitrePage.js            # Titre de l'onglet du navigateur
+│   │   ├── supabase.js                # Client Supabase
+│   │   ├── publicAccess.js            # URL publique d'un adhérent
+│   │   └── *.test.js                  # Tests unitaires (Vitest)
 │   │
-│   ├── dev/                           # Développement uniquement (absent du build de production)
-│   │   ├── donneesTest.js             # Jeux de données de test : démo, pire cas, vide, un seul, 1 284 lignes
-│   │   └── SelecteurDonnees.jsx       # Sélecteur de jeu de données affiché sur les routes /dev/*
+│   ├── dev/                           # Développement uniquement, absent du build de production
+│   │   ├── donneesTest.js             # Jeux de test : démo, pire cas, vide, un seul, 1 284 lignes
+│   │   └── SelecteurDonnees.jsx       # Choix du jeu de test sur les routes /dev/*
 │   │
 │   └── context/
-│       └── AuthContext.jsx            # Authentification et rôle (bureau / coach)
+│       └── AuthContext.jsx            # Session et rôle (bureau ou coach)
 │
+├── public/fonts/                      # DejaVu Sans pour le bon de commande PDF (accents comme « Ś »)
 ├── schema.sql                         # Schéma complet de la base (tables, RLS, fonctions)
-├── playwright.config.js               # Configuration des tests de bout en bout
-├── public/fonts/                      # DejaVu Sans (licence libre) pour le bon de commande PDF : lettres comme « Ś » floquées telles quelles
-├── vercel.json                        # Réécriture SPA — toutes les routes → index.html
+├── playwright.config.js
+├── vercel.json                        # Redirige toutes les routes vers index.html
 └── package.json
 ```
 
----
-
 ## Base de données
 
-Table `adherents` dans Supabase :
+Table `adherents` :
 
 | Colonne | Type | Description |
 |---|---|---|
 | `id` | uuid | Clé primaire |
-| `public_token` | uuid | Token unique pour la page publique et le QR Code |
+| `public_token` | uuid | Token de la page publique et du QR code |
 | `nom` | text | |
 | `prenom` | text | |
 | `email` | text | |
@@ -142,152 +133,122 @@ Table `adherents` dans Supabase :
 | `code_postal` | text | |
 | `ville` | text | |
 | `types_licence` | text[] | `Sportive`, `Arbitre` ou `Encadrant` |
-| `est_responsable_as` | boolean | Respo AS — synchronisé avec la licence Encadrant |
+| `est_responsable_as` | boolean | Responsable AS, lié à la licence Encadrant |
 | `adherent_bde` | boolean | |
-| `licence_ffsu_a_jour` | boolean | Licence fédérale (hors calcul du statut global) |
+| `licence_ffsu_a_jour` | boolean | Licence fédérale, n'entre pas dans le statut |
 | `questionnaire_sante_ok` | boolean | Questionnaire santé rempli |
-| `activite_contraintes` | boolean | Pratique d'une activité à contraintes particulières |
+| `activite_contraintes` | boolean | Activité à contraintes particulières |
 | `situation_handicap` | boolean | |
-| `droit_image` | boolean | Autorisation droit à l'image accordée |
+| `droit_image` | boolean | Droit à l'image accordé |
 | `paiement_global` | boolean | Paiement complet reçu |
-| `manque_paiement` | boolean | Manque le paiement |
-| `manque_yeps` | boolean | Manque l'aide YEPS |
-| `manque_passport` | boolean | Manque l'aide PASS'SPORT |
+| `manque_paiement` | boolean | Paiement manquant |
+| `manque_yeps` | boolean | Aide YEPS manquante |
+| `manque_passport` | boolean | Aide PASS'SPORT manquante |
 | `maillot` / `short` | boolean | Article de merch commandé |
-| `flocage` | boolean | Option du maillot (impossible sans maillot) |
-| `taille_maillot` / `taille_short` | text | `XS` à `3XL` (ou la taille importée telle quelle) |
+| `flocage` | boolean | Option du maillot, impossible sans maillot |
+| `taille_maillot` / `taille_short` | text | `XS` à `3XL`, ou la taille importée telle quelle |
 | `texte_flocage` | text | Nom floqué au dos, 20 caractères maximum |
 | `maillot_recupere` / `short_recupere` | boolean | Article remis à l'adhérent (le flocage est remis avec le maillot) |
 
-> **Statut de licence = `questionnaire_sante_ok AND paiement_global`**  
-> La licence FFSU est informative uniquement (nécessaire pour les compétitions, pas pour les entraînements).
+La licence est à jour quand `questionnaire_sante_ok` et `paiement_global` sont vrais. La licence FFSU est seulement indicative : elle sert aux compétitions universitaires, pas aux entraînements.
 
-> Longueurs maximales : 100 caractères pour `nom` et `prenom`, 254 pour `email` (contraintes SQL et champs du formulaire).
+Les noms et prénoms sont limités à 100 caractères et les emails à 254, en base comme dans le formulaire.
 
-- **Nouvelle base** : exécuter `schema.sql` dans l'éditeur SQL Supabase.
-- **Base existante** : exécuter dans l'ordre les scripts de `migrations/` qui n'ont pas encore été appliqués :
+Pour une nouvelle base, exécuter `schema.sql` dans l'éditeur SQL de Supabase. Pour une base existante, exécuter dans l'ordre les scripts de `migrations/` pas encore appliqués :
 
 | Script | Quand l'exécuter |
 |---|---|
-| `2026-10-25-1-fonction-scan.sql` | Avant de déployer le nouveau scan (ajoute la fonction `scanner_adherent`, sans rien retirer) |
-| `2026-10-25-2-restreindre-lecture-coach.sql` | **Après** le déploiement (retire au compte respos-sports l'accès direct à la table) |
-| `2026-10-25-3-limites-longueur.sql` | N'importe quand (limites de longueur des noms et emails) |
-| `2026-10-26-4-merch.sql` | **Avant** de déployer la fonctionnalité merch (ajoute les colonnes du merch) |
-
----
+| `2026-10-25-1-fonction-scan.sql` | Avant de déployer le nouveau scan (ajoute la fonction `scanner_adherent`) |
+| `2026-10-25-2-restreindre-lecture-coach.sql` | Après ce déploiement (retire au compte respos-sports l'accès direct à la table) |
+| `2026-10-25-3-limites-longueur.sql` | N'importe quand (longueur des noms et des emails) |
+| `2026-10-26-4-merch.sql` | Avant de déployer le merch (ajoute ses colonnes) |
 
 ## Variables d'environnement
 
-Créer un fichier `.env.local` à la racine (ne jamais le committer) :
+Créer un fichier `.env.local` à la racine, à ne jamais committer :
 
 ```env
-# Supabase — côté client (exposé dans le bundle JS)
+# Supabase, côté client (visible dans le bundle JS)
 VITE_SUPABASE_URL=https://xxxx.supabase.co
 VITE_SUPABASE_ANON_KEY=eyJ...
 
-# Supabase — côté serveur (fonctions Vercel uniquement)
+# Supabase, côté serveur (fonctions Vercel uniquement)
 SUPABASE_URL=https://xxxx.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=eyJ...
 
-# Gmail SMTP — envoi des emails
+# Gmail SMTP pour l'envoi des emails
 GMAIL_USER=votre.adresse@gmail.com
 GMAIL_APP_PASSWORD=xxxx xxxx xxxx xxxx
 
-# URL publique du site, utilisée dans les liens des emails (obligatoire pour l'envoi des QR Codes)
+# URL publique du site, utilisée dans les liens des emails (obligatoire pour l'envoi des QR codes)
 APP_BASE_URL=https://as-licences-insa-cvl.vercel.app
 ```
 
-> `GMAIL_APP_PASSWORD` doit être un **mot de passe d'application** généré dans les paramètres de sécurité du compte Google (authentification à deux facteurs requise).  
-> Sur Vercel, renseigner ces variables dans **Settings → Environment Variables**.
+`GMAIL_APP_PASSWORD` est un mot de passe d'application, créé dans les paramètres de sécurité du compte Google (la validation en deux étapes doit être activée). Sur Vercel, ces variables se renseignent dans Settings > Environment Variables.
 
----
-
-## Installation & développement
+## Installation
 
 ```bash
-# Cloner le dépôt
 git clone https://github.com/victorlmnc/projetAPP-AS-qr-licence-manager.git
 cd projetAPP-AS-qr-licence-manager
-
-# Installer les dépendances
 npm install
 
-# Lancer en développement (http://localhost:5173)
-npm run dev
-
-# Lancer les tests unitaires
-npm test
-
-# Lancer les tests de bout en bout (démarre le serveur de dev tout seul)
-npm run test:e2e
-
-# Build de production
-npm run build
+npm run dev        # serveur de développement sur http://localhost:5173
+npm test           # tests unitaires
+npm run test:e2e   # tests de bout en bout (démarre le serveur de dev)
+npm run build      # build de production
 ```
 
-> En développement local, les fonctions `/api/` Vercel ne s'exécutent pas (envoi d'emails, changement du mot de passe respos-sports).  
-> La page publique adhérent bascule sur une lecture Supabase directe, qui ne fonctionne que connecté avec le compte bureau dans le même navigateur.  
-> La caméra (CoachScan) fonctionne en HTTPS sur Vercel et sur `localhost` en développement.
+En local, les fonctions `/api/` de Vercel ne tournent pas, donc l'envoi d'emails et le changement du mot de passe respos-sports ne marchent pas. La page publique adhérent lit alors Supabase directement, ce qui ne fonctionne que si le compte bureau est connecté dans le même navigateur. La caméra du scan fonctionne en HTTPS sur Vercel et sur `localhost`.
 
-### Tester avec des données de test
+### Données de test
 
-En développement uniquement, trois routes affichent les pages **sans connexion ni Supabase**, avec un sélecteur de jeu de données en bas de l'écran (Démo, Pire cas, Vide, Un seul, 1 284 lignes) :
+En développement, trois routes affichent les pages sans connexion ni Supabase. Un sélecteur en bas de l'écran change le jeu de données (Démo, Pire cas, Vide, Un seul, 1 284 lignes).
 
 | Route | Page |
 |---|---|
 | `http://localhost:5173/dev/bureau` | Tableau de bord |
-| `http://localhost:5173/dev/scan` | Résultat du scan terrain (sans caméra) |
+| `http://localhost:5173/dev/scan` | Résultat du scan terrain, sans caméra |
 | `http://localhost:5173/dev/adherent` | Page publique adhérent |
 
-Le jeu « Pire cas » contient des valeurs réalistes qui cassent souvent les interfaces : noms très longs, emails insécables, homonymes, caractères accentués, arabes ou chinois, texte encodé de travers, saisie `<script>`. Les tests de bout en bout s'appuient sur ces mêmes routes.
+Le jeu « Pire cas » regroupe des valeurs réalistes qui posent souvent problème à l'affichage : noms très longs, emails sans espace, homonymes, accents, écritures arabe et chinoise, texte mal encodé, saisie `<script>`. Les tests de bout en bout utilisent ces mêmes routes. Elles sont retirées du build de production (`import.meta.env.DEV`).
 
-Ces routes et les données de test sont retirées du build de production (`import.meta.env.DEV`).
-
-Les tests Playwright utilisent Chromium : si aucun n'est installé sur la machine, lancer une fois `npx playwright install chromium`.
-
----
+Les tests Playwright utilisent Chromium. S'il n'est pas installé, lancer une fois `npx playwright install chromium`.
 
 ## Déploiement
 
-Le projet se déploie automatiquement sur **Vercel** à chaque push sur `main` :
+Vercel redéploie le site à chaque push sur `main`. Pour une nouvelle installation :
 
-1. Importer le repo GitHub dans Vercel
-2. Vérifier que Vercel utilise `npm run build` et le dossier `dist`
-3. Ajouter les variables d'environnement (voir ci-dessus)
+1. Importer le dépôt GitHub dans Vercel
+2. Vérifier que la commande de build est `npm run build` et le dossier de sortie `dist`
+3. Ajouter les variables d'environnement ci-dessus
 4. Déployer
-
----
 
 ## Comptes
 
-Deux comptes gérés via Supabase Auth :
+Les deux comptes sont gérés par Supabase Auth :
 
 | Rôle | Accès |
 |---|---|
-| `bureau` | Tableau de bord complet, imports, exports, envoi d'emails, paramètres |
-| `respos-sports` | Scanner QR terrain uniquement |
+| `bureau` | Tableau de bord, imports, exports, envoi d'emails, paramètres |
+| `respos-sports` | Scan des QR codes uniquement |
 
-Les mots de passe sont modifiables depuis l'application (menu Paramètres).  
-Les adhérents n'ont pas de compte — ils accèdent à leur QR Code via un lien public unique.
-
----
+Les mots de passe se changent depuis le menu Paramètres. Les adhérents n'ont pas de compte : ils accèdent à leur QR code par un lien public personnel.
 
 ## Sécurité
 
-- Les liens adhérents utilisent `public_token` (UUID aléatoire), jamais l'`id` interne
-- `SUPABASE_SERVICE_ROLE_KEY` et `GMAIL_APP_PASSWORD` ne sont jamais exposés côté client
-- `/api/send-qr` vérifie la session Supabase et le rôle `bureau` avant tout envoi
-- Les politiques RLS Supabase protègent l'accès direct à la base : seul le rôle `bureau` lit la table `adherents`
-- Le compte respos-sports n'a aucun accès direct à la table : le scan passe par la fonction SQL `scanner_adherent(token)`, qui renvoie un seul adhérent et uniquement les champs du statut (pas d'adresse, de date de naissance ni de données médicales)
-
----
+- Les liens adhérents utilisent `public_token`, un UUID aléatoire, et jamais l'`id` interne.
+- `SUPABASE_SERVICE_ROLE_KEY` et `GMAIL_APP_PASSWORD` restent côté serveur.
+- `/api/send-qr` vérifie la session Supabase et le rôle `bureau` avant chaque envoi.
+- Avec les politiques RLS, seul le rôle `bureau` lit la table `adherents`.
+- Le compte respos-sports n'a pas accès à la table. Le scan passe par la fonction SQL `scanner_adherent(token)`, qui renvoie un seul adhérent avec les seuls champs du statut : ni adresse, ni date de naissance, ni données médicales.
 
 ## Auteurs
 
-Projet réalisé dans le cadre du cours *Développement et Mathématiques pour l'ingénieur - Projet d'application* — INSA CVL, 3ème année STI.
+Projet réalisé pour le cours *Développement et Mathématiques pour l'ingénieur, Projet d'application*, INSA CVL, 3e année STI.
 
-- Mathis Hiron — mathis.hiron@insa-cvl.fr  
-- Victor Lemanceau — victor.lemanceau@insa-cvl.fr  
-- Gabin Pasquier-Ménard — gabin.pasquier--menard@insa-cvl.fr
-- Paul Bardoux — paul.bardoux@insa-cvl.fr
-- Enrique Zamarreno — enrique.zamarreno@insa-cvl.fr
+- Mathis Hiron (mathis.hiron@insa-cvl.fr)
+- Victor Lemanceau (victor.lemanceau@insa-cvl.fr)
+- Gabin Pasquier-Ménard (gabin.pasquier--menard@insa-cvl.fr)
+- Paul Bardoux (paul.bardoux@insa-cvl.fr)
+- Enrique Zamarreno (enrique.zamarreno@insa-cvl.fr)

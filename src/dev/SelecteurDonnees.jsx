@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { JEUX, LIBELLES, jeuDepuisUrl } from './donneesTest';
 
-// Outil de développement (break-ui) : bascule entre jeux de données de test.
+// Outil de développement : bascule entre les jeux de données de test.
 // Toujours appelé derrière import.meta.env.DEV, donc absent du build de production.
 
 const EVENEMENT = 'jeu-de-test';

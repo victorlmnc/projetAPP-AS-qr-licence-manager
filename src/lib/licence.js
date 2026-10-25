@@ -38,7 +38,7 @@ export function recapitulatifLicence(adherent) {
   const types = Array.isArray(adherent?.types_licence) ? adherent.types_licence.filter(Boolean) : [];
   return [
     [types.length > 1 ? 'Types de licence' : 'Type de licence', types.length > 0 ? types.join(', ') : 'Non renseigné'],
-    // Facultative (compétitions universitaires) : « Non souscrite » plutôt que « Non valide ».
+    // Facultative : seulement nécessaire pour les compétitions universitaires.
     ['Licence FFSU', adherent?.licence_ffsu_a_jour ? 'Valide' : 'Non souscrite'],
     ['Activités à contraintes', adherent?.activite_contraintes ? 'Éligible' : 'Non éligible'],
   ];

@@ -347,7 +347,8 @@ export default function BureauDashboard() {
     setSelection((prev) => [...new Set([...prev, ...idsVisibles])]);
   }
 
-  // Après import forms (touches = array créés+mis à jour) ou complémentaire (touches absent → rechargement).
+  // Après un import Forms, `touches` contient les fiches créées ou mises à jour ;
+  // sans `touches` (import complémentaire), on recharge toute la liste.
   async function onImported(touches) {
     if (touches && touches.length > 0) {
       setAdherents((prev) => {

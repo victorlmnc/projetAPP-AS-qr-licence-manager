@@ -1,4 +1,4 @@
-// Jeux de données de test (break-ui), utilisés uniquement en développement.
+// Jeux de données de test, utilisés uniquement en développement.
 // Choisis par le paramètre d'URL ?data=demo|pire|vide|un|gros. Chaque appel
 // passe par une garde import.meta.env.DEV : rien de ce fichier n'est inclus
 // dans le build de production.
@@ -59,7 +59,7 @@ function adherent(champs) {
   };
 }
 
-// Données « gentilles », comme celles qu'on utilise sans y penser.
+// Données de démonstration.
 function demo() {
   return [
     // Maillot floqué, pas encore remis.

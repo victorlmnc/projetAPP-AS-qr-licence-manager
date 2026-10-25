@@ -1,7 +1,6 @@
 // Contenu des emails envoyés aux adhérents (utilisé par api/send-qr.js).
-// Mise en page en tableaux et styles en ligne : c'est ce que les clients mail
-// (Gmail, Outlook…) affichent de façon fiable. Mêmes gris que le site, sans
-// couleur de statut : c'est le texte qui dit si le dossier est complet.
+// Mise en page en tableaux avec styles en ligne, pour un rendu fiable dans
+// Gmail et Outlook.
 
 import { recapitulatifLicence } from './licence.js';
 
@@ -76,7 +75,7 @@ function salutation(prenom, nom) {
   return `<p style="margin:0 0 12px 0;color:${C.texte};">Bonjour ${esc(prenom)} ${esc(nom)},</p>`;
 }
 
-// Encadré neutre, sans couleur de statut.
+// Encadré du statut de la licence.
 function blocStatut(valide, anomalies, date) {
   const titre = valide ? 'Dossier complet et à jour.' : `Dossier incomplet au ${esc(date)}.`;
   const liste = valide

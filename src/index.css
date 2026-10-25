@@ -1,7 +1,5 @@
-/* ==========================================================================
-   Thème : outil interne sobre. Fond neutre, surfaces blanches bordées,
-   un seul accent (le violet de l'AS), ombres réservées à ce qui flotte.
-   ========================================================================== */
+/* Thème : fond neutre, surfaces blanches bordées, un seul accent (le violet
+   de l'AS). Les ombres sont réservées aux éléments qui flottent. */
 
 :root {
   color-scheme: light;
@@ -944,8 +942,7 @@ body:has(dialog[open]) {
   font-size: 14px;
 }
 
-/* Statut et récapitulatif : même présentation que dans les emails,
-   encadrés neutres sans couleur de statut. */
+/* Statut et récapitulatif, présentés comme dans les emails. */
 .pub-statut {
   width: 100%;
   padding: 12px 14px;

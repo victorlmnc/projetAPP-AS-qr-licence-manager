@@ -197,7 +197,7 @@ export default function AdherentEditor({ adherent, onClose, onSaved, onDeleted }
         <div className="editor__corps">
           <h3 id={titreId}>{creation ? 'Nouvel adhérent' : nomComplet(adherent)}</h3>
 
-          {/* ── Sélecteur d'onglets ── */}
+          {/* Sélecteur d'onglets */}
           <div className="editor-tabs" role="tablist" aria-label="Sections de la fiche">
             <button
               type="button"
@@ -228,7 +228,7 @@ export default function AdherentEditor({ adherent, onClose, onSaved, onDeleted }
             </button>
           </div>
 
-          {/* ══════ Onglet Licence ══════ */}
+          {/* Onglet Licence */}
           {onglet === 'licence' && (
             <div>
               <label className="check">
@@ -270,10 +270,10 @@ export default function AdherentEditor({ adherent, onClose, onSaved, onDeleted }
             </div>
           )}
 
-          {/* ══════ Onglet Informations personnelles ══════ */}
+          {/* Onglet Informations personnelles */}
           {onglet === 'infos' && (
             <div>
-              {/* ── Identité ── */}
+              {/* Identité */}
               <p className="editor-section-title">Identité</p>
               <div className="editor-grid editor-grid--3">
                 <label>Prénom<input type="text" maxLength={100} value={form.prenom} onChange={(e) => set('prenom', e.target.value)} /></label>
@@ -294,7 +294,7 @@ export default function AdherentEditor({ adherent, onClose, onSaved, onDeleted }
                 <label className="editor-grid__span2">Ville de naissance<input type="text" value={form.ville_naissance} onChange={(e) => set('ville_naissance', e.target.value)} /></label>
               </div>
 
-              {/* ── Adresse ── */}
+              {/* Adresse */}
               <p className="editor-section-title">Adresse</p>
               <label>Adresse<input type="text" value={form.adresse} onChange={(e) => set('adresse', e.target.value)} /></label>
               <div className="editor-grid">
@@ -302,7 +302,7 @@ export default function AdherentEditor({ adherent, onClose, onSaved, onDeleted }
                 <label>Ville<input type="text" value={form.ville} onChange={(e) => set('ville', e.target.value)} /></label>
               </div>
 
-              {/* ── Types de licence ── */}
+              {/* Types de licence */}
               <p className="editor-section-title">Types de licence</p>
               <div className="editor-checks-row">
                 {TYPES_LICENCE.map((type) => (
@@ -317,7 +317,7 @@ export default function AdherentEditor({ adherent, onClose, onSaved, onDeleted }
                 ))}
               </div>
 
-              {/* ── Rôle ── */}
+              {/* Rôle */}
               <p className="editor-section-title">Rôle</p>
               <div className="editor-checks-row">
                 <label className="check check--inline">
@@ -347,7 +347,7 @@ export default function AdherentEditor({ adherent, onClose, onSaved, onDeleted }
                 </label>
               </div>
 
-              {/* ── Médical et autres ── */}
+              {/* Médical et autres */}
               <p className="editor-section-title">Médical et autres</p>
               <div className="editor-checks-row">
                 <label className="check check--inline">
@@ -368,7 +368,7 @@ export default function AdherentEditor({ adherent, onClose, onSaved, onDeleted }
             </div>
           )}
 
-          {/* ══════ Onglet Merch ══════ */}
+          {/* Onglet Merch */}
           {onglet === 'merch' && (
             <div className="merch">
               <fieldset className="merch-article">

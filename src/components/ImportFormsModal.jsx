@@ -147,7 +147,7 @@ export default function ImportFormsModal({ onClose, onImported }) {
     // Mapper et filtrer les lignes invalides (nom + prénom requis)
     const mappees = lignes.map(mapperLigne).filter((a) => a.nom && a.prenom);
 
-    // Dédupliquer par email (garder la dernière occurrence — soumission multiple du forms)
+    // Dédupliquer par email : en cas de soumissions multiples, garder la dernière
     const dedupMap = new Map();
     for (const a of mappees) {
       const cle = a.email ?? `__${a.nom}|${a.prenom}`;

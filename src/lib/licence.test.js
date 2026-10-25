@@ -50,7 +50,7 @@ describe('calculerStatutLicence', () => {
     expect(r.anomalies[0]).toContain("Aide PASS'SPORT");
   });
 
-  it('invalide si les deux manquent — deux anomalies', () => {
+  it('invalide si les deux manquent, avec deux anomalies', () => {
     const r = calculerStatutLicence(TOUT_MANQUANT);
     expect(r.valide).toBe(false);
     expect(r.anomalies).toHaveLength(2);

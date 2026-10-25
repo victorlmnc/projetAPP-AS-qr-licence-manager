@@ -56,8 +56,8 @@ export default function App() {
             {/* Page publique : QR code + statut, sans login requis */}
             <Route path="/adherent/:token" element={<AdherentPublic />} />
 
-            {/* Développement uniquement : pages avec données de test, sans connexion
-                (break-ui). Absentes du build de production. */}
+            {/* Développement uniquement : pages avec données de test, sans connexion.
+                Absentes du build de production. */}
             {import.meta.env.DEV && (
               <>
                 <Route path="/dev/bureau" element={<><BureauDashboard /><SelecteurDonnees /></>} />

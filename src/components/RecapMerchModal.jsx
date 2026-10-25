@@ -75,9 +75,8 @@ export default function RecapMerchModal({ adherents, onClose }) {
   const rien = recap.maillot.total + recap.short.total + recap.flocage.total === 0;
   const manques = texteManques(informationsManquantes(recap));
 
-  // Fichier Excel pour le fournisseur : chaque information dans sa case, aucun
-  // nom d'adhérent. Excel plutôt que CSV : un CSV s'ouvre parfois en une seule
-  // colonne selon le logiciel et la langue (séparateur « ; » ou « , »).
+  // Fichier Excel pour le fournisseur, sans nom d'adhérent. Pas de CSV : selon
+  // le logiciel et la langue, il s'ouvre parfois en une seule colonne.
   async function telechargerCommande() {
     const XLSX = await import('xlsx');
     const date = new Date().toLocaleDateString('fr-FR');

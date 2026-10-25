@@ -128,7 +128,7 @@ export default function AdherentPublic() {
           Présentez ce QR Code à votre Responsable Sport lors des entraînements.
         </p>
 
-        {/* Même présentation que dans les emails : encadré neutre, sans couleur de statut. */}
+        {/* Même présentation que dans les emails. */}
         <div className="pub-statut">
           <p className="pub-statut__titre">
             {statut.valide ? 'Votre dossier est complet et à jour.' : 'Votre dossier est incomplet.'}
