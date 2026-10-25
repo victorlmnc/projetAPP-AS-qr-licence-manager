@@ -20,8 +20,8 @@ function withTimeout(promise, label) {
 // Fournit a toute l'application : utilisateur connecte + role + deconnexion.
 export function AuthProvider({ children }) {
   const [session, setSession] = useState(undefined);
-  const [profile, setProfile] = useState(null); // { role, nom, prenom }
-  const [loading, setLoading] = useState(true);
+  // Profil charge et id de l'utilisateur auquel il correspond.
+  const [profilCharge, setProfilCharge] = useState({ userId: null, data: null });
 
   // 1) Recupere la session au demarrage et ecoute connexion/deconnexion.
   useEffect(() => {
@@ -53,50 +53,52 @@ export function AuthProvider({ children }) {
   }, []);
 
   // 2) Quand l'utilisateur change, charge son profil (role).
+  //    On depend de l'id et non de la session : Supabase renouvelle la session
+  //    (token rafraichi environ toutes les heures, reconnexion) sans changer
+  //    d'utilisateur, et recharger le profil demonterait la page en cours.
+  const sessionChargee = session !== undefined;
+  const userId = session?.user?.id ?? null;
+
   useEffect(() => {
+    if (!userId) return;
     let actif = true;
 
     async function loadProfile() {
-      if (session === undefined) return;
-
-      if (!session?.user) {
-        if (!actif) return;
-        setProfile(null);
-        setLoading(false);
-        return;
-      }
-
-      setLoading(true);
+      let data = null;
 
       try {
-        const { data, error } = await withTimeout(
+        const resultat = await withTimeout(
           supabase
             .from('profiles')
             .select('role, nom, prenom')
-            .eq('id', session.user.id)
+            .eq('id', userId)
             .single(),
           'Profil Supabase'
         );
 
-        if (!actif) return;
-
-        if (error) {
-          console.error('Erreur chargement profil :', error.message);
-          setProfile(null);
+        if (resultat.error) {
+          console.error('Erreur chargement profil :', resultat.error.message);
         } else {
-          setProfile(data);
+          data = resultat.data;
         }
       } catch (error) {
-        if (!actif) return;
         console.error('Profil Supabase impossible a charger :', error.message);
-        setProfile(null);
-      } finally {
-        if (actif) setLoading(false);
       }
+
+      if (actif) setProfilCharge({ userId, data });
     }
 
     loadProfile();
-  }, [session]);
+
+    return () => {
+      actif = false;
+    };
+  }, [userId]);
+
+  // Tant que le profil de l'utilisateur courant n'est pas arrive, on est en chargement :
+  // evite d'afficher "Aucun role" ou de rediriger pendant une fraction de seconde.
+  const profile = userId && profilCharge.userId === userId ? profilCharge.data : null;
+  const loading = !sessionChargee || (userId !== null && profilCharge.userId !== userId);
 
   const value = {
     user: session?.user ?? null,
