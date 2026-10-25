@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import Header from '../components/Header';
-import { calculerStatutLicence } from '../lib/licence';
+import { calculerStatutLicence, recapitulatifLicence } from '../lib/licence';
 import { nomComplet } from '../lib/texte';
 import { useTitrePage } from '../lib/useTitrePage';
 import { adherentScanneDeTest } from '../dev/donneesTest';
@@ -236,32 +236,38 @@ export default function CoachScan() {
 
         {erreur && <p className="error scan-error" role="alert">{erreur}</p>}
 
+        {/* Même présentation que la page publique et les emails : encadrés
+            neutres, c'est le texte qui dit si la licence est à jour. */}
         {adherent && statut && (
-          <section className={`scan-result ${statut.valide ? 'scan-result--ok' : 'scan-result--ko'}`} aria-live="polite">
+          <section className="scan-result" aria-live="polite">
             <div className="scan-result__main">
               <span className="scan-result__label">Adhérent contrôlé</span>
               <h2>{nomComplet(adherent)}</h2>
-              <p className="scan-result__status-big">
+            </div>
+
+            <div className="scan-result__statut">
+              <p className="scan-result__statut-titre">
                 {statut.valide ? 'Licence à jour' : 'Licence non à jour'}
               </p>
+              {!statut.valide && (
+                <ul>
+                  {statut.anomalies.map((motif) => (
+                    <li key={motif}>{motif}</li>
+                  ))}
+                </ul>
+              )}
             </div>
 
-            {!statut.valide && (
-              <ul className="scan-result__list">
-                {statut.anomalies.map((motif, i) => (
-                  <li key={i}>{motif}</li>
-                ))}
-              </ul>
-            )}
-
-            <div className="scan-result__badges">
-              <span className={`scan-result__badge ${adherent.licence_ffsu_a_jour ? 'scan-result__badge--ok' : 'scan-result__badge--no'}`}>
-                {adherent.licence_ffsu_a_jour ? '✓' : '✗'} Licence FFSU
-              </span>
-              <span className={`scan-result__badge ${adherent.activite_contraintes ? 'scan-result__badge--ok' : 'scan-result__badge--no'}`}>
-                {adherent.activite_contraintes ? '✓' : '✗'} Activités à contraintes
-              </span>
-            </div>
+            {/* La fonction de scan ne renvoie pas le type de licence : on n'affiche
+                que les lignes FFSU et activités à contraintes du récapitulatif. */}
+            <dl className="scan-result__recap">
+              {recapitulatifLicence(adherent).slice(1).map(([libelle, valeur]) => (
+                <div key={libelle} className="scan-result__ligne">
+                  <dt>{libelle}</dt>
+                  <dd>{valeur}</dd>
+                </div>
+              ))}
+            </dl>
           </section>
         )}
 
