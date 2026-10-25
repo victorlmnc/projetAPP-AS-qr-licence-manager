@@ -131,7 +131,7 @@ export default function AdherentPublic() {
         <p className={`pub-hint pub-hint--${statut.valide ? 'ok' : 'warning'}`}>
           {statut.valide
             ? 'Votre dossier est complet et à jour.'
-            : 'Votre dossier est incomplet. Rapprochez-vous du bureau de l\'AS pour le régulariser.'}
+            : 'Votre dossier est incomplet. Rapprochez-vous du bureau de l\'AS pour le régulariser : asso.sportive-bourges@insa-cvl.fr'}
         </p>
 
         {(adherent.licence_ffsu_a_jour || adherent.activite_contraintes) && (
