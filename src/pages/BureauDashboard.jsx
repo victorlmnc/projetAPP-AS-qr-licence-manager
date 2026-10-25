@@ -104,7 +104,7 @@ function BarreProgression({ envoyes, total }) {
 }
 
 export default function BureauDashboard() {
-  useTitrePage('Adhérents');
+  useTitrePage('Bureau');
   const [adherents, setAdherents] = useState([]);
   const [chargement, setChargement] = useState(true);
   const [erreur, setErreur] = useState(null);
