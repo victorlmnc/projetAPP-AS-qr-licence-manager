@@ -28,7 +28,7 @@ describe('recapitulatifLicence', () => {
     expect(recapitulatifLicence({ types_licence: ['Encadrant'] })[0]).toEqual(['Type de licence', 'Encadrant']);
     expect(recapitulatifLicence(incomplet)).toEqual([
       ['Type de licence', 'Non renseigné'],
-      ['Licence FFSU', 'Non valide'],
+      ['Licence FFSU', 'Non souscrite'],
       ['Activités à contraintes', 'Non éligible'],
     ]);
   });
@@ -49,9 +49,11 @@ describe('emailQrCode', () => {
 
   it('dossier incomplet : date et liste de ce qui manque', () => {
     const { texte, html } = emailQrCode(incomplet, calculerStatutLicence(incomplet), LIEN, DATE);
-    expect(html).toContain(`Dossier incomplet au ${DATE}. Il manque :`);
+    expect(html).toContain(`Dossier incomplet au ${DATE}.`);
+    expect(html).not.toContain('Il manque');
     expect(html).toContain('<li style="margin:2px 0;">Questionnaire santé manquant</li>');
-    expect(texte).toContain('- Paiement non régularisé. Manque : Paiement, Aide YEPS (QR code et numéro)');
+    expect(texte).toContain('- Manque : Paiement, Aide YEPS (QR code et numéro)');
+    expect(texte).not.toContain('Paiement non régularisé');
   });
 
   it('pas d\'aplat de couleur : ni bouton ni encadré sur fond vert, rouge ou violet', () => {
@@ -73,7 +75,7 @@ describe('emailRelance', () => {
   it('sujet, liste des manques, récapitulatif et aucun lien', () => {
     const { sujet, texte, html } = emailRelance(incomplet, calculerStatutLicence(incomplet), DATE);
     expect(sujet).toBe('Licence incomplète - Emma Dubois');
-    expect(html).toContain(`Dossier incomplet au ${DATE}. Il manque :`);
+    expect(html).toContain(`Dossier incomplet au ${DATE}.`);
     expect(html).toContain('Votre licence');
     expect(html).not.toContain('href=');
     expect(texte).toContain('Pensez à régulariser votre situation auprès du bureau de l\'AS.');

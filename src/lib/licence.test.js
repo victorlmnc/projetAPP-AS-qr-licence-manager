@@ -42,7 +42,7 @@ describe('calculerStatutLicence', () => {
       manque_yeps: true,
     });
     expect(a.anomalies[0]).toContain('Paiement');
-    expect(a.anomalies[0]).toContain('Aide YEPS (QR code et numéro)');
+    expect(a.anomalies[0]).toContain('Aide YEPS (QR code et numéro)');
   });
 
   it("liste PASS'SPORT dans les manques", () => {

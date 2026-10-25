@@ -41,7 +41,8 @@ export function recapitulatifLicence(adherent) {
   const types = Array.isArray(adherent.types_licence) ? adherent.types_licence.filter(Boolean) : [];
   return [
     [types.length > 1 ? 'Types de licence' : 'Type de licence', types.length > 0 ? types.join(', ') : 'Non renseigné'],
-    ['Licence FFSU', adherent.licence_ffsu_a_jour ? 'Valide' : 'Non valide'],
+    // Facultative (compétitions universitaires) : « Non souscrite » plutôt que « Non valide ».
+    ['Licence FFSU', adherent.licence_ffsu_a_jour ? 'Valide' : 'Non souscrite'],
     ['Activités à contraintes', adherent.activite_contraintes ? 'Éligible' : 'Non éligible'],
   ];
 }
@@ -90,7 +91,7 @@ function salutation(prenom, nom) {
 // Encadré neutre ; seule la pastille indique le statut (vert ou rouge).
 function blocStatut(valide, anomalies, date) {
   const pastille = `<span style="color:${valide ? C.ok : C.ko};">&#9679;</span>&nbsp;`;
-  const titre = valide ? 'Dossier complet et à jour.' : `Dossier incomplet au ${esc(date)}. Il manque :`;
+  const titre = valide ? 'Dossier complet et à jour.' : `Dossier incomplet au ${esc(date)}.`;
   const liste = valide
     ? ''
     : `<ul style="margin:6px 0 0 0;padding-left:22px;color:${C.texte2};">${anomalies
@@ -160,7 +161,7 @@ export function emailQrCode(adherent, statut, lien, date = dateDuJour()) {
 
   const statutTexte = statut.valide
     ? 'Dossier complet et à jour.'
-    : `Dossier incomplet au ${date}. Il manque :\n- ${anomalies.join('\n- ')}`;
+    : `Dossier incomplet au ${date}.\n- ${anomalies.join('\n- ')}`;
 
   const texte = `Bonjour ${adherent.prenom} ${adherent.nom},
 
@@ -196,7 +197,7 @@ export function emailRelance(adherent, statut, date = dateDuJour()) {
 
 Votre dossier d'inscription à l'AS n'est pas encore complet.
 
-Dossier incomplet au ${date}. Il manque :
+Dossier incomplet au ${date}.
 - ${anomalies.join('\n- ')}
 
 ${texteLicence(adherent)}
