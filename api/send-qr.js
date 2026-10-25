@@ -106,10 +106,10 @@ function qrEmailHtml(prenom, nom, lien, valide, anomalies, licenceFFSU, activite
           <tr>
             <td style="padding:16px 32px;border-top:1px solid #eae4f5;">
               <p style="margin:0 0 6px 0;color:#b5460f;font-size:11px;text-align:center;font-weight:600;">
-                Ceci est un e-mail automatique, merci de ne pas y repondre.
+                Ceci est un e-mail automatique, merci de ne pas y répondre.
               </p>
               <p style="margin:0;color:#746d88;font-size:11px;text-align:center;line-height:1.5;">
-                Cette adresse n'est pas surveillee et aucune reponse ne pourra etre traitee.<br/>
+                Cette adresse n'est pas surveillée et aucune réponse ne pourra être traitée.<br/>
                 Pour toute question, contactez directement un membre du bureau de l'AS de l'INSA CVL.
               </p>
             </td>
@@ -135,7 +135,7 @@ function reminderEmailHtml(prenom, nom, anomalies) {
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Licence incomplete</title>
+  <title>Licence incomplète</title>
 </head>
 <body style="margin:0;padding:0;background:#f5f3f7;font-family:system-ui,sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="padding:40px 16px;">
@@ -145,7 +145,7 @@ function reminderEmailHtml(prenom, nom, anomalies) {
           <tr>
             <td style="background:#8f241e;padding:28px 32px;">
               <p style="margin:0;color:#ffffff;font-size:20px;font-weight:600;">AS de l'INSA CVL</p>
-              <p style="margin:4px 0 0 0;color:rgba(255,255,255,0.82);font-size:13px;">Licence incomplete</p>
+              <p style="margin:4px 0 0 0;color:rgba(255,255,255,0.82);font-size:13px;">Licence incomplète</p>
             </td>
           </tr>
           <tr>
@@ -167,10 +167,10 @@ function reminderEmailHtml(prenom, nom, anomalies) {
           <tr>
             <td style="padding:16px 32px;border-top:1px solid #eae4f5;">
               <p style="margin:0 0 6px 0;color:#b5460f;font-size:11px;text-align:center;font-weight:600;">
-                Ceci est un e-mail automatique, merci de ne pas y repondre.
+                Ceci est un e-mail automatique, merci de ne pas y répondre.
               </p>
               <p style="margin:0;color:#746d88;font-size:11px;text-align:center;line-height:1.5;">
-                Cette adresse n'est pas surveillee et aucune reponse ne pourra etre traitee.<br/>
+                Cette adresse n'est pas surveillée et aucune réponse ne pourra être traitée.<br/>
                 Pour toute question, contactez directement un membre du bureau de l'AS de l'INSA CVL.
               </p>
             </td>
@@ -187,7 +187,7 @@ async function requireBureau(req) {
   const authHeader = req.headers.authorization ?? '';
   const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
   if (!token) {
-    return { error: 'Non authentifie', status: 401 };
+    return { error: 'Non authentifié', status: 401 };
   }
 
   const { data: { user }, error: authError } = await supabase.auth.getUser(token);
@@ -202,7 +202,7 @@ async function requireBureau(req) {
     .single();
 
   if (profileError || profile?.role !== 'bureau') {
-    return { error: 'Acces refuse - role bureau requis', status: 403 };
+    return { error: 'Accès refusé : rôle bureau requis', status: 403 };
   }
 
   return { user };
@@ -258,27 +258,27 @@ export default async function handler(req, res) {
     const anomalies = statut.anomalies.length > 0 ? statut.anomalies : ['Dossier de licence incomplet'];
     const lien = relance ? null : `${baseUrl}/adherent/${a.public_token}`;
     const subject = relance
-      ? `Licence incomplete - ${a.prenom} ${a.nom}`
+      ? `Licence incomplète - ${a.prenom} ${a.nom}`
       : `Votre QR Code de licence - ${a.prenom} ${a.nom}`;
     
     const dateDuJour = new Date().toLocaleDateString('fr-FR', { timeZone: 'Europe/Paris' });
     const qrTextStatus = statut.valide 
-      ? `Dossier complet et a jour.`
-      : `Attention, dossier incomplet (a la date du ${dateDuJour}). Il manque :\n- ${anomalies.join('\n- ')}`;
+      ? `Dossier complet et à jour.`
+      : `Attention, dossier incomplet (à la date du ${dateDuJour}). Il manque :\n- ${anomalies.join('\n- ')}`;
 
     const infoLignes = [
       a.licence_ffsu_a_jour ? 'Licence FFSU : Oui' : '',
-      a.activite_contraintes ? 'Activites a contraintes : Oui' : '',
+      a.activite_contraintes ? 'Activités à contraintes : Oui' : '',
     ].filter(Boolean);
     const infoTexte = infoLignes.length > 0 ? `\n${infoLignes.join('\n')}` : '';
 
     const text = relance
-      ? `Bonjour ${a.prenom} ${a.nom},\n\nVotre dossier d'inscription n'est pas termine (a la date du ${dateDuJour}). Il manque :\n- ${anomalies.join('\n- ')}\n\nPensez a regulariser votre situation aupres de l'AS.\n\n- Le bureau de l'AS INSA CVL`
-      : `Bonjour ${a.prenom} ${a.nom},\n\nVoici votre QR Code pour la saison sportive. Il vous sera demande a l'entree des entrainements.\n\n${qrTextStatus}${infoTexte}\n\nLien du QR Code : ${lien}\n\n- Le bureau de l'AS INSA CVL`;
+      ? `Bonjour ${a.prenom} ${a.nom},\n\nVotre dossier d'inscription n'est pas terminé (à la date du ${dateDuJour}). Il manque :\n- ${anomalies.join('\n- ')}\n\nPensez à régulariser votre situation auprès de l'AS.\n\n- Le bureau de l'AS INSA CVL`
+      : `Bonjour ${a.prenom} ${a.nom},\n\nVoici votre QR Code pour la saison sportive. Il vous sera demandé à l'entrée des entraînements.\n\n${qrTextStatus}${infoTexte}\n\nLien du QR Code : ${lien}\n\n- Le bureau de l'AS INSA CVL`;
 
     try {
       await transporter.sendMail({
-        from: `"AS de l'INSA CVL (ne pas repondre)" <${process.env.GMAIL_USER}>`,
+        from: `"AS de l'INSA CVL (ne pas répondre)" <${process.env.GMAIL_USER}>`,
         to: a.email,
         subject,
         text,

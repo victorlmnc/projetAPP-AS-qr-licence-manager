@@ -36,7 +36,7 @@ export default async function handler(req, res) {
     }
 
     if (!data) {
-      return res.status(404).json({ error: 'Aucun adherent trouve pour ce QR Code.' });
+      return res.status(404).json({ error: 'Aucun adhérent trouvé pour ce QR Code.' });
     }
 
     return res.status(200).json(data);

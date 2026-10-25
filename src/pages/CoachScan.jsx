@@ -53,7 +53,7 @@ async function nettoyerScanner(scanner) {
 export default function CoachScan() {
   const [adherent, setAdherent] = useState(null);
   const [erreur, setErreur] = useState(null);
-  const [cameraMessage, setCameraMessage] = useState('Initialisation de la camera...');
+  const [cameraMessage, setCameraMessage] = useState('Initialisation de la caméra…');
   const [texteLu, setTexteLu] = useState('');
   const [scanActif, setScanActif] = useState(false);
   const [scanKey, setScanKey] = useState(0);
@@ -72,14 +72,14 @@ export default function CoachScan() {
     }
 
     if (!UUID_RE.test(identifiant)) {
-      setErreur('Adherent introuvable ou QR invalide.');
+      setErreur('Adhérent introuvable ou QR invalide.');
       return;
     }
 
     const { data, error } = await lireAdherentScanne(identifiant);
 
     if (error || !data) {
-      setErreur('Adherent introuvable ou QR invalide.');
+      setErreur('Adhérent introuvable ou QR invalide.');
       return;
     }
 
@@ -95,7 +95,7 @@ export default function CoachScan() {
       if (error) return;
       if (!data) {
         setAdherent(null);
-        setErreur('Cet adherent a ete supprime de la base de donnees.');
+        setErreur('Cet adhérent a été supprimé de la base de données.');
         return;
       }
       setAdherent(data);
@@ -113,7 +113,7 @@ export default function CoachScan() {
     generationScannerRef.current = generation;
     lectureEnCoursRef.current = false;
     setScanActif(false);
-    setCameraMessage('Initialisation de la camera...');
+    setCameraMessage('Initialisation de la caméra…');
 
     async function lancerScanner() {
       try {
@@ -134,7 +134,7 @@ export default function CoachScan() {
 
               const identifiant = extraireIdentifiantQr(resultat);
               setTexteLu(identifiant);
-              setCameraMessage('QR code lu. Recherche en cours...');
+              setCameraMessage('QR code lu. Recherche en cours…');
               setScanActif(false);
 
               await nettoyerScanner(scanner);
@@ -150,15 +150,15 @@ export default function CoachScan() {
               return;
             }
             setScanActif(true);
-            setCameraMessage("Camera active : presentez le QR code devant l'objectif.");
+            setCameraMessage("Caméra active : présentez le QR code devant l'objectif.");
           })
           .catch(async () => {
             await nettoyerScanner(scanner);
             if (!annule && generation === generationScannerRef.current) {
               setScanActif(false);
-              setCameraMessage('Camera indisponible.');
+              setCameraMessage('Caméra indisponible.');
               setErreur(
-                "Impossible d'acceder a la camera. Verifiez l'autorisation navigateur et l'acces HTTPS."
+                "Impossible d'accéder à la caméra. Vérifiez l'autorisation du navigateur et l'accès HTTPS."
               );
             }
           });
@@ -202,30 +202,30 @@ export default function CoachScan() {
         <div className="scan-heading">
           <h2>Scanner une licence</h2>
           <p className="muted">
-            Scanner les QR code un par un. Si le scanneur ne s'affiche pas, rechargez la page.
+            Scannez les QR codes un par un. Si le scanner ne s'affiche pas, rechargez la page.
           </p>
         </div>
 
         {scannerVisible && (
-          <section className="scan-reader" aria-label="Scanner QR code">
+          <section className="scan-reader" aria-label="Scanner de QR code">
             <div id={READER_ID} className="scan-reader__camera" />
-            <p className="scan-reader__status">{cameraMessage}</p>
+            <p className="scan-reader__status" role="status">{cameraMessage}</p>
           </section>
         )}
 
         {texteLu && !adherent && !erreur && (
-          <p className="scan-reader__status">Recherche en cours...</p>
+          <p className="scan-reader__status" role="status">Recherche en cours…</p>
         )}
 
-        {erreur && <p className="error scan-error">{erreur}</p>}
+        {erreur && <p className="error scan-error" role="alert">{erreur}</p>}
 
         {adherent && statut && (
           <section className={`scan-result ${statut.valide ? 'scan-result--ok' : 'scan-result--ko'}`} aria-live="polite">
             <div className="scan-result__main">
-              <span className="scan-result__label">Adherent controle</span>
+              <span className="scan-result__label">Adhérent contrôlé</span>
               <h2>{nomComplet(adherent)}</h2>
               <p className="scan-result__status-big">
-                {statut.valide ? 'Licence a jour' : 'Licence non a jour'}
+                {statut.valide ? 'Licence à jour' : 'Licence non à jour'}
               </p>
             </div>
 
@@ -242,7 +242,7 @@ export default function CoachScan() {
                 {adherent.licence_ffsu_a_jour ? '✓' : '✗'} Licence FFSU
               </span>
               <span className={`scan-result__badge ${adherent.activite_contraintes ? 'scan-result__badge--ok' : 'scan-result__badge--no'}`}>
-                {adherent.activite_contraintes ? '✓' : '✗'} Activites a contraintes
+                {adherent.activite_contraintes ? '✓' : '✗'} Activités à contraintes
               </span>
             </div>
           </section>

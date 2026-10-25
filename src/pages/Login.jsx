@@ -28,7 +28,12 @@ export default function Login() {
 
     setEnCours(false);
     if (error) {
-      setErreur('Identifiants incorrects.');
+      // 400 = identifiants refusés ; sinon le serveur n'a pas pu être joint.
+      setErreur(
+        error.status === 400
+          ? 'Identifiants incorrects.'
+          : 'Connexion impossible pour le moment. Vérifiez votre connexion internet puis réessayez.'
+      );
       return;
     }
     navigate('/');
@@ -58,6 +63,8 @@ export default function Login() {
             value={identifiant}
             onChange={(e) => setIdentifiant(e.target.value)}
             autoComplete="username"
+            autoCapitalize="none"
+            spellCheck={false}
             required
           />
         </label>
@@ -73,10 +80,10 @@ export default function Login() {
           />
         </label>
 
-        {erreur && <p className="error">{erreur}</p>}
+        {erreur && <p className="error" role="alert">{erreur}</p>}
 
         <button type="submit" disabled={enCours}>
-          {enCours ? 'Connexion...' : 'Se connecter'}
+          {enCours ? 'Connexion…' : 'Se connecter'}
         </button>
       </form>
     </main>

@@ -22,7 +22,7 @@ function validerMotDePasse(mdp) {
 async function requireBureau(req) {
   const authHeader = req.headers.authorization ?? '';
   const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
-  if (!token) return { error: 'Non authentifie', status: 401 };
+  if (!token) return { error: 'Non authentifié', status: 401 };
 
   const { data: { user }, error: authError } = await supabase.auth.getUser(token);
   if (authError || !user) return { error: 'Token invalide', status: 401 };
@@ -34,7 +34,7 @@ async function requireBureau(req) {
     .single();
 
   if (profileError || profile?.role !== 'bureau') {
-    return { error: 'Acces refuse - role bureau requis', status: 403 };
+    return { error: 'Accès refusé : rôle bureau requis', status: 403 };
   }
 
   return { user };
