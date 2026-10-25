@@ -63,6 +63,30 @@ test.describe('Tableau de bord', () => {
     expect(await noms(page)).toEqual(['Emma Dubois', 'Léa Robert']);
   });
 
+  test('filtre par sport, combiné aux autres et effacé par « Tous »', async ({ page }) => {
+    await ouvrir(page, 'bureau', 'demo');
+    const sport = page.getByRole('combobox', { name: 'Filtrer par sport' });
+    // Seuls les sports déclarés sont proposés, avec leur nombre d'adhérents.
+    await expect(sport.locator('option')).toHaveText(['Tous les sports', 'Badminton (1)', 'Football (1)', 'Rugby (2)']);
+
+    await sport.selectOption('Rugby');
+    expect(await noms(page)).toEqual(['Lucas Bernard', 'Hugo Petit']);
+    await expect(page.getByRole('button', { name: 'Tous', exact: true })).toHaveAttribute('aria-pressed', 'false');
+    await page.getByRole('button', { name: 'Merch à remettre', exact: false }).click();
+    expect(await noms(page)).toEqual(['Lucas Bernard']);
+
+    await page.getByRole('button', { name: 'Tous', exact: true }).click();
+    await expect(sport).toHaveValue('');
+    await expect(lignes(page)).toHaveCount(5);
+  });
+
+  test('pire cas : le filtre par sport tient dans l\'écran', async ({ page }) => {
+    await ouvrir(page, 'bureau', 'pire');
+    await page.getByRole('combobox', { name: 'Filtrer par sport' }).selectOption('Ultimate frisbee (ancienne saison)');
+    expect(await noms(page)).toEqual(['Christopher Alexander Montgomery III']);
+    await attendreSansDebordement(page);
+  });
+
   test('1 284 adhérents : nombres formatés et filtre fonctionnel', async ({ page }) => {
     await ouvrir(page, 'bureau', 'gros');
     await expect(page.locator('.stat-num').first()).toHaveText(/^1\s284$/);

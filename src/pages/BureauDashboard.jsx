@@ -135,6 +135,7 @@ export default function BureauDashboard() {
 
   const [recherche, setRecherche] = useState('');
   const [filtresActifs, setFiltresActifs] = useState([]);
+  const [sport, setSport] = useState(''); // '' = tous les sports
 
   // editeur : null = fermé ; { adherent: objet } = édition ; { adherent: null } = création
   const [editeur, setEditeur] = useState(null);
@@ -167,6 +168,18 @@ export default function BureauDashboard() {
   );
 
   // Nombre d'adhérents avec au moins un article de merch pas encore remis.
+  // Sports déclarés dans le formulaire, avec le nombre d'adhérents de chacun.
+  const sportsPresents = useMemo(() => {
+    const nombres = new Map();
+    for (const a of adherents) {
+      for (const s of a.sports ?? []) nombres.set(s, (nombres.get(s) ?? 0) + 1);
+    }
+    return [...nombres].sort(([a], [b]) => a.localeCompare(b, 'fr'));
+  }, [adherents]);
+
+  // Un sport qui n'est plus pratiqué par personne (fiche modifiée) ne filtre plus rien.
+  const sportActif = sportsPresents.some(([s]) => s === sport) ? sport : '';
+
   const nbMerchARemettre = useMemo(
     () => adherents.filter((a) => merchARemettre(a).length > 0).length,
     [adherents]
@@ -250,6 +263,7 @@ export default function BureauDashboard() {
 
     return adherents
       .filter((a) => filtres.every((f) => f.test(a, statuts.get(a.id))))
+      .filter((a) => !sportActif || (a.sports ?? []).includes(sportActif))
       .filter((a) => {
         if (!q) return true;
         const nom = norm(a.nom);
@@ -263,7 +277,7 @@ export default function BureauDashboard() {
           `${nom} ${prenom}`.includes(q)
         );
       });
-  }, [adherents, statuts, filtresActifs, recherche]);
+  }, [adherents, statuts, filtresActifs, sportActif, recherche]);
 
   // Statistiques globales (sur tous les adhérents, pas seulement la liste filtrée).
   const idsVisibles = useMemo(() => liste.map((adherent) => adherent.id), [liste]);
@@ -364,6 +378,7 @@ export default function BureauDashboard() {
   function basculerFiltre(cle) {
     if (cle === 'tous') {
       setFiltresActifs([]);
+      setSport('');
       return;
     }
 
@@ -622,17 +637,30 @@ export default function BureauDashboard() {
             <button
               key={f.cle}
               className={`chip ${
-                (f.cle === 'tous' ? filtresActifs.length === 0 : filtresActifs.includes(f.cle))
+                (f.cle === 'tous' ? filtresActifs.length === 0 && !sportActif : filtresActifs.includes(f.cle))
                   ? 'chip--on'
                   : ''
               }`}
               onClick={() => basculerFiltre(f.cle)}
-              aria-pressed={f.cle === 'tous' ? filtresActifs.length === 0 : filtresActifs.includes(f.cle)}
+              aria-pressed={f.cle === 'tous' ? filtresActifs.length === 0 && !sportActif : filtresActifs.includes(f.cle)}
             >
               {f.libelle}
               {f.cle === 'merch' && ` (${formatNombre(nbMerchARemettre)})`}
             </button>
           ))}
+          {sportsPresents.length > 0 && (
+            <select
+              className={`chip chip-select${sportActif ? ' chip--on' : ''}`}
+              aria-label="Filtrer par sport"
+              value={sportActif}
+              onChange={(e) => setSport(e.target.value)}
+            >
+              <option value="">Tous les sports</option>
+              {sportsPresents.map(([s, nombre]) => (
+                <option key={s} value={s}>{s} ({formatNombre(nombre)})</option>
+              ))}
+            </select>
+          )}
         </div>
 
         {chargement && <p>Chargement…</p>}
@@ -666,6 +694,7 @@ export default function BureauDashboard() {
                 onClick={() => {
                   setRecherche('');
                   setFiltresActifs([]);
+                  setSport('');
                 }}
               >
                 Effacer la recherche et les filtres

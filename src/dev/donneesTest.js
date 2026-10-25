@@ -74,7 +74,7 @@ function demo() {
     }),
     // Ensemble (maillot + short) pas encore remis.
     adherent({
-      prenom: 'Lucas', nom: 'Bernard', email: 'lucas.bernard@example.com',
+      prenom: 'Lucas', nom: 'Bernard', email: 'lucas.bernard@example.com', sports: ['Rugby', 'Football'],
       maillot: true, taille_maillot: 'L', short: true, taille_short: 'L',
     }),
     adherent({
@@ -84,7 +84,7 @@ function demo() {
     }),
     // Short seul, déjà remis.
     adherent({
-      prenom: 'Hugo', nom: 'Petit', email: 'hugo.petit@example.com', activite_contraintes: true,
+      prenom: 'Hugo', nom: 'Petit', email: 'hugo.petit@example.com', activite_contraintes: true, sports: ['Rugby'],
       short: true, taille_short: 'S', short_recupere: true,
     }),
     adherent({
