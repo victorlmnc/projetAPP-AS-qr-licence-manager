@@ -56,10 +56,14 @@ describe('emailQrCode', () => {
     expect(texte).not.toContain('Paiement non régularisé');
   });
 
-  it('pas d\'aplat de couleur : ni bouton ni encadré sur fond vert, rouge ou violet', () => {
-    const { html } = emailQrCode(incomplet, calculerStatutLicence(incomplet), LIEN, DATE);
-    for (const couleur of ['#4b2177', '#15803d', '#b91c1c', '#f0fdf4', '#fef2f2']) {
-      expect(html).not.toContain(`background:${couleur}`);
+  it('aucune couleur de statut : ni aplat, ni pastille verte ou rouge', () => {
+    for (const adherent of [aJour, incomplet]) {
+      const { html } = emailQrCode(adherent, calculerStatutLicence(adherent), LIEN, DATE);
+      expect(html).not.toContain('background:#4b2177');
+      for (const couleur of ['#15803d', '#b91c1c', '#f0fdf4', '#fef2f2']) {
+        expect(html).not.toContain(couleur);
+      }
+      expect(html).not.toContain('&#9679;');
     }
   });
 

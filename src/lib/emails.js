@@ -1,7 +1,7 @@
 // Contenu des emails envoyés aux adhérents (utilisé par api/send-qr.js).
 // Mise en page en tableaux et styles en ligne : c'est ce que les clients mail
-// (Gmail, Outlook…) affichent de façon fiable. Mêmes couleurs que le site,
-// sans aplat de couleur : la couleur se limite à une pastille de statut.
+// (Gmail, Outlook…) affichent de façon fiable. Mêmes gris que le site, sans
+// couleur de statut : c'est le texte qui dit si le dossier est complet.
 
 const C = {
   fond: '#f4f4f5',
@@ -13,8 +13,6 @@ const C = {
   texte2: '#3f3f46',
   discret: '#71717a',
   accent: '#4b2177',
-  ok: '#15803d',
-  ko: '#b91c1c',
 };
 
 const POLICE = "system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif";
@@ -88,9 +86,8 @@ function salutation(prenom, nom) {
   return `<p style="margin:0 0 12px 0;color:${C.texte};">Bonjour ${esc(prenom)} ${esc(nom)},</p>`;
 }
 
-// Encadré neutre ; seule la pastille indique le statut (vert ou rouge).
+// Encadré neutre, sans couleur de statut.
 function blocStatut(valide, anomalies, date) {
-  const pastille = `<span style="color:${valide ? C.ok : C.ko};">&#9679;</span>&nbsp;`;
   const titre = valide ? 'Dossier complet et à jour.' : `Dossier incomplet au ${esc(date)}.`;
   const liste = valide
     ? ''
@@ -99,7 +96,7 @@ function blocStatut(valide, anomalies, date) {
       .join('')}</ul>`;
 
   return `<div style="margin:0 0 20px 0;padding:12px 14px;background:${C.encadre};border:1px solid ${C.ligne};border-radius:8px;">
-                <p style="margin:0;color:${C.texte};font-weight:600;">${pastille}${titre}</p>
+                <p style="margin:0;color:${C.texte};font-weight:600;">${titre}</p>
                 ${liste}
               </div>`;
 }
