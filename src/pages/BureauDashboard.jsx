@@ -11,6 +11,8 @@ import ImportComplementaireModal from '../components/ImportComplementaireModal';
 import EnvoiQrModal from '../components/EnvoiQrModal';
 import Modal from '../components/Modal';
 import { nomComplet, reparerTexte } from '../lib/texte';
+import { adherentsDeTest } from '../dev/donneesTest';
+import { useJeuDeTest } from '../dev/SelecteurDonnees';
 import './BureauDashboard.css';
 
 // Liste des filtres. `test(adherent)` renvoie true si l'adhérent doit
@@ -91,8 +93,18 @@ export default function BureauDashboard() {
     [adherents]
   );
 
+  // Développement uniquement : jeu de données de test (?data=…) à la place de Supabase.
+  const jeuTest = useJeuDeTest();
+
   // Chargement initial et abonnement Realtime depuis Supabase.
   useEffect(() => {
+    if (import.meta.env.DEV && jeuTest) {
+      setAdherents(adherentsDeTest(jeuTest));
+      setErreur(null);
+      setChargement(false);
+      return undefined;
+    }
+
     async function charger() {
       const { data, error } = await supabase
         .from('adherents')
@@ -134,7 +146,7 @@ export default function BureauDashboard() {
     return () => {
       supabase.removeChannel(canal);
     };
-  }, []);
+  }, [jeuTest]);
 
   // Liste affichée = filtres actifs + recherche texte.
   useEffect(() => {

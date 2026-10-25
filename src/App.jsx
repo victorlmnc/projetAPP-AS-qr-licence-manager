@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Login from './pages/Login';
+import { SelecteurDonnees } from './dev/SelecteurDonnees';
 
 // Chaque espace est chargé à la demande : la page publique et le scan
 // sur téléphone ne téléchargent pas le code du tableau de bord.
@@ -54,6 +55,16 @@ export default function App() {
             />
             {/* Page publique : QR code + statut, sans login requis */}
             <Route path="/adherent/:token" element={<AdherentPublic />} />
+
+            {/* Développement uniquement : pages avec données de test, sans connexion
+                (break-ui). Absentes du build de production. */}
+            {import.meta.env.DEV && (
+              <>
+                <Route path="/dev/bureau" element={<><BureauDashboard /><SelecteurDonnees /></>} />
+                <Route path="/dev/scan" element={<><CoachScan /><SelecteurDonnees /></>} />
+                <Route path="/dev/adherent" element={<><AdherentPublic /><SelecteurDonnees /></>} />
+              </>
+            )}
 
             {/* Toute URL inconnue retombe sur l'accueil. */}
             <Route path="*" element={<Navigate to="/" replace />} />

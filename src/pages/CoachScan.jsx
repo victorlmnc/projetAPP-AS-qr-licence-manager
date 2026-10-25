@@ -3,6 +3,8 @@ import { supabase } from '../lib/supabase';
 import Header from '../components/Header';
 import { calculerStatutLicence } from '../lib/licence';
 import { nomComplet } from '../lib/texte';
+import { adherentScanneDeTest } from '../dev/donneesTest';
+import { useJeuDeTest } from '../dev/SelecteurDonnees';
 import './CoachScan.css';
 
 const READER_ID = 'reader';
@@ -86,9 +88,20 @@ export default function CoachScan() {
     setAdherent(data);
   }, []);
 
+  // Développement uniquement : résultat de scan simulé (?data=…), sans caméra.
+  const jeuTest = useJeuDeTest();
+
+  useEffect(() => {
+    if (!import.meta.env.DEV || !jeuTest) return;
+    const simule = adherentScanneDeTest(jeuTest);
+    setTexteLu(simule ? simule.public_token : 'qr-inconnu');
+    setAdherent(simule);
+    setErreur(simule ? null : 'Adhérent introuvable ou QR invalide.');
+  }, [jeuTest]);
+
   useEffect(() => {
     const token = adherent?.public_token;
-    if (!token) return;
+    if (!token || jeuTest) return;
 
     const timer = setInterval(async () => {
       const { data, error } = await lireAdherentScanne(token);
@@ -105,6 +118,8 @@ export default function CoachScan() {
   }, [adherent?.public_token]);
 
   useEffect(() => {
+    if (import.meta.env.DEV && jeuTest) return undefined;
+
     let annule = false;
     let scanner = null;
     let demarrage = Promise.resolve();
@@ -182,7 +197,7 @@ export default function CoachScan() {
       if (scannerRef.current === scanner) scannerRef.current = null;
       demarrage.finally(() => nettoyerScanner(scanner));
     };
-  }, [chercherAdherent, scanKey]);
+  }, [chercherAdherent, scanKey, jeuTest]);
 
   function scannerUnAutre() {
     setAdherent(null);

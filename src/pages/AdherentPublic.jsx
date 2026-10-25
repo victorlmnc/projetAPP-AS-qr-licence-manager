@@ -5,6 +5,8 @@ import { supabase } from '../lib/supabase';
 import { calculerStatutLicence } from '../lib/licence';
 import { publicAdherentUrl } from '../lib/publicAccess';
 import { nomComplet, reparerTexte } from '../lib/texte';
+import { adherentScanneDeTest } from '../dev/donneesTest';
+import { useJeuDeTest } from '../dev/SelecteurDonnees';
 
 async function chargerAdherentPublic(token) {
   const res = await fetch(`/api/public-adherent?token=${encodeURIComponent(token)}`);
@@ -40,8 +42,18 @@ export default function AdherentPublic() {
   const [chargement, setChargement] = useState(true);
   const [erreur, setErreur] = useState(null);
   const qrRef = useRef(null);
+  // Développement uniquement : adhérent de test (?data=…) à la place de l'API.
+  const jeuTest = useJeuDeTest();
 
   useEffect(() => {
+    if (import.meta.env.DEV && jeuTest) {
+      const simule = adherentScanneDeTest(jeuTest);
+      setAdherent(simule);
+      setErreur(simule ? null : 'Aucun adhérent trouvé pour ce QR Code.');
+      setChargement(false);
+      return undefined;
+    }
+
     let annule = false;
 
     async function charger() {
@@ -60,7 +72,7 @@ export default function AdherentPublic() {
     return () => {
       annule = true;
     };
-  }, [token]);
+  }, [token, jeuTest]);
 
   function telechargerQr() {
     const canvas = qrRef.current?.querySelector('canvas');
