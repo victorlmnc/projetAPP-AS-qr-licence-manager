@@ -158,14 +158,18 @@ export default function ImportFormsModal({ onClose, onImported }) {
       return;
     }
 
-    // Chercher les adhérents existants par email
-    const emails = uniques.map((a) => a.email).filter(Boolean);
-    let existants = [];
-    if (emails.length > 0) {
-      const { data } = await supabase.from('adherents').select('id, email').in('email', emails);
-      existants = data ?? [];
+    // Chercher les adhérents existants par email, sans tenir compte de la casse
+    // (un email saisi à la main peut contenir des majuscules).
+    const { data: existants, error: erreurLecture } = await supabase
+      .from('adherents')
+      .select('id, email')
+      .not('email', 'is', null);
+    if (erreurLecture) {
+      setEtat('Lecture des adhérents impossible : ' + erreurLecture.message);
+      setEnCours(false);
+      return;
     }
-    const emailsMap = new Map(existants.map((a) => [a.email?.toLowerCase(), a.id]));
+    const emailsMap = new Map(existants.map((a) => [a.email.trim().toLowerCase(), a.id]));
 
     const aInserer = [];
     const aModifier = [];
@@ -180,22 +184,40 @@ export default function ImportFormsModal({ onClose, onImported }) {
 
     let crees = [];
     const modifies = [];
-    let erreurs = 0;
+    const echecs = [];
 
     if (aInserer.length > 0) {
       const { data, error } = await supabase.from('adherents').insert(aInserer).select();
-      if (error) erreurs++;
-      else crees = data ?? [];
+      if (!error) {
+        crees = data ?? [];
+      } else {
+        // Une seule ligne invalide fait échouer tout le lot :
+        // on réessaie ligne par ligne pour ne perdre que les lignes en erreur.
+        for (const adherent of aInserer) {
+          const { data: cree, error: erreurLigne } = await supabase
+            .from('adherents')
+            .insert(adherent)
+            .select()
+            .single();
+          if (erreurLigne) echecs.push(`${adherent.prenom} ${adherent.nom}`);
+          else crees.push(cree);
+        }
+      }
     }
 
-    for (const { id, manque_paiement: _mp, ...donnees } of aModifier) {
+    // Champs gérés par le bureau après le premier import : on ne les écrase pas.
+    // Le questionnaire santé peut seulement passer à OK, jamais revenir en arrière
+    // (le bureau a pu le valider à la main, par exemple après un certificat).
+    for (const { id, manque_paiement: _mp, manque_passport: _mpp, questionnaire_sante_ok, ...donnees } of aModifier) {
+      if (questionnaire_sante_ok) donnees.questionnaire_sante_ok = true;
+
       const { data, error } = await supabase
         .from('adherents')
         .update(donnees)
         .eq('id', id)
         .select()
         .single();
-      if (error) erreurs++;
+      if (error) echecs.push(`${donnees.prenom} ${donnees.nom}`);
       else if (data) modifies.push(data);
     }
 
@@ -203,7 +225,7 @@ export default function ImportFormsModal({ onClose, onImported }) {
     const total = crees.length + modifies.length;
     setEtat(
       `${total} adhérent(s) traité(s) : ${crees.length} créé(s), ${modifies.length} mis à jour.` +
-      (erreurs > 0 ? ` ${erreurs} erreur(s).` : '')
+      (echecs.length > 0 ? `\n${echecs.length} erreur(s) : ${echecs.join(', ')}.` : '')
     );
     onImported([...crees, ...modifies]);
   }
@@ -215,7 +237,8 @@ export default function ImportFormsModal({ onClose, onImported }) {
         <p className="muted import-aide">
           Fichier CSV ou Excel exporté depuis Google Forms. Les adhérents dont l'email existe déjà
           sont mis à jour ; les autres sont créés. En cas de double soumission du forms, la dernière
-          version est conservée.
+          version est conservée. Une mise à jour ne modifie ni le paiement ni l'aide PASS'SPORT,
+          et ne retire jamais un questionnaire santé déjà validé.
         </p>
 
         <input

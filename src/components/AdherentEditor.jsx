@@ -100,7 +100,7 @@ export default function AdherentEditor({ adherent, onClose, onSaved, onDeleted }
     const donnees = {
       nom: reparerTexte(form.nom).trim(),
       prenom: reparerTexte(form.prenom).trim(),
-      email: form.email.trim() || null,
+      email: form.email.trim().toLowerCase() || null,
       telephone: form.telephone.trim() || null,
       sexe: form.sexe || null,
       annee_etude: form.annee_etude.trim() || null,

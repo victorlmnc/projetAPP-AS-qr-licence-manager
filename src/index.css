@@ -706,6 +706,10 @@ button:disabled {
   font-weight: 700;
 }
 
+.import-etat {
+  white-space: pre-line;
+}
+
 .apercu--ok {
   color: #075c41;
   background: var(--ok-bg);
