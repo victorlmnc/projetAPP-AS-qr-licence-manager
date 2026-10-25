@@ -62,6 +62,7 @@ Déployée sur **[as-licences-insa-cvl.vercel.app](https://as-licences-insa-cvl.
 │   ├── scan.spec.js                   # Résultat du scan terrain
 │   ├── adherent.spec.js               # Page publique adhérent
 │   ├── captures.spec.js               # Captures d'écran pour revue visuelle (CAPTURES=1, non lancé par défaut)
+│   ├── emails-tuto.spec.js            # Régénère les images d'emails du tutoriel (TUTO=1, non lancé par défaut)
 │   └── outils.js                      # Aides communes (ouverture, détection de débordements)
 │
 ├── src/
@@ -86,6 +87,9 @@ Déployée sur **[as-licences-insa-cvl.vercel.app](https://as-licences-insa-cvl.
 │   ├── lib/
 │   │   ├── licence.js                 # Calcul du statut de licence et messages
 │   │   ├── licence.test.js            # Tests unitaires (Vitest)
+│   │   ├── emails.js                  # Contenu des emails (QR Code, relance), utilisé par api/send-qr.js
+│   │   ├── emails.test.js             # Tests unitaires (Vitest)
+│   │   ├── useTitrePage.js            # Titre de l'onglet propre à chaque page
 │   │   ├── supabase.js                # Client Supabase côté client
 │   │   ├── texte.js                   # Utilitaires texte (nomComplet, reparerTexte, comparerParNom)
 │   │   ├── texte.test.js              # Tests unitaires (Vitest)
