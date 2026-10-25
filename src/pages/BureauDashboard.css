@@ -337,6 +337,15 @@
   font-weight: 500;
 }
 
+.recap-merch__alerte {
+  margin: 16px 0 0;
+  padding: 10px 12px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  font-size: 14px;
+}
+
 .recap-merch__texte {
   font-weight: 600;
   overflow-wrap: anywhere;

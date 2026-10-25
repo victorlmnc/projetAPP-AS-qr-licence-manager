@@ -1,5 +1,20 @@
+import fs from 'node:fs';
 import { test, expect } from '@playwright/test';
+import * as XLSX from 'xlsx';
 import { ouvrir, attendreSansDebordement } from './outils.js';
+
+// Télécharge la commande fournisseur et renvoie chaque onglet sous forme de lignes.
+async function telechargerCommande(page) {
+  const [telechargement] = await Promise.all([
+    page.waitForEvent('download'),
+    page.getByRole('button', { name: 'Télécharger la commande (Excel)' }).click(),
+  ]);
+  expect(telechargement.suggestedFilename()).toMatch(/^commande-merch-\d{4}-\d{2}-\d{2}\.xlsx$/);
+  const classeur = XLSX.read(fs.readFileSync(await telechargement.path()), { type: 'buffer' });
+  return Object.fromEntries(
+    classeur.SheetNames.map((nom) => [nom, XLSX.utils.sheet_to_json(classeur.Sheets[nom], { header: 1 })])
+  );
+}
 
 // Jeu « démo » : Jeanne (maillot M floqué MARTIN, à remettre), Lucas (ensemble
 // L/L à remettre), Hugo (short S remis), Léa (maillot S remis).
@@ -58,7 +73,34 @@ test.describe('Merch', () => {
     const flocages = fenetre.getByRole('region', { name: 'Flocages' });
     await expect(flocages).toContainText('1 commandé · 0 remis · 1 à remettre');
     await expect(flocages.locator('tbody tr')).toHaveText([/Jeanne Martin\s*MARTIN\s*M\s*Non/]);
-    await expect(fenetre.getByRole('button', { name: 'Exporter en CSV' })).toBeVisible();
+    // Rien à compléter dans le jeu démo.
+    await expect(fenetre.locator('.recap-merch__alerte')).toHaveCount(0);
+  });
+
+  test('commande fournisseur : une information par case, aucun nom d\'adhérent', async ({ page }) => {
+    await ouvrir(page, 'bureau', 'demo');
+    await page.getByRole('button', { name: 'Commande merch' }).click();
+    const onglets = await telechargerCommande(page);
+
+    expect(Object.keys(onglets)).toEqual(['Quantités par taille', 'Flocages']);
+
+    const parTaille = onglets['Quantités par taille'];
+    expect(parTaille[0][0]).toBe("Commande merch : Association Sportive de l'INSA CVL (Bourges)");
+    expect(parTaille[2][0]).toBe('Contact : asso.sportive-bourges@insa-cvl.fr');
+    expect(parTaille.slice(4)).toEqual([
+      ['Taille', 'Maillots', 'Dont floqués', 'Shorts'],
+      ['S', 1, 0, 1],
+      ['M', 1, 1, 0],
+      ['L', 1, 0, 1],
+      ['Total', 3, 1, 2],
+    ]);
+
+    expect(onglets.Flocages.slice(4)).toEqual([
+      ['Taille du maillot', 'Texte à floquer au dos', 'Quantité'],
+      ['M', 'MARTIN', 1],
+    ]);
+
+    expect(JSON.stringify(onglets)).not.toMatch(/Jeanne|Lucas|Hugo|Léa|Emma|example\.com/);
   });
 
   test('récap pire cas : tailles non précisées ou importées, rien ne déborde', async ({ page }) => {
@@ -69,7 +111,14 @@ test.describe('Merch', () => {
     const flocages = page.getByRole('region', { name: 'Flocages' });
     await expect(flocages).toContainText('WIŚNIEWSKA-KOWALCZYK');
     await expect(flocages).toContainText('JO');
+    await expect(page.locator('.recap-merch__alerte')).toHaveText(
+      "À compléter avant d'envoyer la commande : 1 maillot sans taille."
+    );
     await attendreSansDebordement(page);
+
+    // La taille manquante apparaît « À préciser » dans le fichier.
+    const onglets = await telechargerCommande(page);
+    expect(onglets['Quantités par taille']).toContainEqual(['À préciser', 1, 0, 0]);
   });
 
   test('aucun merch : message dans le récap', async ({ page }) => {

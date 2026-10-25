@@ -1,12 +1,23 @@
 import { useId, useMemo } from 'react';
-import { recapCommande, taillesTriees } from '../lib/merch';
+import {
+  informationsManquantes, recapCommande, tableauFlocages, tableauParTaille, taillesTriees,
+} from '../lib/merch';
 import { nomComplet } from '../lib/texte';
 import Modal from './Modal';
 
 const formatNombre = new Intl.NumberFormat('fr-FR').format;
+const CONTACT_AS = 'asso.sportive-bourges@insa-cvl.fr';
 
-function champCsv(valeur) {
-  return `"${String(valeur ?? '').replace(/"/g, '""')}"`;
+// « 1 maillot sans taille, 2 flocages sans texte »
+function texteManques({ maillotsSansTaille, shortsSansTaille, flocagesSansTexte }) {
+  return [
+    [maillotsSansTaille, 'maillot sans taille', 'maillots sans taille'],
+    [shortsSansTaille, 'short sans taille', 'shorts sans taille'],
+    [flocagesSansTexte, 'flocage sans texte', 'flocages sans texte'],
+  ]
+    .filter(([n]) => n > 0)
+    .map(([n, un, plusieurs]) => `${formatNombre(n)} ${n > 1 ? plusieurs : un}`)
+    .join(', ');
 }
 
 // « 12 commandés · 5 remis · 7 à remettre »
@@ -40,26 +51,43 @@ export default function RecapMerchModal({ adherents, onClose }) {
   const titreId = useId();
   const recap = useMemo(() => recapCommande(adherents), [adherents]);
   const rien = recap.maillot.total + recap.short.total + recap.flocage.total === 0;
+  const manques = texteManques(informationsManquantes(recap));
 
-  function exporterCsv() {
-    const lignes = [['Article', 'Taille', 'Quantité'].map(champCsv).join(';')];
-    for (const [cle, libelle] of [['maillot', 'Maillot'], ['short', 'Short']]) {
-      for (const [taille, quantite] of taillesTriees(recap[cle].tailles)) {
-        lignes.push([libelle, taille, quantite].map(champCsv).join(';'));
-      }
-    }
-    lignes.push('', ['Adhérent', 'Texte floqué', 'Taille du maillot'].map(champCsv).join(';'));
-    for (const f of recap.flocage.textes) {
-      lignes.push([nomComplet(f.adherent), f.texte, f.tailleMaillot].map(champCsv).join(';'));
+  // Fichier Excel pour le fournisseur : chaque information dans sa case, aucun
+  // nom d'adhérent. Excel plutôt que CSV : un CSV s'ouvre parfois en une seule
+  // colonne selon le logiciel et la langue (séparateur « ; » ou « , »).
+  async function telechargerCommande() {
+    const XLSX = await import('xlsx');
+    const date = new Date().toLocaleDateString('fr-FR');
+    const entete = [
+      ["Commande merch : Association Sportive de l'INSA CVL (Bourges)"],
+      [`Date : ${date}`],
+      [`Contact : ${CONTACT_AS}`],
+      [],
+    ];
+
+    const classeur = XLSX.utils.book_new();
+
+    const parTaille = XLSX.utils.aoa_to_sheet([
+      ...entete,
+      ['Taille', 'Maillots', 'Dont floqués', 'Shorts'],
+      ...tableauParTaille(recap),
+    ]);
+    parTaille['!cols'] = [{ wch: 16 }, { wch: 12 }, { wch: 14 }, { wch: 12 }];
+    XLSX.utils.book_append_sheet(classeur, parTaille, 'Quantités par taille');
+
+    const flocages = tableauFlocages(recap);
+    if (flocages.length > 0) {
+      const feuille = XLSX.utils.aoa_to_sheet([
+        ...entete,
+        ['Taille du maillot', 'Texte à floquer au dos', 'Quantité'],
+        ...flocages,
+      ]);
+      feuille['!cols'] = [{ wch: 18 }, { wch: 30 }, { wch: 10 }];
+      XLSX.utils.book_append_sheet(classeur, feuille, 'Flocages');
     }
 
-    const blob = new Blob(['﻿' + lignes.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const lien = document.createElement('a');
-    lien.href = url;
-    lien.download = `commande-merch-${new Date().toISOString().slice(0, 10)}.csv`;
-    lien.click();
-    URL.revokeObjectURL(url);
+    XLSX.writeFile(classeur, `commande-merch-${new Date().toISOString().slice(0, 10)}.xlsx`);
   }
 
   return (
@@ -99,10 +127,16 @@ export default function RecapMerchModal({ adherents, onClose }) {
         </>
       )}
 
+      {!rien && manques && (
+        <p className="recap-merch__alerte" role="status">
+          À compléter avant d'envoyer la commande : {manques}.
+        </p>
+      )}
+
       <div className="modal-actions">
         {!rien && (
-          <button type="button" className="btn-ghost" onClick={exporterCsv}>
-            Exporter en CSV
+          <button type="button" className="btn-ghost" onClick={telechargerCommande}>
+            Télécharger la commande (Excel)
           </button>
         )}
         <button type="button" onClick={onClose}>Fermer</button>

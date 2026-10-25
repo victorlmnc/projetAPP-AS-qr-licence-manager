@@ -47,6 +47,65 @@ export function taillesTriees(tailles) {
     .map((t) => [t, tailles[t]]);
 }
 
+// ---------- Commande fournisseur (sans aucun nom d'adhérent) ----------
+
+const A_PRECISER = 'À préciser';
+
+// Rang d'une taille dans l'ordre XS → 3XL, tailles inconnues ensuite, « non précisée » en dernier.
+function rangTaille(taille) {
+  if (taille === SANS_TAILLE) return 2000;
+  const i = TAILLES.indexOf(taille);
+  return i === -1 ? 1000 : i;
+}
+
+function trierTailles(a, b) {
+  return rangTaille(a) - rangTaille(b) || a.localeCompare(b, 'fr');
+}
+
+// Lignes [taille, maillots, dont floqués, shorts], puis une ligne Total.
+export function tableauParTaille(recap) {
+  const floquesParTaille = {};
+  for (const f of recap.flocage.textes) {
+    const taille = f.tailleMaillot?.trim() || SANS_TAILLE;
+    floquesParTaille[taille] = (floquesParTaille[taille] ?? 0) + 1;
+  }
+
+  const tailles = [...new Set([...Object.keys(recap.maillot.tailles), ...Object.keys(recap.short.tailles)])]
+    .sort(trierTailles);
+
+  const lignes = tailles.map((taille) => [
+    taille === SANS_TAILLE ? A_PRECISER : taille,
+    recap.maillot.tailles[taille] ?? 0,
+    floquesParTaille[taille] ?? 0,
+    recap.short.tailles[taille] ?? 0,
+  ]);
+  lignes.push(['Total', recap.maillot.total, recap.flocage.total, recap.short.total]);
+  return lignes;
+}
+
+// Lignes [taille du maillot, texte à floquer, quantité] : flocages identiques regroupés.
+export function tableauFlocages(recap) {
+  const groupes = new Map();
+  for (const f of recap.flocage.textes) {
+    const taille = f.tailleMaillot?.trim() || SANS_TAILLE;
+    const texte = f.texte || '';
+    const cle = `${taille}\u0000${texte}`;
+    groupes.set(cle, { taille, texte, quantite: (groupes.get(cle)?.quantite ?? 0) + 1 });
+  }
+  return [...groupes.values()]
+    .sort((a, b) => trierTailles(a.taille, b.taille) || a.texte.localeCompare(b.texte, 'fr'))
+    .map((g) => [g.taille === SANS_TAILLE ? A_PRECISER : g.taille, g.texte || A_PRECISER, g.quantite]);
+}
+
+// Ce qu'il faut compléter avant d'envoyer la commande au fournisseur.
+export function informationsManquantes(recap) {
+  return {
+    maillotsSansTaille: recap.maillot.tailles[SANS_TAILLE] ?? 0,
+    shortsSansTaille: recap.short.tailles[SANS_TAILLE] ?? 0,
+    flocagesSansTexte: recap.flocage.textes.filter((f) => !f.texte).length,
+  };
+}
+
 // Récapitulatif pour passer commande et suivre la distribution.
 // Un flocage n'est compté qu'avec un maillot, et il est remis avec lui.
 export function recapCommande(adherents) {

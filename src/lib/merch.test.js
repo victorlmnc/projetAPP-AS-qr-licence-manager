@@ -1,5 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import { articlesMerch, merchARemettre, recapCommande, resumeArticles, SANS_TAILLE, taillesTriees } from './merch.js';
+import {
+  articlesMerch, informationsManquantes, merchARemettre, recapCommande, resumeArticles,
+  SANS_TAILLE, tableauFlocages, tableauParTaille, taillesTriees,
+} from './merch.js';
 
 const ensembleFloque = {
   maillot: true, taille_maillot: 'M', maillot_recupere: true,
@@ -62,5 +65,39 @@ describe('recapCommande', () => {
 
   it('une taille inconnue (venue d\'un import) est gardée telle quelle, après les tailles connues', () => {
     expect(taillesTriees({ 'Taille unique': 1, S: 2 })).toEqual([['S', 2], ['Taille unique', 1]]);
+  });
+});
+
+describe('commande fournisseur', () => {
+  const recap = recapCommande([
+    { prenom: 'Jeanne', nom: 'Martin', maillot: true, taille_maillot: 'M', flocage: true, texte_flocage: 'MARTIN' },
+    { prenom: 'Paul', nom: 'Martin', maillot: true, taille_maillot: 'M', flocage: true, texte_flocage: 'MARTIN' },
+    { maillot: true, taille_maillot: 'S', short: true, taille_short: 'S' },
+    { maillot: true, taille_maillot: 'M' },
+    { maillot: true, flocage: true },
+    { short: true, taille_short: 'XL' },
+  ]);
+
+  it('quantités par taille, dont floqués, avec une ligne Total', () => {
+    expect(tableauParTaille(recap)).toEqual([
+      ['S', 1, 0, 1],
+      ['M', 3, 2, 0],
+      ['XL', 0, 0, 1],
+      ['À préciser', 1, 1, 0],
+      ['Total', 5, 3, 2],
+    ]);
+  });
+
+  it('flocages identiques regroupés, sans aucun nom d\'adhérent', () => {
+    const lignes = tableauFlocages(recap);
+    expect(lignes).toEqual([
+      ['M', 'MARTIN', 2],
+      ['À préciser', 'À préciser', 1],
+    ]);
+    expect(JSON.stringify(lignes)).not.toMatch(/Jeanne|Paul/);
+  });
+
+  it('signale ce qu\'il faut compléter avant l\'envoi', () => {
+    expect(informationsManquantes(recap)).toEqual({ maillotsSansTaille: 1, shortsSansTaille: 0, flocagesSansTexte: 1 });
   });
 });
