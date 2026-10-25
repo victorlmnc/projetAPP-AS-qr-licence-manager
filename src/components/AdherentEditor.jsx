@@ -241,8 +241,8 @@ export default function AdherentEditor({ adherent, onClose, onSaved, onDeleted }
             {/* ── Identité ── */}
             <p className="editor-section-title">Identité</p>
             <div className="editor-grid editor-grid--3">
-              <label>Prénom<input type="text" value={form.prenom} onChange={(e) => set('prenom', e.target.value)} /></label>
-              <label>Nom<input type="text" value={form.nom} onChange={(e) => set('nom', e.target.value)} /></label>
+              <label>Prénom<input type="text" maxLength={100} value={form.prenom} onChange={(e) => set('prenom', e.target.value)} /></label>
+              <label>Nom<input type="text" maxLength={100} value={form.nom} onChange={(e) => set('nom', e.target.value)} /></label>
               <label>Sexe
                 <select value={form.sexe} onChange={(e) => set('sexe', e.target.value)}>
                   <option value="">—</option>
@@ -250,7 +250,7 @@ export default function AdherentEditor({ adherent, onClose, onSaved, onDeleted }
                   <option value="F">F</option>
                 </select>
               </label>
-              <label>E-mail<input type="email" value={form.email} onChange={(e) => set('email', e.target.value)} /></label>
+              <label>E-mail<input type="email" maxLength={254} value={form.email} onChange={(e) => set('email', e.target.value)} /></label>
               <label>Téléphone<input type="text" value={form.telephone} onChange={(e) => set('telephone', e.target.value)} /></label>
               <label>Année d'étude<input type="text" placeholder="ex. 3A étudiant" value={form.annee_etude} onChange={(e) => set('annee_etude', e.target.value)} /></label>
               <label>Date de naissance<input type="text" placeholder="ex. 16/07/2005" value={form.date_naissance} onChange={(e) => set('date_naissance', e.target.value)} /></label>

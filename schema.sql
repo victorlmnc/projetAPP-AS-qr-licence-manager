@@ -74,6 +74,17 @@ alter table adherents alter column public_token set default gen_random_uuid();
 alter table adherents alter column public_token set not null;
 create unique index if not exists adherents_public_token_key on adherents(public_token);
 
+-- Longueurs maximales (les memes que dans le formulaire de l'application).
+alter table adherents drop constraint if exists adherents_nom_longueur;
+alter table adherents add constraint adherents_nom_longueur
+  check (char_length(nom) <= 100) not valid;
+alter table adherents drop constraint if exists adherents_prenom_longueur;
+alter table adherents add constraint adherents_prenom_longueur
+  check (char_length(prenom) <= 100) not valid;
+alter table adherents drop constraint if exists adherents_email_longueur;
+alter table adherents add constraint adherents_email_longueur
+  check (char_length(email) <= 254) not valid;
+
 create table if not exists profiles (
   id uuid primary key references auth.users(id) on delete cascade,
   role text not null check (role in ('bureau', 'coach')),
