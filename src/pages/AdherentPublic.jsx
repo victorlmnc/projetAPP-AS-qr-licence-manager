@@ -2,14 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { QRCodeCanvas } from 'qrcode.react';
 import { supabase } from '../lib/supabase';
-import {
-  EMAIL_PASS_SPORT,
-  PASS_SPORT_APRES_EMAIL,
-  PASS_SPORT_AVANT_EMAIL,
-  calculerStatutLicence,
-  doitEnvoyerPassSport,
-  recapitulatifLicence,
-} from '../lib/licence';
+import { calculerStatutLicence, recapitulatifLicence } from '../lib/licence';
 import { publicAdherentUrl } from '../lib/publicAccess';
 import { nomComplet, reparerTexte } from '../lib/texte';
 import { useTitrePage } from '../lib/useTitrePage';
@@ -33,7 +26,7 @@ async function chargerAdherentPublic(token) {
   // Fallback local limité aux mêmes champs publics.
   const { data, error } = await supabase
     .from('adherents')
-    .select('public_token, nom, prenom, types_licence, questionnaire_sante_ok, paiement_global, manque_paiement, manque_yeps, manque_passport, licence_ffsu_a_jour, activite_contraintes')
+    .select('public_token, nom, prenom, types_licence, questionnaire_sante_ok, paiement_global, manque_paiement, manque_yeps, licence_ffsu_a_jour, activite_contraintes')
     .eq('public_token', token)
     .maybeSingle();
 
@@ -147,13 +140,6 @@ export default function AdherentPublic() {
                   <li key={anomalie}>{anomalie}</li>
                 ))}
               </ul>
-              {doitEnvoyerPassSport(adherent) && (
-                <p className="pub-statut__passsport">
-                  {PASS_SPORT_AVANT_EMAIL}{' '}
-                  <a href={`mailto:${EMAIL_PASS_SPORT}`}>{EMAIL_PASS_SPORT}</a>
-                  {PASS_SPORT_APRES_EMAIL}
-                </p>
-              )}
               <p className="pub-statut__contact">
                 Rapprochez-vous du bureau de l'AS pour le régulariser :{' '}
                 <a href="mailto:asso.sportive-bourges@insa-cvl.fr">asso.sportive-bourges@insa-cvl.fr</a>

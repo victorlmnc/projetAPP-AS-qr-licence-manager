@@ -25,7 +25,6 @@ export default function BulkAdherentEditor({ adherents, onClose, onSaved }) {
   const [paiementGlobalMode, setPaiementGlobalMode] = useState('ignore');
   const [manquePaiementMode, setManquePaiementMode] = useState('ignore');
   const [manqueYepsMode, setManqueYepsMode] = useState('ignore');
-  const [manquePassportMode, setManquePassportMode] = useState('ignore');
   const [remiseModes, setRemiseModes] = useState({ maillot: 'ignore', short: 'ignore' });
   const [enCours, setEnCours] = useState(false);
   const [erreur, setErreur] = useState(null);
@@ -58,7 +57,6 @@ export default function BulkAdherentEditor({ adherents, onClose, onSaved }) {
       if (paiementGlobal) {
         update.manque_paiement = false;
         update.manque_yeps = false;
-        update.manque_passport = false;
       }
     }
 
@@ -68,22 +66,14 @@ export default function BulkAdherentEditor({ adherents, onClose, onSaved }) {
     if (manqueYepsMode !== 'ignore') {
       update.manque_yeps = modeVersBool(manqueYepsMode);
     }
-    if (manquePassportMode !== 'ignore') {
-      update.manque_passport = modeVersBool(manquePassportMode);
-    }
 
-    if (
-      update.manque_paiement === true ||
-      update.manque_yeps === true ||
-      update.manque_passport === true
-    ) {
+    if (update.manque_paiement === true || update.manque_yeps === true) {
       update.paiement_global = false;
     }
 
     if (update.paiement_global === true) {
       update.manque_paiement = false;
       update.manque_yeps = false;
-      update.manque_passport = false;
     }
 
     const remises = ARTICLES_MERCH
@@ -174,18 +164,10 @@ export default function BulkAdherentEditor({ adherents, onClose, onSaved }) {
             </select>
           </label>
 
-          <label className="champ">
-            Manque PASS'SPORT
-            <select value={manquePassportMode} onChange={(e) => setManquePassportMode(e.target.value)}>
-              {MODES.map((mode) => (
-                <option key={mode.value} value={mode.value}>{mode.label}</option>
-              ))}
-            </select>
-          </label>
         </div>
 
         <p className="muted small bulk-editor__hint">
-          Si « Paiement global à jour » passe à Oui, les manques de paiement, YEPS et PASS'SPORT seront remis à Non.
+          Si « Paiement global à jour » passe à Oui, les manques de paiement et YEPS seront remis à Non.
         </p>
 
         <p className="editor-section-title">Remise du merch</p>

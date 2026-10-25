@@ -13,7 +13,6 @@ export function calculerStatutLicence(adherent) {
     const manques = [];
     if (adherent?.manque_paiement) manques.push('Paiement');
     if (adherent?.manque_yeps) manques.push('Aide YEPS (QR code et numéro)');
-    if (adherent?.manque_passport) manques.push("Aide PASS'SPORT");
 
     // Sans détail coché, on garde un libellé général plutôt qu'un « Manque : » vide.
     anomalies.push(
@@ -42,17 +41,6 @@ export function recapitulatifLicence(adherent) {
     ['Licence FFSU', adherent?.licence_ffsu_a_jour ? 'Valide' : 'Non souscrite'],
     ['Activités à contraintes', adherent?.activite_contraintes ? 'Éligible' : 'Non éligible'],
   ];
-}
-
-// Démarche PASS'SPORT, expliquée aux adhérents à qui l'aide manque
-// (emails et page publique) : l'adresse est séparée pour en faire un lien.
-export const EMAIL_PASS_SPORT = 'sport-bourges@insa-cvl.fr';
-export const PASS_SPORT_AVANT_EMAIL =
-  "Pour utiliser votre Pass'Sport, prenez votre place au tarif normal, puis envoyez votre Pass'Sport et votre RIB par mail à";
-export const PASS_SPORT_APRES_EMAIL = '. Nous vous rembourserons les 50 €.';
-
-export function doitEnvoyerPassSport(adherent) {
-  return adherent?.manque_passport === true && adherent?.paiement_global !== true;
 }
 
 export function messageAdherent(adherent) {

@@ -44,7 +44,6 @@ export default function AdherentEditor({ adherent, onClose, onSaved, onDeleted }
     paiement_global: adherent?.paiement_global ?? false,
     manque_paiement: adherent?.manque_paiement ?? true,
     manque_yeps: adherent?.manque_yeps ?? false,
-    manque_passport: adherent?.manque_passport ?? false,
     maillot: adherent?.maillot ?? false,
     taille_maillot: adherent?.taille_maillot ?? '',
     maillot_recupere: adherent?.maillot_recupere ?? false,
@@ -152,7 +151,6 @@ export default function AdherentEditor({ adherent, onClose, onSaved, onDeleted }
       paiement_global: form.paiement_global,
       manque_paiement: form.paiement_global ? false : form.manque_paiement,
       manque_yeps: form.paiement_global ? false : form.manque_yeps,
-      manque_passport: form.paiement_global ? false : form.manque_passport,
       // Un article décoché efface sa taille et sa remise ; le flocage est une
       // option du maillot, il disparaît avec lui.
       maillot: form.maillot,
@@ -255,11 +253,6 @@ export default function AdherentEditor({ adherent, onClose, onSaved, onDeleted }
                     <input type="checkbox" checked={form.manque_yeps}
                            onChange={(e) => set('manque_yeps', e.target.checked)} />
                     Aide YEPS (QR code et numéro)
-                  </label>
-                  <label className="check">
-                    <input type="checkbox" checked={form.manque_passport}
-                           onChange={(e) => set('manque_passport', e.target.checked)} />
-                    Aide PASS'SPORT
                   </label>
                 </fieldset>
               )}

@@ -46,7 +46,6 @@ function adherent(champs) {
     paiement_global: true,
     manque_paiement: false,
     manque_yeps: false,
-    manque_passport: false,
     maillot: false,
     taille_maillot: null,
     maillot_recupere: false,
@@ -98,7 +97,7 @@ function pire() {
       prenom: 'Aleksandra', nom: 'Wiśniewska-Kowalczyk',
       email: 'bartholomew.fitzgerald@northwind-industries-holdings.example.com',
       questionnaire_sante_ok: false, paiement_global: false,
-      manque_paiement: true, manque_yeps: true, manque_passport: true,
+      manque_paiement: true, manque_yeps: true,
       // Ensemble floqué, texte à la longueur maximale (20 caractères).
       maillot: true, taille_maillot: 'XL', short: true, taille_short: 'XL',
       flocage: true, texte_flocage: 'WIŚNIEWSKA-KOWALCZYK',

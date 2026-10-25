@@ -67,20 +67,6 @@ describe('emailQrCode', () => {
     }
   });
 
-  it("explique la démarche PASS'SPORT seulement si l'aide manque", () => {
-    const passSport = { ...incomplet, manque_passport: true };
-    const { texte, html } = emailQrCode(passSport, calculerStatutLicence(passSport), LIEN, DATE);
-    expect(html).toContain('prenez votre place au tarif normal');
-    expect(html).toContain('href="mailto:sport-bourges@insa-cvl.fr"');
-    expect(texte).toContain('votre RIB par mail à sport-bourges@insa-cvl.fr. Nous vous rembourserons les 50 €.');
-
-    for (const adherent of [aJour, incomplet]) {
-      const email = emailQrCode(adherent, calculerStatutLicence(adherent), LIEN, DATE);
-      expect(email.html).not.toContain('sport-bourges@insa-cvl.fr');
-      expect(email.texte).not.toContain('sport-bourges@insa-cvl.fr');
-    }
-  });
-
   it('échappe le nom de l\'adhérent dans le HTML', () => {
     const malveillant = { ...aJour, nom: '<script>alert(1)</script>' };
     const { html } = emailQrCode(malveillant, calculerStatutLicence(malveillant), LIEN, DATE);
@@ -97,13 +83,6 @@ describe('emailRelance', () => {
     expect(html).toContain('Votre licence');
     expect(html).not.toContain('href=');
     expect(texte).toContain('Pensez à régulariser votre situation auprès du bureau de l\'AS.');
-  });
-
-  it("explique la démarche PASS'SPORT si l'aide manque", () => {
-    const passSport = { ...incomplet, manque_passport: true };
-    const { texte, html } = emailRelance(passSport, calculerStatutLicence(passSport), DATE);
-    expect(html).toContain('href="mailto:sport-bourges@insa-cvl.fr"');
-    expect(texte).toContain('prenez votre place au tarif normal');
   });
 });
 

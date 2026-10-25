@@ -11,7 +11,6 @@ const CHAMPS_COMPL = [
   { db: 'paiement_global',     bool: true,  patterns: ['paiement global'] },
   { db: 'manque_paiement',     bool: true,  patterns: ['manque paiement'] },
   { db: 'manque_yeps',         bool: true,  patterns: ['yeps'] },
-  { db: 'manque_passport',     bool: true,  patterns: ['passport', 'pass sport'] },
   { db: 'situation_handicap',  bool: true,  patterns: ['handicap'] },
   { db: 'droit_image',         bool: true,  patterns: ['droit image', 'autorisation image'] },
   { db: 'annee_etude',         bool: false, patterns: ['annee', 'promotion'] },

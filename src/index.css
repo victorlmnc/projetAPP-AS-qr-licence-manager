@@ -965,12 +965,6 @@ body:has(dialog[open]) {
   font-size: 14px;
 }
 
-.pub-statut__passsport {
-  margin: 8px 0 0;
-  color: var(--ink-2);
-  font-size: 14px;
-}
-
 .pub-statut__contact {
   margin: 8px 0 0;
   color: var(--muted);
@@ -978,7 +972,6 @@ body:has(dialog[open]) {
 }
 
 /* L'adresse passe à la ligne d'un bloc plutôt que d'être coupée en deux. */
-.pub-statut__passsport a,
 .pub-statut__contact a {
   display: inline-block;
   color: var(--accent);

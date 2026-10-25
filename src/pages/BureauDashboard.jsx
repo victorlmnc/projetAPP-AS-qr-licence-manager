@@ -27,7 +27,6 @@ const FILTRES = [
   { cle: 'non_a_jour', libelle: 'Non à jour', test: (a, statut) => !statut.valide },
   { cle: 'fiche', libelle: 'Questionnaire manquant', test: (a) => !a.questionnaire_sante_ok },
   { cle: 'yeps', libelle: 'Manque YEPS', test: (a) => a.manque_yeps },
-  { cle: 'passport', libelle: "Manque PASS'SPORT", test: (a) => a.manque_passport },
   { cle: 'paiement', libelle: 'Manque paiement', test: (a) => a.manque_paiement },
   { cle: 'merch', libelle: 'Merch à remettre', test: (a) => merchARemettre(a).length > 0 },
 ];
@@ -427,7 +426,7 @@ export default function BureauDashboard() {
   const ENTETES_EXPORT = [
     'Prénom', 'Nom', 'Email', 'Statut', 'Détail',
     'Questionnaire santé', 'Paiement global',
-    'Manque paiement', 'Manque YEPS', "Manque PASS’SPORT",
+    'Manque paiement', 'Manque YEPS',
     'Maillot', 'Taille maillot', 'Flocage', 'Texte flocage', 'Maillot récupéré',
     'Short', 'Taille short', 'Short récupéré', 'ID',
   ];
@@ -445,7 +444,6 @@ export default function BureauDashboard() {
         a.paiement_global ? 'Oui' : 'Non',
         a.manque_paiement ? 'Oui' : 'Non',
         a.manque_yeps ? 'Oui' : 'Non',
-        a.manque_passport ? 'Oui' : 'Non',
         a.maillot ? 'Oui' : 'Non',
         a.maillot ? a.taille_maillot ?? '' : '',
         a.maillot ? (a.flocage ? 'Oui' : 'Non') : '',

@@ -25,10 +25,6 @@ function mapperLigne(row) {
     return [];
   });
 
-  // Boursier éligible Pass'Sport → pré-cocher manque_passport
-  const boursierRaw = lire(row, 'je suis boursier', 'eligible au pass sport');
-  const est_boursier = normaliser(boursierRaw).includes('oui');
-
   // Questionnaire santé : "J'ai répondu NON à toutes les questions" = OK (pas de certificat)
   const santeRaw = lire(row, 'questionnaire de sante', "j'ai repondu non a toutes");
   const questionnaire_sante_ok = santeRaw !== '' && !normaliser(santeRaw).includes("n'ai pas");
@@ -74,7 +70,6 @@ function mapperLigne(row) {
     droit_image,
     questionnaire_sante_ok,
     activite_contraintes,
-    manque_passport: est_boursier,
     manque_paiement: true,
   };
 }
@@ -202,7 +197,7 @@ export default function ImportFormsModal({ onClose, onImported }) {
     // Champs gérés par le bureau après le premier import : on ne les écrase pas.
     // Le questionnaire santé peut seulement passer à OK, jamais revenir en arrière
     // (le bureau a pu le valider à la main, par exemple après un certificat).
-    for (const { id, manque_paiement: _mp, manque_passport: _mpp, questionnaire_sante_ok, ...donnees } of aModifier) {
+    for (const { id, manque_paiement: _mp, questionnaire_sante_ok, ...donnees } of aModifier) {
       if (questionnaire_sante_ok) donnees.questionnaire_sante_ok = true;
 
       const { data, error } = await supabase
@@ -230,7 +225,7 @@ export default function ImportFormsModal({ onClose, onImported }) {
       <p className="muted import-aide">
         Fichier CSV ou Excel exporté depuis Google Forms. Les adhérents dont l'email existe déjà
         sont mis à jour ; les autres sont créés. En cas de double soumission du forms, la dernière
-        version est conservée. Une mise à jour ne modifie ni le paiement ni l'aide PASS'SPORT,
+        version est conservée. Une mise à jour ne modifie pas le paiement
         et ne retire jamais un questionnaire santé déjà validé.
       </p>
 

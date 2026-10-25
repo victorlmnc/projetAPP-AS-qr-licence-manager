@@ -6,7 +6,6 @@ const VALIDE = {
   paiement_global: true,
   manque_paiement: false,
   manque_yeps: false,
-  manque_passport: false,
 };
 
 const QUESTIONNAIRE_MANQUANT = { ...VALIDE, questionnaire_sante_ok: false };
@@ -43,11 +42,6 @@ describe('calculerStatutLicence', () => {
     });
     expect(a.anomalies[0]).toContain('Paiement');
     expect(a.anomalies[0]).toContain('Aide YEPS (QR code et numéro)');
-  });
-
-  it("liste PASS'SPORT dans les manques", () => {
-    const r = calculerStatutLicence({ ...PAIEMENT_MANQUANT, manque_passport: true });
-    expect(r.anomalies[0]).toContain("Aide PASS'SPORT");
   });
 
   it('invalide si les deux manquent, avec deux anomalies', () => {

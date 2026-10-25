@@ -7,7 +7,6 @@ test.describe('Page publique adhérent', () => {
     await expect(page.getByRole('heading', { level: 1, name: 'Jeanne Martin' })).toBeVisible();
     await expect(page.locator('.pub-qr canvas')).toBeVisible();
     await expect(page.getByText('Votre dossier est complet et à jour.')).toBeVisible();
-    await expect(page.locator('.pub-statut__passsport')).toHaveCount(0);
     await expect(page.getByRole('button', { name: 'Télécharger le QR Code' })).toBeVisible();
 
     // Récapitulatif toujours complet, y compris quand la réponse est non.
@@ -30,11 +29,8 @@ test.describe('Page publique adhérent', () => {
       await expect(page.getByText(/Votre dossier est incomplet/)).toBeVisible();
       await expect(page.locator('.pub-statut li')).toHaveText([
         'Questionnaire santé manquant',
-        "Manque : Paiement, Aide YEPS (QR code et numéro), Aide PASS'SPORT",
+        'Manque : Paiement, Aide YEPS (QR code et numéro)',
       ]);
-      await expect(page.locator('.pub-statut__passsport')).toContainText('prenez votre place au tarif normal');
-      await expect(page.getByRole('link', { name: 'sport-bourges@insa-cvl.fr' }))
-        .toHaveAttribute('href', 'mailto:sport-bourges@insa-cvl.fr');
       await expect(page.getByRole('region', { name: 'Votre licence' }).locator('dd').nth(1)).toHaveText('Non souscrite');
       await attendreSansDebordement(page);
     });

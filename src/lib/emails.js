@@ -2,13 +2,7 @@
 // Mise en page en tableaux avec styles en ligne, pour un rendu fiable dans
 // Gmail et Outlook.
 
-import {
-  EMAIL_PASS_SPORT,
-  PASS_SPORT_APRES_EMAIL,
-  PASS_SPORT_AVANT_EMAIL,
-  doitEnvoyerPassSport,
-  recapitulatifLicence,
-} from './licence.js';
+import { recapitulatifLicence } from './licence.js';
 
 const C = {
   fond: '#f4f4f5',
@@ -96,17 +90,6 @@ function blocStatut(valide, anomalies, date) {
               </div>`;
 }
 
-// Démarche de remboursement, seulement si l'aide PASS'SPORT manque.
-function blocPassSport(adherent) {
-  if (!doitEnvoyerPassSport(adherent)) return '';
-  return `<p style="margin:0 0 20px 0;">${esc(PASS_SPORT_AVANT_EMAIL)} <a href="mailto:${EMAIL_PASS_SPORT}" style="color:${C.accent};">${EMAIL_PASS_SPORT}</a>${esc(PASS_SPORT_APRES_EMAIL)}</p>`;
-}
-
-function textePassSport(adherent) {
-  if (!doitEnvoyerPassSport(adherent)) return '';
-  return `${PASS_SPORT_AVANT_EMAIL} ${EMAIL_PASS_SPORT}${PASS_SPORT_APRES_EMAIL}\n\n`;
-}
-
 function blocLicence(adherent) {
   const lignes = recapitulatifLicence(adherent);
   const rangees = lignes
@@ -149,7 +132,6 @@ export function emailQrCode(adherent, statut, lien, date = dateDuJour()) {
               ${salutation(adherent.prenom, adherent.nom)}
               <p style="margin:0 0 20px 0;">Voici votre QR Code pour la saison sportive. Il vous sera demandé à l'entrée des entraînements.</p>
               ${blocStatut(statut.valide, anomalies, date)}
-              ${blocPassSport(adherent)}
               ${blocLicence(adherent)}
               <table role="presentation" cellpadding="0" cellspacing="0">
                 <tr>
@@ -173,7 +155,7 @@ Voici votre QR Code pour la saison sportive. Il vous sera demandé à l'entrée 
 
 ${statutTexte}
 
-${textePassSport(adherent)}${texteLicence(adherent)}
+${texteLicence(adherent)}
 
 Lien du QR Code : ${lien}
 
@@ -194,7 +176,6 @@ export function emailRelance(adherent, statut, date = dateDuJour()) {
               ${salutation(adherent.prenom, adherent.nom)}
               <p style="margin:0 0 20px 0;">Votre dossier d'inscription à l'AS n'est pas encore complet.</p>
               ${blocStatut(false, anomalies, date)}
-              ${blocPassSport(adherent)}
               ${blocLicence(adherent)}
               <p style="margin:0;">Pensez à régulariser votre situation auprès du bureau de l'AS.</p>`);
 
@@ -205,7 +186,7 @@ Votre dossier d'inscription à l'AS n'est pas encore complet.
 Dossier incomplet au ${date}.
 - ${anomalies.join('\n- ')}
 
-${textePassSport(adherent)}${texteLicence(adherent)}
+${texteLicence(adherent)}
 
 Pensez à régulariser votre situation auprès du bureau de l'AS.
 

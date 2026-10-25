@@ -40,7 +40,6 @@ create table if not exists adherents (
   paiement_global boolean not null default false,
   manque_paiement boolean not null default false,
   manque_yeps boolean not null default false,
-  manque_passport boolean not null default false,
 
   -- Merch : article commandé, taille, remis ou non. Le flocage est une
   -- option du maillot, remise avec lui.
@@ -172,7 +171,6 @@ create or replace function scanner_adherent(p_token uuid)
     paiement_global boolean,
     manque_paiement boolean,
     manque_yeps boolean,
-    manque_passport boolean,
     licence_ffsu_a_jour boolean,
     activite_contraintes boolean
   )
@@ -182,7 +180,7 @@ as $$
   select
     a.public_token, a.nom, a.prenom,
     a.questionnaire_sante_ok, a.paiement_global,
-    a.manque_paiement, a.manque_yeps, a.manque_passport,
+    a.manque_paiement, a.manque_yeps,
     a.licence_ffsu_a_jour, a.activite_contraintes
   from adherents a
   where a.public_token = p_token
