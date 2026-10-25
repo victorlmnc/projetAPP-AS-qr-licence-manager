@@ -251,7 +251,7 @@ export default function AdherentEditor({ adherent, onClose, onSaved, onDeleted }
                 </select>
               </label>
               <label>E-mail<input type="email" maxLength={254} value={form.email} onChange={(e) => set('email', e.target.value)} /></label>
-              <label>Téléphone<input type="text" value={form.telephone} onChange={(e) => set('telephone', e.target.value)} /></label>
+              <label>Téléphone<input type="tel" value={form.telephone} onChange={(e) => set('telephone', e.target.value)} /></label>
               <label>Année d'étude<input type="text" placeholder="ex. 3A étudiant" value={form.annee_etude} onChange={(e) => set('annee_etude', e.target.value)} /></label>
               <label>Date de naissance<input type="text" placeholder="ex. 16/07/2005" value={form.date_naissance} onChange={(e) => set('date_naissance', e.target.value)} /></label>
               <label>Pays de naissance<input type="text" value={form.pays_naissance} onChange={(e) => set('pays_naissance', e.target.value)} /></label>
@@ -263,7 +263,7 @@ export default function AdherentEditor({ adherent, onClose, onSaved, onDeleted }
             <p className="editor-section-title">Adresse</p>
             <label>Adresse<input type="text" value={form.adresse} onChange={(e) => set('adresse', e.target.value)} /></label>
             <div className="editor-grid">
-              <label>Code postal<input type="text" value={form.code_postal} onChange={(e) => set('code_postal', e.target.value)} /></label>
+              <label>Code postal<input type="text" inputMode="numeric" value={form.code_postal} onChange={(e) => set('code_postal', e.target.value)} /></label>
               <label>Ville<input type="text" value={form.ville} onChange={(e) => set('ville', e.target.value)} /></label>
             </div>
 

@@ -532,14 +532,16 @@ body:has(dialog[open]) {
   width: min(560px, 96%);
 }
 
+/* Éditeur de fiche : fenêtre centrée, qui défile elle-même si la fiche est
+   plus haute que l'écran. */
 .editor {
   width: min(470px, 100%);
-  height: 100%;
-  margin-left: auto;
+  max-height: 100%;
+  margin: auto;
   padding: 28px;
   overflow-y: auto;
-  border-radius: 22px 0 0 22px;
-  animation: panel-in 0.28s var(--ease);
+  border-radius: 22px;
+  animation: modal-in 0.25s var(--ease);
 }
 
 .editor--large {
@@ -597,16 +599,6 @@ body:has(dialog[open]) {
   }
 }
 
-@keyframes panel-in {
-  from {
-    opacity: 0;
-    transform: translateX(24px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
 
 .editor h3,
 .modal h3 {
@@ -1220,14 +1212,27 @@ body:has(dialog[open]) {
     font-size: 25px;
   }
 
+  /* Plus de place pour les fenêtres sur petit écran. */
+  .modal-overlay {
+    padding: 12px;
+  }
+
   .editor,
   .editor--large {
     width: 100%;
-    border-radius: 22px;
+    padding: 22px 18px;
   }
 
-  .editor-grid {
+  /* Une seule colonne de champs. Le champ « sur deux colonnes » doit lui aussi
+     n'en occuper qu'une, sinon la grille crée une colonne implicite et
+     écrase tous les champs. */
+  .editor-grid,
+  .editor-grid--3 {
     grid-template-columns: 1fr;
+  }
+
+  .editor-grid__span2 {
+    grid-column: auto;
   }
 }
 
