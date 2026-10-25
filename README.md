@@ -252,3 +252,7 @@ Projet réalisé pour le cours *Développement et Mathématiques pour l'ingénie
 - Gabin Pasquier-Ménard (gabin.pasquier--menard@insa-cvl.fr)
 - Paul Bardoux (paul.bardoux@insa-cvl.fr)
 - Enrique Zamarreno (enrique.zamarreno@insa-cvl.fr)
+
+## Licence
+
+Code sous licence MIT, voir [LICENSE](LICENSE). La police DejaVu Sans de `public/fonts/` garde sa propre licence libre ([LICENSE-DejaVu.txt](public/fonts/LICENSE-DejaVu.txt)).
