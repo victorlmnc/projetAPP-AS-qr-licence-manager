@@ -27,14 +27,5 @@ Thumbs.db
 .vscode/
 .idea/
 
-# Local Codex/agent state
-.agents/
-.codex/
-agents.md
-AGENTS.md
-docs/codex/
-fonctionnementprojet.txt
-FONCTIONNEMENTprojet.txt
-
 # Local documents not meant for Git
 *.pdf

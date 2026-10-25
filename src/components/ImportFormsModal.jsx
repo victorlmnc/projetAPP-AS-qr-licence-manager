@@ -1,16 +1,7 @@
 import { useId, useRef, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import Modal from './Modal';
-import { reparerTexte } from '../lib/texte';
-
-function normaliser(s) {
-  return String(s || '').trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
-}
-
-function versBool(v) {
-  const n = normaliser(v);
-  return n === 'oui' || n === 'true' || n === '1' || n === 'x' || n === 'vrai';
-}
+import { normaliser, reparerTexte, versBool } from '../lib/texte';
 
 // Cherche la valeur d'une colonne dont la clé normalisée correspond à l'un des patterns.
 // Essaie d'abord la correspondance exacte, puis substring.

@@ -50,6 +50,18 @@ export function nomComplet(adherent) {
   return `${reparerTexte(adherent?.prenom)} ${reparerTexte(adherent?.nom)}`.replace(/\s+/g, ' ').trim();
 }
 
+// Minuscules, sans accents ni espaces autour : pour comparer des en-têtes de
+// colonnes ou des réponses de formulaire.
+export function normaliser(valeur) {
+  return String(valeur || '').trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+}
+
+// Case cochée dans un tableur : « oui », « vrai », « x », « 1 » ou « true ».
+export function versBool(valeur) {
+  const n = normaliser(valeur);
+  return n === 'oui' || n === 'true' || n === '1' || n === 'x' || n === 'vrai';
+}
+
 // Clé de tri : texte réparé, sans espaces superflus.
 function cleDeTri(valeur) {
   return reparerTexte(valeur).replace(/\s+/g, ' ').trim();

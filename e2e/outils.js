@@ -8,7 +8,7 @@ export async function ouvrir(page, route, jeu) {
 
 // Éléments qui sortent de l'écran par la droite, hors zones prévues pour
 // défiler ou masquer leur contenu, et hors sélecteur de données de test.
-export function elementsQuiDebordent(page) {
+function elementsQuiDebordent(page) {
   return page.evaluate(() => {
     const largeur = document.documentElement.clientWidth;
     const resultats = [];

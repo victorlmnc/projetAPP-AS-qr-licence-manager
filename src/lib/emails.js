@@ -30,7 +30,7 @@ export function esc(valeur) {
 }
 
 // Date du jour au format français, heure de Paris (16/06/2026).
-export function dateDuJour() {
+function dateDuJour() {
   return new Date().toLocaleDateString('fr-FR', { timeZone: 'Europe/Paris' });
 }
 

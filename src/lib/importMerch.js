@@ -6,7 +6,7 @@
 
 import { reparerTexte } from './texte.js';
 
-export function normaliser(valeur) {
+function normaliser(valeur) {
   return reparerTexte(String(valeur ?? ''))
     .normalize('NFD')
     .replace(/[̀-ͯ]/g, '')
