@@ -46,7 +46,7 @@ const REPONSES = {
   ville: 'Bourges',
   telephone: '0612345678',
   email: 'Jeanne.Martin@insa-cvl.fr',
-  sport: 'Badminton',
+  sport: 'Badminton;Volleyball / beach volley',
   competitions: 'Oui',
   ancien: 'Non',
   licence: 'Sportive;Arbitre',
@@ -85,6 +85,10 @@ describe('mapperLigne (formulaire 2026-2027)', () => {
       telephone: '0612345678',
       types_licence: ['Sportive', 'Arbitre'],
       est_responsable_as: false,
+      honorabilite_attestee: false,
+      sports: ['Badminton', 'Volleyball / beach volley'],
+      competitions_universitaires: true,
+      licencie_annee_derniere: false,
       situation_handicap: false,
       droit_image: true,
       questionnaire_sante_ok: true,
@@ -106,10 +110,18 @@ describe('mapperLigne (formulaire 2026-2027)', () => {
     expect(a.activite_contraintes).toBe(true);
   });
 
-  it('licence Encadrant pour un responsable', () => {
-    const a = mapperLigne(ligne({ licence: "Encadrant (responsable d'un AS)", responsable: 'Oui' }));
+  it("licence Encadrant pour un responsable, avec l'attestation d'honorabilité", () => {
+    const a = mapperLigne(ligne({ licence: "Encadrant (responsable d'un AS)", responsable: 'Oui', honorabilite: 'Oui' }));
     expect(a.types_licence).toEqual(['Encadrant']);
     expect(a.est_responsable_as).toBe(true);
+    expect(a.honorabilite_attestee).toBe(true);
+  });
+
+  it("ancien licencié, pas de compétitions, aucun sport lu", () => {
+    const a = mapperLigne(ligne({ ancien: 'Oui', competitions: 'Non', sport: '' }));
+    expect(a.licencie_annee_derniere).toBe(true);
+    expect(a.competitions_universitaires).toBe(false);
+    expect(a.sports).toBeNull();
   });
 
   it('plusieurs licences séparées par une virgule (export Google Sheets)', () => {
@@ -137,6 +149,7 @@ describe('fichier exporté, lu comme à l\'import', () => {
     expect(a.annee_etude).toBe('3A STI Alternant');
     expect(a.dept_naissance).toBe('18');
     expect(a.types_licence).toEqual(['Sportive', 'Arbitre']);
+    expect(a.sports).toEqual(['Badminton', 'Volleyball / beach volley']);
   });
 
   it('Excel de Google Sheets : la date de naissance reste une date lisible', async () => {

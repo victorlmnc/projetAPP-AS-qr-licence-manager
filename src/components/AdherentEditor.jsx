@@ -8,6 +8,17 @@ import Modal from './Modal';
 
 const TYPES_LICENCE = ['Sportive', 'Arbitre', 'Encadrant'];
 
+// Choix de la question « Sport principal » du formulaire d'inscription.
+const SPORTS = [
+  'Running', 'Badminton', 'Rugby', 'Football', 'Futsal', 'Cheerleading (stunt et danse)',
+  'Handball', 'Escalade', 'Tennis', 'Volleyball / beach volley', 'Basketball',
+];
+
+// Un sport importé hors liste reste affiché et décochable.
+function optionsSports(sportsActuels) {
+  return [...SPORTS, ...sportsActuels.filter((sport) => !SPORTS.includes(sport))];
+}
+
 // Tailles proposées ; une taille importée hors liste reste sélectionnable.
 function optionsTaille(tailleActuelle) {
   return tailleActuelle && !TAILLES.includes(tailleActuelle) ? [...TAILLES, tailleActuelle] : TAILLES;
@@ -34,6 +45,10 @@ export default function AdherentEditor({ adherent, onClose, onSaved, onDeleted }
     ville: reparerTexte(adherent?.ville) ?? '',
     types_licence: adherent?.types_licence ?? [],
     est_responsable_as: adherent?.est_responsable_as ?? false,
+    honorabilite_attestee: adherent?.honorabilite_attestee ?? false,
+    sports: adherent?.sports ?? [],
+    competitions_universitaires: adherent?.competitions_universitaires ?? false,
+    licencie_annee_derniere: adherent?.licencie_annee_derniere ?? false,
     adherent_bde: adherent?.adherent_bde ?? false,
     licence_ffsu_a_jour: adherent?.licence_ffsu_a_jour ?? false,
     questionnaire_sante_ok: adherent?.questionnaire_sante_ok ?? false,
@@ -108,6 +123,13 @@ export default function AdherentEditor({ adherent, onClose, onSaved, onDeleted }
     });
   }
 
+  function toggleSport(sport) {
+    setForm((f) => ({
+      ...f,
+      sports: f.sports.includes(sport) ? f.sports.filter((s) => s !== sport) : [...f.sports, sport],
+    }));
+  }
+
   const apercu = calculerStatutLicence(form);
 
   async function enregistrer(e) {
@@ -141,6 +163,10 @@ export default function AdherentEditor({ adherent, onClose, onSaved, onDeleted }
       ville: form.ville.trim() || null,
       types_licence: form.types_licence.length > 0 ? form.types_licence : null,
       est_responsable_as: form.est_responsable_as,
+      honorabilite_attestee: form.honorabilite_attestee,
+      sports: form.sports.length > 0 ? form.sports : null,
+      competitions_universitaires: form.competitions_universitaires,
+      licencie_annee_derniere: form.licencie_annee_derniere,
       adherent_bde: form.adherent_bde,
       licence_ffsu_a_jour: form.licence_ffsu_a_jour,
       questionnaire_sante_ok: form.questionnaire_sante_ok,
@@ -330,6 +356,12 @@ export default function AdherentEditor({ adherent, onClose, onSaved, onDeleted }
                   />
                   Respo AS
                 </label>
+                {form.est_responsable_as && (
+                  <label className="check check--inline">
+                    <input type="checkbox" checked={form.honorabilite_attestee} onChange={(e) => set('honorabilite_attestee', e.target.checked)} />
+                    Contrôle d'honorabilité attesté
+                  </label>
+                )}
                 <label className="check check--inline">
                   <input type="checkbox" checked={form.adherent_bde} onChange={(e) => set('adherent_bde', e.target.checked)} />
                   Adhérent BDE
@@ -337,6 +369,27 @@ export default function AdherentEditor({ adherent, onClose, onSaved, onDeleted }
                 <label className="check check--inline">
                   <input type="checkbox" checked={form.licence_ffsu_a_jour} onChange={(e) => set('licence_ffsu_a_jour', e.target.checked)} />
                   Licence FFSU
+                </label>
+              </div>
+
+              {/* Pratique sportive */}
+              <p className="editor-section-title">Pratique sportive</p>
+              <div className="editor-checks-row">
+                {optionsSports(form.sports).map((sport) => (
+                  <label key={sport} className="check check--inline">
+                    <input type="checkbox" checked={form.sports.includes(sport)} onChange={() => toggleSport(sport)} />
+                    {sport}
+                  </label>
+                ))}
+              </div>
+              <div className="editor-checks-row" style={{ marginTop: 8 }}>
+                <label className="check check--inline">
+                  <input type="checkbox" checked={form.competitions_universitaires} onChange={(e) => set('competitions_universitaires', e.target.checked)} />
+                  Compétitions universitaires
+                </label>
+                <label className="check check--inline">
+                  <input type="checkbox" checked={form.licencie_annee_derniere} onChange={(e) => set('licencie_annee_derniere', e.target.checked)} />
+                  Licencié(e) l'année dernière
                 </label>
               </div>
 

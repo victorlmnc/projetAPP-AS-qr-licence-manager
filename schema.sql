@@ -28,6 +28,12 @@ create table if not exists adherents (
   est_responsable_as boolean not null default false,
   adherent_bde boolean not null default false,
   licence_ffsu_a_jour boolean not null default false,
+  honorabilite_attestee boolean not null default false,
+
+  -- Pratique sportive
+  sports text[],
+  competitions_universitaires boolean not null default false,
+  licencie_annee_derniere boolean not null default false,
 
   -- Medical et autorisations
   questionnaire_sante_ok boolean not null default false,
@@ -71,6 +77,10 @@ alter table adherents add column if not exists types_licence text[];
 alter table adherents add column if not exists est_responsable_as boolean not null default false;
 alter table adherents add column if not exists adherent_bde boolean not null default false;
 alter table adherents add column if not exists licence_ffsu_a_jour boolean not null default false;
+alter table adherents add column if not exists honorabilite_attestee boolean not null default false;
+alter table adherents add column if not exists sports text[];
+alter table adherents add column if not exists competitions_universitaires boolean not null default false;
+alter table adherents add column if not exists licencie_annee_derniere boolean not null default false;
 alter table adherents add column if not exists questionnaire_sante_ok boolean not null default false;
 alter table adherents add column if not exists activite_contraintes boolean not null default false;
 alter table adherents add column if not exists situation_handicap boolean not null default false;

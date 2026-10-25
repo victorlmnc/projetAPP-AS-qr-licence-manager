@@ -22,11 +22,15 @@ function lire(row, ...patterns) {
   return '';
 }
 
+// Réponses d'une question à cases : séparées par « ; » dans le CSV de
+// Google Forms, par « , » dans Google Sheets.
+function choixMultiples(valeur) {
+  return valeur.split(/[;,]/).map((choix) => choix.trim()).filter(Boolean);
+}
+
 export function mapperLigne(row) {
-  // Types de licence : séparés par « ; » dans le CSV de Google Forms,
-  // par « , » dans Google Sheets.
   const licenceRaw = lire(row, 'je souhaite prendre une licence');
-  const types_licence = licenceRaw.split(/[;,]/).flatMap((t) => {
+  const types_licence = choixMultiples(licenceRaw).flatMap((t) => {
     const n = normaliser(t);
     if (n.includes('sportive')) return ['Sportive'];
     if (n.includes('arbitre')) return ['Arbitre'];
@@ -54,6 +58,13 @@ export function mapperLigne(row) {
   const respRaw = lire(row, "es-tu responsable");
   const est_responsable_as = versBool(respRaw);
 
+  // Attestation du contrôle d'honorabilité, posée aux seuls responsables.
+  const honorabilite_attestee = versBool(lire(row, 'honorabilite'));
+
+  const sports = [...new Set(choixMultiples(lire(row, 'sport principal')))];
+  const competitions_universitaires = versBool(lire(row, 'competitions universitaire'));
+  const licencie_annee_derniere = versBool(lire(row, 'annee derniere'));
+
   const nom = reparerTexte(lire(row, 'nom')).trim();
   const prenom = reparerTexte(lire(row, 'prenom')).trim();
   const email = lire(row, 'email').trim().toLowerCase() || null;
@@ -76,6 +87,10 @@ export function mapperLigne(row) {
     telephone: lire(row, 'numero de telephone').trim() || null,
     types_licence: types_licence.length > 0 ? types_licence : null,
     est_responsable_as,
+    honorabilite_attestee,
+    sports: sports.length > 0 ? sports : null,
+    competitions_universitaires,
+    licencie_annee_derniere,
     situation_handicap,
     droit_image,
     questionnaire_sante_ok,

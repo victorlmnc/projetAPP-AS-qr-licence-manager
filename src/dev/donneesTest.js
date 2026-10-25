@@ -36,6 +36,10 @@ function adherent(champs) {
     ville: null,
     types_licence: ['Sportive'],
     est_responsable_as: false,
+    honorabilite_attestee: false,
+    sports: null,
+    competitions_universitaires: false,
+    licencie_annee_derniere: false,
     adherent_bde: false,
     licence_ffsu_a_jour: false,
     questionnaire_sante_ok: true,
@@ -64,6 +68,7 @@ function demo() {
     // Maillot floqué, pas encore remis.
     adherent({
       prenom: 'Jeanne', nom: 'Martin', email: 'jeanne.martin@example.com', licence_ffsu_a_jour: true,
+      sports: ['Badminton'], competitions_universitaires: true, licencie_annee_derniere: true,
       maillot: true, taille_maillot: 'M', flocage: true, texte_flocage: 'MARTIN',
     }),
     // Ensemble (maillot + short) pas encore remis.
@@ -107,6 +112,12 @@ function pire() {
       prenom: 'Christopher Alexander', nom: 'Montgomery III',
       email: 'first.last+billing-notifications@example.com',
       licence_ffsu_a_jour: true, activite_contraintes: true,
+      // Respo qui pratique tous les sports, plus un sport hors de la liste du formulaire.
+      types_licence: ['Sportive', 'Arbitre', 'Encadrant'], est_responsable_as: true, honorabilite_attestee: true,
+      sports: [
+        'Running', 'Badminton', 'Rugby', 'Football', 'Futsal', 'Cheerleading (stunt et danse)', 'Handball',
+        'Escalade', 'Tennis', 'Volleyball / beach volley', 'Basketball', 'Ultimate frisbee (ancienne saison)',
+      ],
       // Maillot commandé sans taille renseignée.
       maillot: true,
     }),

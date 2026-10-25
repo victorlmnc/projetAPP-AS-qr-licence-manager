@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { ouvrir, deborde } from './outils.js';
+import { ouvrir, deborde, attendreSansDebordement } from './outils.js';
 
 // Ouvre l'éditeur du premier adhérent du jeu « démo » (Lucas Bernard).
 async function ouvrirEditeur(page) {
@@ -84,6 +84,25 @@ test.describe('Éditeur de fiche', () => {
       const largeurChamp = (await page.getByLabel(champ).boundingBox()).width;
       expect(largeurChamp, champ).toBeGreaterThan(largeurEditeur * 0.8);
     }
+  });
+
+  test('questions du formulaire : sports, compétitions, ancien licencié, honorabilité', async ({ page }) => {
+    await ouvrir(page, 'bureau', 'pire');
+    await page.locator('.dash-table tbody tr').filter({ hasText: 'Montgomery III' })
+      .getByRole('button', { name: 'Modifier' }).click();
+    const editeur = page.getByRole('dialog', { name: 'Christopher Alexander Montgomery III' });
+    await editeur.getByRole('tab', { name: 'Informations personnelles' }).click();
+
+    // Les 11 sports du formulaire, plus celui importé hors liste.
+    await expect(editeur.locator('.editor-checks-row').filter({ hasText: 'Running' }).getByRole('checkbox')).toHaveCount(12);
+    await expect(editeur.getByLabel('Ultimate frisbee (ancienne saison)')).toBeChecked();
+    await expect(editeur.getByLabel('Compétitions universitaires')).not.toBeChecked();
+    await expect(editeur.getByLabel("Contrôle d'honorabilité attesté")).toBeChecked();
+
+    // L'attestation ne concerne que les respos.
+    await editeur.getByLabel('Respo AS').uncheck();
+    await expect(editeur.getByLabel("Contrôle d'honorabilité attesté")).toHaveCount(0);
+    await attendreSansDebordement(page);
   });
 });
 

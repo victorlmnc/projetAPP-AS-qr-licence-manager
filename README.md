@@ -8,7 +8,7 @@ Application web de gestion des licences de l'Association Sportive de l'INSA CVL 
 
 - Liste des adhérents avec statistiques (à jour ou non), filtres et recherche par nom, prénom ou email
 - Fiche adhérent, ouverte d'un clic sur la ligne : informations personnelles, adresse, types de licence, rôle, médical, documents et paiement
-- Import de l'export CSV de Google Forms (les doubles soumissions sont fusionnées)
+- Import de l'export du formulaire d'inscription Google Forms, en CSV ou Excel (les doubles soumissions sont fusionnées). Toutes les questions sont reprises dans la fiche, sauf celle sur la bourse et le Pass'Sport.
 - Import complémentaire CSV ou Excel pour mettre à jour certains champs (paiement, YEPS…)
 - Export de la liste filtrée en CSV, Excel ou PDF
 - Envoi des QR codes par email, à un adhérent ou à plusieurs
@@ -134,8 +134,12 @@ Table `adherents` :
 | `ville` | text | |
 | `types_licence` | text[] | `Sportive`, `Arbitre` ou `Encadrant` |
 | `est_responsable_as` | boolean | Responsable AS, lié à la licence Encadrant |
+| `honorabilite_attestee` | boolean | Le responsable atteste avoir compris le contrôle d'honorabilité |
 | `adherent_bde` | boolean | |
 | `licence_ffsu_a_jour` | boolean | Licence fédérale, n'entre pas dans le statut |
+| `sports` | text[] | Sports pratiqués, réponses à « Sport principal » |
+| `competitions_universitaires` | boolean | Participera aux compétitions universitaires |
+| `licencie_annee_derniere` | boolean | Déjà licencié(e) à l'AS la saison précédente |
 | `questionnaire_sante_ok` | boolean | Questionnaire santé rempli |
 | `activite_contraintes` | boolean | Activité à contraintes particulières |
 | `situation_handicap` | boolean | |
@@ -162,6 +166,7 @@ Pour une nouvelle base, exécuter `schema.sql` dans l'éditeur SQL de Supabase. 
 | `2026-10-25-3-limites-longueur.sql` | N'importe quand (longueur des noms et des emails) |
 | `2026-10-26-4-merch.sql` | Avant de déployer le merch (ajoute ses colonnes) |
 | `2026-10-26-5-retirer-pass-sport.sql` | Après avoir déployé le retrait du Pass'Sport (supprime la colonne `manque_passport`) |
+| `2026-10-26-6-questions-forms.sql` | Avant de déployer l'import des questions du formulaire (ajoute leurs colonnes) |
 
 ## Variables d'environnement
 
