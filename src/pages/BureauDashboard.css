@@ -1,259 +1,247 @@
 .dash {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 16px;
 }
 
 .dash-top {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: space-between;
-  gap: 16px;
   flex-wrap: wrap;
+  gap: 12px;
 }
 
 .dash-top h2 {
   margin: 0;
-  color: var(--as-purple-950);
-  font-size: 30px;
-  font-weight: 800;
+  font-size: 22px;
 }
 
 .dash-top-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 10px;
   flex-wrap: wrap;
+  gap: 8px;
 }
 
 .dash-bulk-actions {
   display: flex;
-  justify-content: flex-start;
 }
 
-.dash-mail-limit {
-  width: 100%;
-  margin: 6px 0 0;
-  text-align: right;
-}
+/* ---------- Menus Importer / Exporter ---------- */
 
-/* --- Dropdown export --- */
 .export-dropdown {
   position: relative;
 }
 
 .export-dropdown__trigger {
-  /* Même apparence que les boutons btn-ghost */
   display: inline-flex;
   align-items: center;
-  border-radius: var(--radius, 12px);
-  padding: 12px 18px;
-  font-weight: 800;
-  cursor: pointer;
+  gap: 6px;
+  min-height: 38px;
+  padding: 8px 14px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 600;
   list-style: none;
-  color: var(--as-purple-800);
-  background: rgba(255, 255, 255, 0.72);
-  border: 1px solid rgba(80, 35, 124, 0.22);
-  box-shadow: none;
-  font-size: inherit;
-  font-family: inherit;
+  cursor: pointer;
+  user-select: none;
 }
-.export-dropdown__trigger::-webkit-details-marker { display: none; }
-.export-dropdown__trigger:hover {
-  color: var(--as-purple-900);
-  background: #fff;
-  border-color: rgba(80, 35, 124, 0.38);
-  box-shadow: var(--shadow-sm);
+
+.export-dropdown__trigger::-webkit-details-marker {
+  display: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .export-dropdown__trigger:hover {
+    background: var(--surface-2);
+    border-color: var(--line-strong);
+  }
 }
 
 .export-dropdown__trigger--disabled {
-  opacity: 0.45;
+  opacity: 0.5;
   pointer-events: none;
 }
 
+/* Le menu s'ouvre depuis son bouton (origine en haut à droite). */
 .export-dropdown__menu {
   position: absolute;
-  right: 0;
   top: calc(100% + 4px);
-  z-index: 100;
-  background: #fff;
-  border: 1px solid #e0d8f0;
-  border-radius: 10px;
-  box-shadow: 0 6px 20px rgba(94,58,140,0.12);
-  min-width: 200px;
-  overflow: hidden;
+  right: 0;
+  z-index: 30;
+  min-width: 220px;
+  padding: 4px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-pop);
+  transform-origin: top right;
+  animation: menu-in 150ms var(--ease-out);
+}
+
+/* Le premier menu (Importer) est à gauche : il s'ouvre vers la droite. */
+.export-dropdown:first-child .export-dropdown__menu {
+  right: auto;
+  left: 0;
+  transform-origin: top left;
+}
+
+@keyframes menu-in {
+  from {
+    opacity: 0;
+    transform: scale(0.97) translateY(-2px);
+  }
 }
 
 .export-dropdown__item {
-  display: block;
+  display: flex;
+  justify-content: flex-start;
   width: 100%;
-  padding: 10px 16px;
+  min-height: 34px;
+  padding: 6px 10px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--ink);
+  font-weight: 500;
   text-align: left;
-  background: none;
-  border: none;
-  border-radius: 0;
-  box-shadow: none;
-  font-size: 14px;
   white-space: nowrap;
-  font-weight: 600;
-  color: #1e1b29;
-  cursor: pointer;
 }
+
 .export-dropdown__item:hover {
-  background: #f5f3f7;
-  box-shadow: none;
+  background: #f4f4f5;
+  transform: none;
 }
+
+/* ---------- Compteurs ---------- */
 
 .stats {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 14px;
+  gap: 12px;
 }
 
 .stat {
-  position: relative;
-  overflow: hidden;
-  min-height: 104px;
-  padding: 18px;
-  border: 1px solid rgba(232, 222, 239, 0.95);
-  border-radius: 20px;
+  padding: 14px 16px;
   background: var(--surface);
-  box-shadow: var(--shadow-sm);
-}
-
-.stat::before {
-  content: '';
-  position: absolute;
-  inset: 0 auto 0 0;
-  width: 5px;
-  background: var(--as-purple-700);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
 }
 
 .stat-num {
   display: block;
-  color: var(--as-purple-900);
-  font-size: 34px;
-  font-weight: 800;
+  font-size: 26px;
+  font-weight: 650;
   font-variant-numeric: tabular-nums;
-  line-height: 1;
+  line-height: 1.15;
 }
 
 .stat-lib {
   display: block;
-  margin-top: 8px;
+  margin-top: 2px;
   color: var(--muted);
-  font-weight: 700;
-}
-
-.stat--ok::before {
-  background: var(--ok);
+  font-size: 13px;
 }
 
 .stat--ok .stat-num {
   color: var(--ok);
 }
 
-.stat--ko::before {
-  background: var(--ko);
-}
-
 .stat--ko .stat-num {
   color: var(--ko);
 }
 
-.dash-search {
-  width: 100%;
-  margin-top: 4px;
-  padding: 15px 18px;
-  border: 1px solid var(--line);
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.86);
-  box-shadow: var(--shadow-sm);
-}
-
-.dash-search:focus {
-  outline: none;
-  border-color: var(--as-purple-600);
-  box-shadow: 0 0 0 4px rgba(111, 66, 168, 0.14);
-}
+/* ---------- Filtres ---------- */
 
 .chips {
   display: flex;
-  gap: 9px;
   flex-wrap: wrap;
+  gap: 6px;
 }
 
 .chip {
-  padding: 9px 14px;
-  border: 1px solid rgba(80, 35, 124, 0.18);
+  min-height: 32px;
+  padding: 5px 12px;
+  background: var(--surface);
+  border: 1px solid var(--line);
   border-radius: 999px;
-  color: var(--as-purple-800);
-  background: rgba(255, 255, 255, 0.78);
-  box-shadow: none;
+  color: var(--ink-2);
+  font-size: 13px;
+  font-weight: 500;
 }
 
 .chip:hover {
-  background: #fff;
+  background: var(--surface-2);
+  border-color: var(--line-strong);
+  color: var(--ink);
 }
 
 .chip--on,
 .chip--on:hover {
-  color: #fff;
-  background: var(--as-purple-800);
-  border-color: var(--as-purple-800);
-  box-shadow: 0 10px 22px rgba(80, 35, 124, 0.2);
+  background: var(--accent-soft);
+  border-color: var(--accent-line);
+  color: var(--accent);
 }
+
+/* ---------- Tableau ---------- */
 
 .dash-table-wrap {
   overflow-x: auto;
-  border: 1px solid rgba(232, 222, 239, 0.95);
-  border-radius: 22px;
   background: var(--surface);
-  box-shadow: var(--shadow-md);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
 }
 
 .dash-table {
   width: 100%;
   min-width: 760px;
   border-collapse: collapse;
+  font-size: 14px;
 }
 
 .dash-table th,
 .dash-table td {
-  padding: 16px 18px;
-  border-bottom: 1px solid rgba(232, 222, 239, 0.78);
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--line);
   text-align: left;
   vertical-align: middle;
 }
 
 .dash-table th {
+  background: var(--surface-2);
   color: var(--muted);
-  background: rgba(250, 247, 253, 0.86);
-  font-size: 12px;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  font-size: 12.5px;
+  font-weight: 500;
 }
 
 .dash-table tr:last-child td {
   border-bottom: 0;
 }
 
-.dash-table tbody tr {
-  transition: background 0.18s var(--ease);
+/* Toute la ligne ouvre la fiche de l'adhérent. */
+.dash-ligne {
+  cursor: pointer;
+  transition: background-color 120ms ease;
 }
 
-.dash-table tbody tr:hover {
-  background: rgba(243, 237, 248, 0.45);
+@media (hover: hover) and (pointer: fine) {
+  .dash-ligne:hover {
+    background: var(--surface-2);
+  }
 }
 
-/* Le flex est sur un <div> dans la cellule : posé sur le <td>, il cassait
-   l'alignement des bordures sur les lignes de plusieurs lignes de texte. */
-.dash-row-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-  white-space: nowrap;
+/* Sans cette largeur, l'email sécable laisse le tableau réduire la colonne
+   et les noms passent inutilement sur deux lignes. */
+.dash-nom-col {
+  min-width: 300px;
+}
+
+.dash-nom-col strong {
+  font-weight: 600;
 }
 
 /* Un email sans espace peut se couper n'importe où plutôt que d'élargir la colonne. */
@@ -261,10 +249,26 @@
   overflow-wrap: anywhere;
 }
 
-/* Sans cette largeur, l'email sécable laisse le tableau réduire la colonne
-   et les noms passent inutilement sur deux lignes. */
-.dash-nom-col {
-  min-width: 300px;
+.dash-detail-col {
+  color: var(--ink-2);
+}
+
+.dash-row-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.dash-row-actions .btn-ghost {
+  min-height: 32px;
+  padding: 5px 10px;
+  font-size: 13px;
+}
+
+.dash-select-col {
+  width: 44px;
+  text-align: center !important;
 }
 
 .dash-select-all {
@@ -279,58 +283,16 @@
   display: none;
 }
 
-.dash-row-actions .btn-ghost {
-  padding: 9px 12px;
-}
-
-.dash-select-col {
-  width: 54px;
-  text-align: center !important;
-}
-
-.dash-select {
-  width: 18px;
-  height: 18px;
-  accent-color: var(--as-purple-700);
-  cursor: pointer;
-}
-
-.bulk-editor {
-  text-align: left;
-}
-
-.bulk-editor__intro {
-  margin-bottom: 6px;
-}
-
-.bulk-editor__resume {
-  margin: 0;
-  padding: 10px 14px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  background: var(--as-purple-50);
-  font-size: 14px;
-  font-weight: 600;
-}
-
-.bulk-editor__grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 14px;
-}
-
-.bulk-editor__hint {
-  margin-top: 14px;
-}
+/* ---------- États vides, imports, édition en masse ---------- */
 
 .dash-empty {
   display: grid;
   justify-items: center;
   gap: 6px;
-  padding: 26px;
-  border: 1px dashed rgba(80, 35, 124, 0.28);
-  border-radius: 18px;
-  background: rgba(255, 255, 255, 0.72);
+  padding: 32px 20px;
+  background: var(--surface);
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--radius-lg);
   text-align: center;
 }
 
@@ -339,25 +301,11 @@
 }
 
 .dash-empty__titre {
-  color: var(--as-purple-900);
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .dash-empty button {
   margin-top: 8px;
-}
-
-.editor-danger {
-  margin-top: 22px;
-  padding-top: 18px;
-  border-top: 1px solid var(--line);
-}
-
-.modal form,
-.modal .import-aide,
-.modal .import-etat,
-.modal input[type='file'] {
-  text-align: left;
 }
 
 .import-aide {
@@ -366,46 +314,73 @@
 
 .import-btns {
   display: flex;
-  gap: 10px;
   flex-wrap: wrap;
+  gap: 8px;
   margin: 16px 0 4px;
 }
 
-.import-etat {
-  background: var(--as-purple-50);
-  border: 1px solid var(--line);
+.bulk-editor__intro {
+  margin-bottom: 6px;
 }
 
+.bulk-editor__resume {
+  margin: 0;
+  padding: 8px 12px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  font-size: 14px;
+}
+
+.bulk-editor__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 14px;
+}
+
+.bulk-editor__hint {
+  margin-top: 14px;
+}
+
+/* ---------- Téléphone ---------- */
+
 @media (max-width: 760px) {
-  /* Les trois compteurs restent côte à côte, en plus compact. */
+  .dash-top-actions {
+    width: 100%;
+  }
+
+  .dash-top-actions > * {
+    flex: 1 1 140px;
+  }
+
+  .export-dropdown__trigger {
+    width: 100%;
+    justify-content: center;
+  }
+
   .stats {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 8px;
   }
 
   .stat {
-    min-height: 0;
-    padding: 12px 10px 12px 15px;
-    border-radius: 16px;
+    padding: 10px 12px;
   }
 
   .stat-num {
-    font-size: 26px;
+    font-size: 22px;
   }
 
-  .stat-lib {
-    margin-top: 4px;
-    font-size: 13px;
+  .bulk-editor__grid {
+    grid-template-columns: 1fr;
   }
 
-  /* Tableau → cartes : sur téléphone, chaque adhérent devient une carte
-     avec ses actions visibles, sans défilement horizontal. */
+  /* Tableau → cartes : chaque adhérent devient une carte, actions visibles,
+     sans défilement horizontal. */
   .dash-table-wrap {
     overflow: visible;
+    background: none;
     border: 0;
     border-radius: 0;
-    background: none;
-    box-shadow: none;
   }
 
   .dash-table,
@@ -417,7 +392,7 @@
 
   .dash-table thead tr {
     display: flex;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
   }
 
   .dash-table thead th {
@@ -430,10 +405,8 @@
     padding: 4px 2px;
     border: 0;
     background: none;
-    color: var(--as-purple-800);
+    color: var(--ink-2);
     font-size: 14px;
-    letter-spacing: 0;
-    text-transform: none;
   }
 
   .dash-select-all__texte {
@@ -451,13 +424,12 @@
       '. detail'
       '. actions';
     align-items: start;
-    gap: 8px 12px;
-    margin-bottom: 10px;
-    padding: 14px;
-    border: 1px solid rgba(232, 222, 239, 0.95);
-    border-radius: 18px;
+    gap: 6px 10px;
+    margin-bottom: 8px;
+    padding: 12px 14px;
     background: var(--surface);
-    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
   }
 
   .dash-table tbody td {
@@ -492,30 +464,15 @@
 
   .dash-actions-col {
     grid-area: actions;
-  }
-
-  .dash-row-actions .btn-ghost {
-    flex: 1;
-  }
-
-  .dash-top {
-    align-items: stretch;
-  }
-
-  .dash-top-actions {
-    width: 100%;
-    justify-content: stretch;
-  }
-
-  .dash-top-actions button {
-    flex: 1 1 150px;
+    margin-top: 4px;
   }
 
   .dash-row-actions {
     justify-content: flex-start;
   }
 
-  .bulk-editor__grid {
-    grid-template-columns: 1fr;
+  .dash-row-actions .btn-ghost {
+    flex: 1;
+    min-height: 36px;
   }
 }

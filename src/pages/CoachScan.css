@@ -1,116 +1,90 @@
+/* Écran utilisé debout sur le terrain, téléphone à la main : une colonne,
+   gros textes, couleur de statut sur toute la carte pour une lecture à distance. */
 .scan-page {
   display: grid;
-  gap: 20px;
-}
-
-.scan-heading {
-  max-width: 720px;
+  gap: 16px;
+  max-width: 640px;
 }
 
 .scan-heading h2 {
-  margin-bottom: 6px;
-  color: var(--as-purple-950);
-  font-size: 32px;
+  margin: 0 0 4px;
+  font-size: 22px;
 }
 
 .scan-heading p {
-  margin-bottom: 0;
+  margin: 0;
 }
 
 .scan-reader {
-  position: relative;
-  overflow: hidden;
-  padding: 18px;
-  border: 1px solid rgba(232, 222, 239, 0.95);
-  border-radius: 24px;
+  padding: 12px;
   background: var(--surface);
-  box-shadow: var(--shadow-md);
-}
-
-.scan-reader::before {
-  content: '';
-  position: absolute;
-  inset: 0 0 auto;
-  height: 6px;
-  background: linear-gradient(90deg, var(--as-purple-800), var(--as-coral), var(--as-pink));
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
 }
 
 .scan-reader__camera {
+  min-height: 300px;
   overflow: hidden;
-  min-height: 330px;
-  border-radius: 18px;
-  background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.08), transparent),
-    #12091f;
+  background: #18181b;
+  border-radius: var(--radius);
 }
 
 .scan-reader__camera video {
   display: block;
   width: 100%;
-  border-radius: 18px;
 }
 
 .scan-reader__status {
-  margin: 14px 0 0;
+  margin: 10px 2px 0;
   color: var(--muted);
   font-size: 14px;
-  font-weight: 700;
 }
 
 .scan-result {
-  position: relative;
-  overflow: hidden;
   display: grid;
-  gap: 22px;
-  padding: 34px 32px;
-  border: 1px solid rgba(232, 222, 239, 0.95);
-  border-radius: 24px;
-  background: var(--surface);
-  box-shadow: var(--shadow-md);
+  gap: 16px;
+  padding: 24px;
+  border: 2px solid;
+  border-radius: var(--radius-lg);
 }
 
-.scan-result::before {
-  content: '';
-  position: absolute;
-  inset: 0 auto 0 0;
-  width: 8px;
+.scan-result--ok {
+  background: var(--ok-bg);
+  border-color: var(--ok-line);
 }
 
-.scan-result--ok::before {
-  background: var(--ok);
-}
-
-.scan-result--ko::before {
-  background: var(--ko);
+.scan-result--ko {
+  background: var(--ko-bg);
+  border-color: var(--ko-line);
 }
 
 .scan-result__main {
   display: grid;
-  gap: 12px;
+  gap: 4px;
 }
 
 .scan-result__label {
   color: var(--muted);
   font-size: 13px;
-  font-weight: 800;
-  text-transform: uppercase;
+  font-weight: 500;
 }
 
 .scan-result__main h2 {
   margin: 0;
-  color: var(--as-purple-950);
-  /* 34px minimum : un nom comme « Wiśniewska-Kowalczyk » tient à 320px.
-     Au-delà, un mot trop long se coupe plutôt que d'être masqué par la carte. */
-  font-size: clamp(34px, 8vw, 72px);
-  line-height: 0.96;
+  /* Un nom comme « Wiśniewska-Kowalczyk » tient à 320px. Au-delà, un mot
+     trop long se coupe plutôt que de sortir de la carte. */
+  font-size: clamp(30px, 8vw, 52px);
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
   overflow-wrap: anywhere;
 }
 
 .scan-result__status-big {
-  margin: 0;
-  font-size: clamp(28px, 5vw, 42px);
-  font-weight: 900;
-  line-height: 1;
+  margin: 8px 0 0;
+  font-size: clamp(24px, 5vw, 34px);
+  font-weight: 700;
+  line-height: 1.1;
 }
 
 .scan-result--ok .scan-result__status-big {
@@ -123,48 +97,43 @@
 
 .scan-result__list {
   margin: 0;
-  padding: 18px 18px 18px 36px;
-  border-radius: 18px;
-  background: var(--ko-bg);
-  color: #7c211c;
-  font-size: 18px;
-  font-weight: 700;
+  padding: 12px 14px 12px 32px;
+  background: rgba(255, 255, 255, 0.65);
+  border-radius: var(--radius);
+  color: #7f1d1d;
+  font-size: 16px;
+  font-weight: 500;
 }
 
 .scan-result__badges {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 8px;
 }
 
 .scan-result__badge {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 8px 16px;
+  padding: 4px 12px;
+  background: var(--surface);
+  border: 1px solid var(--line);
   border-radius: 999px;
-  font-size: 16px;
-  font-weight: 700;
-  border: 2px solid transparent;
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 500;
 }
 
 .scan-result__badge--ok {
-  background: var(--ok-bg, #d1fae5);
-  color: #166534;
-  border-color: rgba(22, 101, 52, 0.25);
-}
-
-.scan-result__badge--no {
-  background: #f3f4f6;
-  color: #6b7280;
-  border-color: rgba(107, 114, 128, 0.2);
+  border-color: var(--ok-line);
+  color: var(--ok);
 }
 
 .scan-error {
-  padding: 18px 20px;
-  border: 1px solid rgba(191, 51, 43, 0.22);
-  border-radius: 18px;
+  padding: 14px 16px;
   background: var(--ko-bg);
+  border: 1px solid var(--ko-line);
+  border-radius: var(--radius-lg);
 }
 
 .scan-actions {
@@ -173,16 +142,17 @@
 }
 
 .scan-actions button {
-  min-width: 190px;
+  min-width: 180px;
+  min-height: 44px;
 }
 
 @media (max-width: 560px) {
-  .scan-reader {
-    padding: 12px;
+  .scan-reader__camera {
+    min-height: 240px;
   }
 
-  .scan-reader__camera {
-    min-height: 250px;
+  .scan-result {
+    padding: 20px;
   }
 
   .scan-actions button {

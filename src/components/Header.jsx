@@ -15,6 +15,8 @@ export default function Header({ titre }) {
             src="/logo.png"
             className="topbar__logo"
             alt="Logo AS"
+            width="36"
+            height="36"
             onError={(e) => {
               const retries = Number(e.target.dataset.retries || 0);
               if (retries < 2) {
@@ -26,22 +28,16 @@ export default function Header({ titre }) {
             }}
           />
           <div className="topbar__title">
-            <span>AS INSA CVL - Bourges</span>
             <strong>{titre}</strong>
+            <span>AS INSA CVL · Bourges</span>
           </div>
-          {role && <span className="badge">{role === 'coach' ? 'Responsable Sport' : 'Bureau'}</span>}
         </div>
 
         <div className="topbar__actions">
           <InstallButton />
           {role === 'bureau' && (
-            <button
-              className="btn-ghost"
-              onClick={() => setParametresOuverts(true)}
-              aria-label="Paramètres"
-              title="Paramètres"
-            >
-              {'\u2699'} Paramètres
+            <button className="btn-ghost" onClick={() => setParametresOuverts(true)}>
+              Paramètres
             </button>
           )}
           <button className="btn-ghost" onClick={signOut}>Se déconnecter</button>

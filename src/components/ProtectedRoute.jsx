@@ -24,13 +24,8 @@ export default function ProtectedRoute({ allow, children }) {
   return (
     <>
       {children}
-      <button 
-        className="btn-tuto-float" 
-        onClick={() => setTutoOuvert(true)}
-        aria-label="Tutoriel"
-        title="Ouvrir le tutoriel"
-      >
-        Tuto
+      <button className="btn-ghost btn-tuto-float" onClick={() => setTutoOuvert(true)}>
+        Aide
       </button>
       {tutoOuvert && <TutorialModal onClose={() => setTutoOuvert(false)} />}
     </>

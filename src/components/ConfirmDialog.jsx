@@ -21,9 +21,6 @@ export default function ConfirmDialog({
       labelledBy={titreId}
       className={`modal confirm-modal ${danger ? 'confirm-modal--danger' : ''}`}
     >
-      <div className="confirm-icon" aria-hidden="true">
-        {danger ? '!' : '?'}
-      </div>
       <h3 id={titreId}>{title}</h3>
       <p className="muted">{message}</p>
 

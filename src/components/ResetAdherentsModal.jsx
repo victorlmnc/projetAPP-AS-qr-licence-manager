@@ -68,7 +68,6 @@ export default function ResetAdherentsModal({ onClose, onResetCompleted }) {
       labelledBy={titreId}
       className="modal danger-modal"
     >
-      <div className="confirm-icon" aria-hidden="true">!</div>
       <h3 id={titreId}>Réinitialiser les adhérents</h3>
       <p className="danger-copy">
         Cette action supprime toutes les fiches adhérents. Elle est définitive après
