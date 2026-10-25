@@ -20,7 +20,7 @@ const C = {
 
 const POLICE = "system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif";
 const SIGNATURE = "Le bureau de l'AS INSA CVL";
-const AVERTISSEMENT = "Cet email est envoyé automatiquement : les réponses ne sont pas lues. Pour toute question, adressez-vous à un membre du bureau de l'AS.";
+const AVERTISSEMENT = "Cet email est envoyé automatiquement : les réponses ne sont pas lues. Pour toute question, adressez-vous à un membre du bureau de l'AS : ethan.minier@insa-cvl.fr ou asso.sportive-bourges@insa-cvl.fr";
 
 export function esc(valeur) {
   return String(valeur ?? '')
