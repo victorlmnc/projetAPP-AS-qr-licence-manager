@@ -16,7 +16,8 @@ Déployée sur **[as-licences-insa-cvl.vercel.app](https://as-licences-insa-cvl.
 - Génération et envoi par email des QR Codes (individuel ou groupé)
 - Relance automatique par email des dossiers incomplets
 - Édition en masse de plusieurs adhérents simultanément (dont la remise du merch)
-- Merch (maillot avec flocage en option, short) : articles commandés, tailles, texte floqué et remise article par article (le flocage est remis avec le maillot) ; filtre « Merch à remettre » ; récap de commande par taille exportable en CSV pour le fournisseur
+- Merch (maillot avec flocage en option, short) : articles commandés, tailles, texte floqué et remise article par article (le flocage est remis avec le maillot) ; filtre « Merch à remettre » ; récap de commande par taille, téléchargeable en bon de commande PDF ou en fichier Excel pour le fournisseur (sans aucun nom d'adhérent)
+- Import des commandes de merch depuis l'export du site de paiement (ou un modèle Excel) : formules reconnues, aperçu avant d'appliquer, l'import n'ajoute que ce qui manque
 - Mise à jour temps réel via Supabase Realtime
 - Paramètres : changement des mots de passe, remise à zéro de la base en fin de saison
 - Utilisable sur ordinateur et sur téléphone (sur petit écran, le tableau s'affiche en cartes)
@@ -76,7 +77,8 @@ Déployée sur **[as-licences-insa-cvl.vercel.app](https://as-licences-insa-cvl.
 │   ├── components/
 │   │   ├── AdherentEditor.jsx         # Éditeur de fiche (2 onglets : Licence / Informations)
 │   │   ├── BulkAdherentEditor.jsx     # Édition en masse
-│   │   ├── RecapMerchModal.jsx        # Récap de commande merch (quantités par taille, flocages, export CSV)
+│   │   ├── RecapMerchModal.jsx        # Récap de commande merch, bon de commande PDF et fichier Excel
+│   │   ├── ImportMerchModal.jsx       # Import des commandes de merch (aperçu puis application)
 │   │   ├── QrCodeModal.jsx            # Affichage et envoi d'un QR Code individuel
 │   │   ├── EnvoiQrModal.jsx           # Modal de sélection pour envoi groupé
 │   │   ├── ImportFormsModal.jsx       # Import depuis Google Forms CSV/Excel
@@ -97,6 +99,9 @@ Déployée sur **[as-licences-insa-cvl.vercel.app](https://as-licences-insa-cvl.
 │   │   ├── texte.test.js              # Tests unitaires (Vitest)
 │   │   ├── merch.js                   # Articles de merch, reste à remettre, récap de commande
 │   │   ├── merch.test.js              # Tests unitaires (Vitest)
+│   │   ├── importMerch.js             # Lecture des commandes : formules, tailles, colonnes, regroupement
+│   │   ├── importMerch.test.js        # Tests unitaires (Vitest)
+│   │   ├── fichierTableur.js          # Lecture CSV (séparateur et encodage détectés) ou Excel
 │   │   └── publicAccess.js            # Construction de l'URL publique d'un adhérent
 │   │
 │   ├── dev/                           # Développement uniquement (absent du build de production)
@@ -108,6 +113,7 @@ Déployée sur **[as-licences-insa-cvl.vercel.app](https://as-licences-insa-cvl.
 │
 ├── schema.sql                         # Schéma complet de la base (tables, RLS, fonctions)
 ├── playwright.config.js               # Configuration des tests de bout en bout
+├── public/fonts/                      # DejaVu Sans (licence libre) pour le bon de commande PDF : lettres comme « Ś » floquées telles quelles
 ├── vercel.json                        # Réécriture SPA — toutes les routes → index.html
 └── package.json
 ```

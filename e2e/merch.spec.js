@@ -3,6 +3,18 @@ import { test, expect } from '@playwright/test';
 import * as XLSX from 'xlsx';
 import { ouvrir, attendreSansDebordement } from './outils.js';
 
+// Texte d'un PDF, extrait comme le ferait un lecteur PDF (police intégrée comprise).
+async function texteDuPdf(chemin) {
+  const pdfjs = await import('pdfjs-dist/legacy/build/pdf.mjs');
+  const pdf = await pdfjs.getDocument({ data: new Uint8Array(fs.readFileSync(chemin)) }).promise;
+  const pages = [];
+  for (let n = 1; n <= pdf.numPages; n++) {
+    const contenu = await (await pdf.getPage(n)).getTextContent();
+    pages.push(contenu.items.map((item) => item.str).join(' '));
+  }
+  return pages.join('\n');
+}
+
 // Télécharge la commande fournisseur et renvoie chaque onglet sous forme de lignes.
 async function telechargerCommande(page) {
   const [telechargement] = await Promise.all([
@@ -119,6 +131,75 @@ test.describe('Merch', () => {
     // La taille manquante apparaît « À préciser » dans le fichier.
     const onglets = await telechargerCommande(page);
     expect(onglets['Quantités par taille']).toContainEqual(['À préciser', 1, 0, 0]);
+  });
+
+  test('bon de commande PDF : quantités et flocages, aucun nom d\'adhérent', async ({ page }) => {
+    await ouvrir(page, 'bureau', 'demo');
+    await page.getByRole('button', { name: 'Commande merch' }).click();
+    const [telechargement] = await Promise.all([
+      page.waitForEvent('download'),
+      page.getByRole('button', { name: 'Bon de commande (PDF)' }).click(),
+    ]);
+    expect(telechargement.suggestedFilename()).toMatch(/^bon-de-commande-merch-\d{4}-\d{2}-\d{2}\.pdf$/);
+
+    const texte = await texteDuPdf(await telechargement.path());
+    for (const attendu of ['Bon de commande merch', 'Quantités par taille', 'Dont floqués', 'Total', 'MARTIN', 'Page 1 / 1']) {
+      expect(texte).toContain(attendu);
+    }
+    expect(texte).not.toMatch(/Jeanne|Lucas|Hugo|Léa|example\.com/);
+  });
+
+  test('bon de commande PDF : les lettres accentuées des flocages sont conservées', async ({ page }) => {
+    await ouvrir(page, 'bureau', 'pire');
+    await page.getByRole('button', { name: 'Commande merch' }).click();
+    const [telechargement] = await Promise.all([
+      page.waitForEvent('download'),
+      page.getByRole('button', { name: 'Bon de commande (PDF)' }).click(),
+    ]);
+    const texte = await texteDuPdf(await telechargement.path());
+    expect(texte).toContain('WIŚNIEWSKA-KOWALCZYK');
+    expect(texte).toContain('À préciser avant production : 1 maillot sans taille.');
+  });
+
+  test('import des commandes : aperçu avant d\'appliquer', async ({ page }) => {
+    await ouvrir(page, 'bureau', 'demo');
+    await page.locator('summary', { hasText: 'Importer' }).click();
+    await page.getByRole('button', { name: 'Commandes de merch' }).click();
+    const fenetre = page.getByRole('dialog', { name: 'Importer des commandes de merch' });
+
+    // Export type site de paiement : séparateur « ; », une ligne par article.
+    const csv = [
+      'Nom;Prénom;Email;Tarif;Taille du maillot;Nom au dos (flocage)',
+      'Bernard;Lucas;LUCAS.BERNARD@example.com;Licence + ensemble (avec YEPS);xl;',
+      'Bernard;Lucas;lucas.bernard@example.com;Flocage (nom au dos);;BERNARD',
+      'Dubois;Emma;emma.dubois@example.com;Licence seule;;',
+      'Petit;Hugo;hugo.petit@example.com;Flocage (nom au dos);;PETIT',
+      'Inconnu;Paul;paul@example.com;Maillot seul;M;',
+    ].join('\n');
+    await fenetre.locator('input[type="file"]').setInputFiles({
+      name: 'export-paiement.csv', mimeType: 'text/csv', buffer: Buffer.from(csv, 'utf-8'),
+    });
+
+    const apercu = fenetre.getByLabel("Aperçu de l'import");
+    await expect(apercu).toContainText('5 ligne(s) lue(s)');
+    await expect(apercu).toContainText('Formule → « Tarif »');
+    await expect(apercu.locator('tbody tr')).toHaveText([/Lucas Bernard\s*Maillot \(XL\), floqué « BERNARD »/]);
+    await expect(apercu).toContainText('paul@example.com');
+    await expect(apercu).toContainText('Hugo Petit : flocage sans maillot, ignoré.');
+    await expect(fenetre.getByRole('button', { name: 'Appliquer (1)' })).toBeVisible();
+  });
+
+  test('import des commandes : le modèle se télécharge', async ({ page }) => {
+    await ouvrir(page, 'bureau', 'demo');
+    await page.locator('summary', { hasText: 'Importer' }).click();
+    await page.getByRole('button', { name: 'Commandes de merch' }).click();
+    const [telechargement] = await Promise.all([
+      page.waitForEvent('download'),
+      page.getByRole('button', { name: 'Télécharger le modèle' }).click(),
+    ]);
+    const classeur = XLSX.read(fs.readFileSync(await telechargement.path()), { type: 'buffer' });
+    const [entetes] = XLSX.utils.sheet_to_json(classeur.Sheets.Commandes, { header: 1 });
+    expect(entetes).toEqual(['Email', 'Nom', 'Prénom', 'Formule', 'Taille maillot', 'Taille short', 'Texte flocage']);
   });
 
   test('aucun merch : message dans le récap', async ({ page }) => {
