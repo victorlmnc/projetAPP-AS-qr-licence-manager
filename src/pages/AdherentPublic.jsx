@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabase';
 import { calculerStatutLicence } from '../lib/licence';
 import { publicAdherentUrl } from '../lib/publicAccess';
 import { nomComplet, reparerTexte } from '../lib/texte';
+import { useTitrePage } from '../lib/useTitrePage';
 import { adherentScanneDeTest } from '../dev/donneesTest';
 import { useJeuDeTest } from '../dev/SelecteurDonnees';
 
@@ -38,6 +39,7 @@ async function chargerAdherentPublic(token) {
 
 export default function AdherentPublic() {
   const { token } = useParams();
+  useTitrePage('Ma licence');
   const [adherent, setAdherent] = useState(null);
   const [chargement, setChargement] = useState(true);
   const [erreur, setErreur] = useState(null);

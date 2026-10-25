@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase, supabaseConfigMissing } from '../lib/supabase';
+import { useTitrePage } from '../lib/useTitrePage';
 
 const DOMAINE_LOGIN = 'as-licences.fr';
 
@@ -15,6 +16,7 @@ export default function Login() {
   const [erreur, setErreur] = useState(null);
   const [enCours, setEnCours] = useState(false);
   const navigate = useNavigate();
+  useTitrePage('Connexion');
 
   async function handleSubmit(e) {
     e.preventDefault();

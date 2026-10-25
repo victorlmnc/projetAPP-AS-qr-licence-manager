@@ -11,6 +11,7 @@ import ImportComplementaireModal from '../components/ImportComplementaireModal';
 import EnvoiQrModal from '../components/EnvoiQrModal';
 import Modal from '../components/Modal';
 import { comparerParNom, nomComplet, reparerTexte } from '../lib/texte';
+import { useTitrePage } from '../lib/useTitrePage';
 import { adherentsDeTest } from '../dev/donneesTest';
 import { useJeuDeTest } from '../dev/SelecteurDonnees';
 import './BureauDashboard.css';
@@ -103,6 +104,7 @@ function BarreProgression({ envoyes, total }) {
 }
 
 export default function BureauDashboard() {
+  useTitrePage('Adhérents');
   const [adherents, setAdherents] = useState([]);
   const [chargement, setChargement] = useState(true);
   const [erreur, setErreur] = useState(null);

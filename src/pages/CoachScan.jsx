@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase';
 import Header from '../components/Header';
 import { calculerStatutLicence } from '../lib/licence';
 import { nomComplet } from '../lib/texte';
+import { useTitrePage } from '../lib/useTitrePage';
 import { adherentScanneDeTest } from '../dev/donneesTest';
 import { useJeuDeTest } from '../dev/SelecteurDonnees';
 import './CoachScan.css';
@@ -53,6 +54,7 @@ async function nettoyerScanner(scanner) {
 }
 
 export default function CoachScan() {
+  useTitrePage('Scan');
   const [adherent, setAdherent] = useState(null);
   const [erreur, setErreur] = useState(null);
   const [cameraMessage, setCameraMessage] = useState('Initialisation de la caméra…');
