@@ -51,6 +51,9 @@ function adherent(champs) {
     manque_paiement: false,
     manque_yeps: false,
     boursier: false,
+    pass_sport_recu: false,
+    rib_recu: false,
+    pass_sport_rembourse: false,
     maillot: false,
     taille_maillot: null,
     maillot_recupere: false,
@@ -80,7 +83,7 @@ function demo() {
     adherent({
       prenom: 'Emma', nom: 'Dubois', email: 'emma.dubois@example.com',
       paiement_global: false, manque_paiement: true,
-      boursier: true, competitions_universitaires: true,
+      boursier: true, competitions_universitaires: true, pass_sport_recu: true,
     }),
     // Short seul, déjà remis.
     adherent({

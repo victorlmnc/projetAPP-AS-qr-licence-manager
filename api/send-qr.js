@@ -62,7 +62,7 @@ export default async function handler(req, res) {
 
   let query = supabase
     .from('adherents')
-    .select('id, nom, prenom, email, public_token, types_licence, questionnaire_sante_ok, paiement_global, manque_paiement, manque_yeps, licence_ffsu_a_jour, activite_contraintes, boursier, competitions_universitaires');
+    .select('id, nom, prenom, email, public_token, types_licence, questionnaire_sante_ok, paiement_global, manque_paiement, manque_yeps, licence_ffsu_a_jour, activite_contraintes, boursier, pass_sport_recu, rib_recu, pass_sport_rembourse, competitions_universitaires');
 
   if (Array.isArray(adherentIds) && adherentIds.length > 0) {
     query = query.in('id', adherentIds);

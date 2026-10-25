@@ -48,6 +48,10 @@ create table if not exists adherents (
   manque_yeps boolean not null default false,
   -- Boursier eligible au Pass'Sport : paie le tarif normal, rembourse sur demande.
   boursier boolean not null default false,
+  -- Suivi du remboursement : documents recus, 50 euros rembourses.
+  pass_sport_recu boolean not null default false,
+  rib_recu boolean not null default false,
+  pass_sport_rembourse boolean not null default false,
 
   -- Merch : article commandé, taille, remis ou non. Le flocage est une
   -- option du maillot, remise avec lui.
@@ -84,6 +88,9 @@ alter table adherents add column if not exists sports text[];
 alter table adherents add column if not exists competitions_universitaires boolean not null default false;
 alter table adherents add column if not exists licencie_annee_derniere boolean not null default false;
 alter table adherents add column if not exists boursier boolean not null default false;
+alter table adherents add column if not exists pass_sport_recu boolean not null default false;
+alter table adherents add column if not exists rib_recu boolean not null default false;
+alter table adherents add column if not exists pass_sport_rembourse boolean not null default false;
 alter table adherents add column if not exists questionnaire_sante_ok boolean not null default false;
 alter table adherents add column if not exists activite_contraintes boolean not null default false;
 alter table adherents add column if not exists situation_handicap boolean not null default false;

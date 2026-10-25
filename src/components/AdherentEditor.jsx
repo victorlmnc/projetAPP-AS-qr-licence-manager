@@ -60,6 +60,9 @@ export default function AdherentEditor({ adherent, onClose, onSaved, onDeleted }
     manque_paiement: adherent?.manque_paiement ?? true,
     manque_yeps: adherent?.manque_yeps ?? false,
     boursier: adherent?.boursier ?? false,
+    pass_sport_recu: adherent?.pass_sport_recu ?? false,
+    rib_recu: adherent?.rib_recu ?? false,
+    pass_sport_rembourse: adherent?.pass_sport_rembourse ?? false,
     maillot: adherent?.maillot ?? false,
     taille_maillot: adherent?.taille_maillot ?? '',
     maillot_recupere: adherent?.maillot_recupere ?? false,
@@ -179,6 +182,10 @@ export default function AdherentEditor({ adherent, onClose, onSaved, onDeleted }
       manque_paiement: form.paiement_global ? false : form.manque_paiement,
       manque_yeps: form.paiement_global ? false : form.manque_yeps,
       boursier: form.boursier,
+      // Le suivi n'a de sens que pour un boursier : effacé si la case est décochée.
+      pass_sport_recu: form.boursier && form.pass_sport_recu,
+      rib_recu: form.boursier && form.rib_recu,
+      pass_sport_rembourse: form.boursier && form.pass_sport_rembourse,
       // Un article décoché efface sa taille et sa remise ; le flocage est une
       // option du maillot, il disparaît avec lui.
       maillot: form.maillot,
@@ -295,6 +302,27 @@ export default function AdherentEditor({ adherent, onClose, onSaved, onDeleted }
                 <input type="checkbox" checked={form.boursier} onChange={(e) => set('boursier', e.target.checked)} />
                 Boursier, éligible au Pass'Sport
               </label>
+
+              {form.boursier && (
+                <fieldset className="manques">
+                  <legend>Suivi du remboursement :</legend>
+                  <label className="check">
+                    <input type="checkbox" checked={form.pass_sport_recu}
+                           onChange={(e) => set('pass_sport_recu', e.target.checked)} />
+                    Pass'Sport reçu
+                  </label>
+                  <label className="check">
+                    <input type="checkbox" checked={form.rib_recu}
+                           onChange={(e) => set('rib_recu', e.target.checked)} />
+                    RIB reçu
+                  </label>
+                  <label className="check">
+                    <input type="checkbox" checked={form.pass_sport_rembourse}
+                           onChange={(e) => set('pass_sport_rembourse', e.target.checked)} />
+                    50 € remboursés
+                  </label>
+                </fieldset>
+              )}
             </div>
           )}
 

@@ -11,7 +11,7 @@ Application web de gestion des licences de l'Association Sportive de l'INSA CVL 
 - Import de l'export du formulaire d'inscription Google Forms, en CSV ou Excel (les doubles soumissions sont fusionnées). Toutes les questions sont reprises dans la fiche.
 - Import complémentaire CSV ou Excel pour mettre à jour certains champs (paiement, YEPS…)
 - Export de la liste filtrée en CSV, Excel ou PDF
-- Envoi des QR codes par email, à un adhérent ou à plusieurs. L'email explique aux boursiers comment se faire rembourser avec le Pass'Sport, et à ceux qui veulent faire les compétitions universitaires sans licence FFSU comment la prendre.
+- Envoi des QR codes par email, à un adhérent ou à plusieurs. L'email explique aux boursiers comment se faire rembourser avec le Pass'Sport (tant que le bureau n'a pas reçu leurs documents), et à ceux qui veulent faire les compétitions universitaires sans licence FFSU comment la prendre.
 - Relance par email des dossiers incomplets
 - Modification de plusieurs adhérents à la fois, y compris la remise du merch
 - Suivi du merch (maillot avec flocage en option, short) : articles commandés, tailles, texte floqué, remise article par article. Le flocage est remis avec le maillot. Un filtre affiche le merch à remettre, et le récap de commande par taille se télécharge en bon de commande PDF ou en fichier Excel pour le fournisseur, sans nom d'adhérent.
@@ -148,6 +148,8 @@ Table `adherents` :
 | `manque_paiement` | boolean | Paiement manquant |
 | `manque_yeps` | boolean | Aide YEPS manquante |
 | `boursier` | boolean | Boursier éligible au Pass'Sport : paie le tarif normal, remboursé sur demande |
+| `pass_sport_recu` / `rib_recu` | boolean | Le bureau a reçu le Pass'Sport / le RIB du boursier |
+| `pass_sport_rembourse` | boolean | Les 50 € du Pass'Sport ont été remboursés |
 | `maillot` / `short` | boolean | Article de merch commandé |
 | `flocage` | boolean | Option du maillot, impossible sans maillot |
 | `taille_maillot` / `taille_short` | text | `XS` à `3XL`, ou la taille importée telle quelle |
@@ -168,6 +170,7 @@ Pour une nouvelle base, exécuter `schema.sql` dans l'éditeur SQL de Supabase. 
 | `2026-10-26-4-merch.sql` | Avant de déployer le merch (ajoute ses colonnes) |
 | `2026-10-26-5-retirer-pass-sport.sql` | Après avoir déployé le retrait du Pass'Sport (supprime la colonne `manque_passport`) |
 | `2026-10-26-6-questions-forms.sql` | Avant de déployer l'import des questions du formulaire (ajoute leurs colonnes) |
+| `2026-10-26-7-suivi-pass-sport.sql` | Avant de déployer le suivi du remboursement Pass'Sport (ajoute ses colonnes) |
 
 ## Variables d'environnement
 

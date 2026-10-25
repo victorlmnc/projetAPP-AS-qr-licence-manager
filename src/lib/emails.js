@@ -116,7 +116,10 @@ function texteLicence(adherent) {
 // email, s'il y en a une, est à part pour en faire un lien dans le HTML.
 function informations(adherent) {
   const infos = [];
-  if (adherent.boursier) {
+  // Inutile de réexpliquer la démarche une fois les documents reçus ou le remboursement fait.
+  const passSportEnAttente =
+    adherent.boursier && !adherent.pass_sport_rembourse && !(adherent.pass_sport_recu && adherent.rib_recu);
+  if (passSportEnAttente) {
     infos.push({
       avant: "Vous avez indiqué être boursier et éligible au Pass'Sport. Pour l'utiliser, prenez votre place au tarif normal, puis envoyez votre Pass'Sport et votre RIB par mail à ",
       email: 'sport-bourges@insa-cvl.fr',
@@ -154,7 +157,8 @@ function anomaliesOuDefaut(statut) {
 /**
  * Email d'envoi du QR Code.
  * @param adherent  { prenom, nom, types_licence, licence_ffsu_a_jour, activite_contraintes,
- *                    boursier, competitions_universitaires }
+ *                    boursier, pass_sport_recu, rib_recu, pass_sport_rembourse,
+ *                    competitions_universitaires }
  * @param statut    résultat de calculerStatutLicence(adherent)
  * @param lien      URL de la page publique de l'adhérent
  * @param date      date affichée pour un dossier incomplet

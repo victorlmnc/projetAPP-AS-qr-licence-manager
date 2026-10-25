@@ -75,6 +75,17 @@ describe('emailQrCode', () => {
     expect(texte).toContain('votre RIB par mail à sport-bourges@insa-cvl.fr. Nous vous rembourserons les 50 €.');
   });
 
+  it("boursier dont le dossier Pass'Sport est traité : plus d'explication", () => {
+    for (const suivi of [{ pass_sport_recu: true, rib_recu: true }, { pass_sport_rembourse: true }]) {
+      const boursier = { ...aJour, boursier: true, ...suivi };
+      const { texte } = emailQrCode(boursier, calculerStatutLicence(boursier), LIEN, DATE);
+      expect(texte).not.toContain('sport-bourges@insa-cvl.fr');
+    }
+    // Un seul des deux documents reçu : la démarche reste expliquée.
+    const enCours = { ...aJour, boursier: true, pass_sport_recu: true };
+    expect(emailQrCode(enCours, calculerStatutLicence(enCours), LIEN, DATE).texte).toContain('sport-bourges@insa-cvl.fr');
+  });
+
   it('compétitions universitaires sans licence FFSU : comment la prendre', () => {
     const competiteur = { ...incomplet, competitions_universitaires: true };
     const { texte, html } = emailQrCode(competiteur, calculerStatutLicence(competiteur), LIEN, DATE);

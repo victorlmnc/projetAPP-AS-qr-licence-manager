@@ -86,6 +86,23 @@ test.describe('Éditeur de fiche', () => {
     }
   });
 
+  test("boursier : suivi du remboursement Pass'Sport", async ({ page }) => {
+    await ouvrir(page, 'bureau', 'demo');
+    await page.locator('.dash-table tbody tr').filter({ hasText: 'Emma Dubois' })
+      .getByRole('button', { name: 'Modifier' }).click();
+    const editeur = page.getByRole('dialog', { name: 'Emma Dubois' });
+    const suivi = editeur.getByRole('group', { name: 'Suivi du remboursement :' });
+
+    await expect(editeur.getByLabel("Boursier, éligible au Pass'Sport")).toBeChecked();
+    await expect(suivi.getByLabel("Pass'Sport reçu")).toBeChecked();
+    await expect(suivi.getByLabel('RIB reçu')).not.toBeChecked();
+    await expect(suivi.getByLabel('50 € remboursés')).not.toBeChecked();
+
+    // Le suivi ne concerne que les boursiers.
+    await editeur.getByLabel("Boursier, éligible au Pass'Sport").uncheck();
+    await expect(suivi).toHaveCount(0);
+  });
+
   test('questions du formulaire : sports, compétitions, ancien licencié, honorabilité', async ({ page }) => {
     await ouvrir(page, 'bureau', 'pire');
     await page.locator('.dash-table tbody tr').filter({ hasText: 'Montgomery III' })
